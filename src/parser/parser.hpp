@@ -8,6 +8,7 @@
 
 namespace bloop::ast {
 	struct BlockStatement;
+	struct Program;
 }
 namespace bloop::lexer{
 	class CLexer;
@@ -17,7 +18,7 @@ namespace bloop::parser {
 	struct CParserContext {
 		ParserIterator& m_iterPos;
 		ParserIterator& m_iterEnd;
-		bloop::ast::BlockStatement* m_pCurrentBlock;
+		mutable bloop::ast::BlockStatement* m_pCurrentBlock;
 
 		auto& GetIterator() const noexcept { return *m_iterPos; }
 	};
@@ -29,7 +30,7 @@ namespace bloop::parser {
 		CLexParser(const bloop::lexer::CLexer& lexer);
 		~CLexParser();
 
-		[[nodiscard]] bloop::EStatus Parse();
+		[[nodiscard]] std::unique_ptr<bloop::ast::Program> Parse();
 
 	private:
 		std::vector<bloop::CToken*> m_oTokens;
@@ -42,10 +43,12 @@ namespace bloop::parser {
 		CLexParserInternal(ParserIterator& start, ParserIterator& end);
 		~CLexParserInternal();
 
-		[[nodiscard]] bloop::EStatus Parse();
+		[[nodiscard]] std::unique_ptr<bloop::ast::Program> Parse();
 
 	private:
-		[[nodiscard]] bloop::EStatus ParseToken(const CParserContext& ctx);
 	};
+
+	//other parsers might utilize this
+	[[nodiscard]] bloop::EStatus ParseToken(const CParserContext& ctx);
 
 }

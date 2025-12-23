@@ -16,9 +16,11 @@ namespace bloop::parser {
 	struct CParserContext;
 	enum class EOperandBaseType : char {
 		ot_constant,
+		ot_identifier
 	};
 
 	struct IOperand {
+		friend class CParserOperand;
 		BLOOP_NONCOPYABLE(IOperand);
 
 		IOperand() = default;
@@ -26,9 +28,11 @@ namespace bloop::parser {
 
 		[[nodiscard]] constexpr virtual EOperandBaseType Type() const noexcept = 0;
 		[[nodiscard]] virtual std::unique_ptr<ASTExpression> ToExpression() = 0;
+	protected:
+		bloop::CodePosition m_oDeclPos;
 	};
 
-	class CParserOperand final : public CParserSingle<CToken> {
+	class CParserOperand final : public CParserSingle<bloop::CToken> {
 		BLOOP_NONCOPYABLE(CParserOperand);
 	public:
 		CParserOperand() = delete;
@@ -41,10 +45,10 @@ namespace bloop::parser {
 
 	private:
 		[[nodiscard]] std::unique_ptr<IOperand> ParseConstant();
+		[[nodiscard]] std::unique_ptr<IOperand> ParseIdentifier();
 
 		const CParserContext& m_oCtx;
 		std::unique_ptr<IOperand> m_pOperand;
-
 	};
 
 }

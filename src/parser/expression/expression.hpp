@@ -11,7 +11,7 @@ namespace bloop::parser {
 	struct CParserContext;
 	class CParserSubExpression;
 
-	class CParserExpression final : CParserSingle<CToken>, protected IStatement {
+	class CParserExpression final : CParserSingle<bloop::CToken>, protected IStatement {
 		BLOOP_NONCOPYABLE(CParserExpression);
 	public:
 		CParserExpression() = delete;
@@ -26,12 +26,14 @@ namespace bloop::parser {
 			std::optional<PairMatcher>& eoe,
 			EEvaluationType evalType = EEvaluationType::evaluate_everything);
 
-		[[nodiscard]] UniqueStatement ToAST() override;
+		[[nodiscard]] UniqueStatement ToStatement() override;
+		[[nodiscard]] UniqueExpression ToExpression();
 
 	private:
 		[[nodiscard]] bool EndOfExpression(const std::optional<PairMatcher>& eoe) const noexcept;
 
 		const CParserContext& m_oCtx;
 		std::vector<std::unique_ptr<CParserSubExpression>> m_oSubExpressions;
+		bloop::CodePosition m_oDeclPos;
 	};
 }

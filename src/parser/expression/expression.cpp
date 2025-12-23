@@ -14,6 +14,7 @@ using namespace bloop::parser;
 CParserExpression::CParserExpression(const CParserContext& ctx) 
 	: CParserSingle(ctx.m_iterPos, ctx.m_iterEnd), m_oCtx(ctx) {
 	assert(!IsEndOfBuffer());
+	m_oDeclPos = GetIteratorSafe()->GetCodePosition();
 }
 CParserExpression::~CParserExpression() = default;
 
@@ -23,7 +24,7 @@ bloop::EStatus CParserExpression::Parse(std::optional<PairMatcher> eoe, EEvaluat
 
 bloop::EStatus CParserExpression::ParseInternal(std::optional<PairMatcher>& eoe, EEvaluationType evalType) {
 
-	if (IsEndOfBuffer())
+	if (EndOfExpression(eoe))
 		throw exception::ParserError(BLOOPTEXT("expected an expression"), GetIteratorSafe()->GetCodePosition());
 
 	auto status = EStatus::failure;
@@ -52,7 +53,10 @@ bloop::EStatus CParserExpression::ParseInternal(std::optional<PairMatcher>& eoe,
 using Operands = std::vector<CParserOperand*>;
 using Operators = std::vector<COperator*>;
 [[nodiscard]] static UniqueExpression CreateExpression(Operands& operands, Operators& operators);
-UniqueStatement CParserExpression::ToAST() {
+UniqueStatement CParserExpression::ToStatement() {
+	return std::make_unique<bloop::ast::ExpressionStatement>(ToExpression(), m_oDeclPos);
+}
+UniqueExpression CParserExpression::ToExpression() {
 
 	Operands operands;
 	Operators operators;
@@ -64,9 +68,8 @@ UniqueStatement CParserExpression::ToAST() {
 	}
 
 	assert(operands.size() == operators.size() + 1u);
-	return std::make_unique<bloop::ast::ExpressionStatement>(CreateExpression(operands, operators));
+	return CreateExpression(operands, operators);
 }
-
 bool CParserExpression::EndOfExpression(const std::optional<PairMatcher>& eoe) const noexcept {
 	assert(!IsEndOfBuffer());
 
@@ -83,17 +86,20 @@ bool CParserExpression::EndOfExpression(const std::optional<PairMatcher>& eoe) c
 [[nodiscard]] static UniqueExpression GetLeaf(Operands& operands);
 [[nodiscard]] static Operators::iterator FindLowestPriorityOperator(Operators& operators);
 [[nodiscard]] static void CreateExpressionRecursively(bloop::ast::BinaryExpression* _this, Operands& operands, Operators& operators);
+[[nodiscard]] static auto MakeBinary(bloop::EPunctuation punct, bloop::CodePosition pos) {
+	return std::make_unique<bloop::ast::BinaryExpression>(punct, pos);
+}
 
 [[nodiscard]] static UniqueExpression CreateExpression(Operands& operands, Operators& operators) {
 
-	assert(!operators.empty());
 
 	if (auto&& leaf = GetLeaf(operands))
 		return leaf;
 
+	assert(!operators.empty());
+
 	auto lowestPriority = FindLowestPriorityOperator(operators);
-	auto&& oper = std::make_unique<bloop::ast::BinaryExpression>((*lowestPriority)->m_pToken->m_ePunctuation);
-	oper->m_oApproximatePosition = (*lowestPriority)->m_pToken->GetCodePosition();
+	auto oper = MakeBinary((*lowestPriority)->m_pToken->m_ePunctuation, (*lowestPriority)->m_pToken->GetCodePosition());
 	CreateExpressionRecursively(oper.get(), operands, operators);
 	return oper;
 }
@@ -138,18 +144,14 @@ void CreateExpressionRecursively(bloop::ast::BinaryExpression* _this, Operands& 
 	if (!lhsOperands.empty()) {
 		if (_this->left = GetLeaf(lhsOperands), !_this->left) {
 			const auto l = FindLowestPriorityOperator(lhsOperators);
-			auto&& oper = std::make_unique<bloop::ast::BinaryExpression>((*l)->m_pToken->m_ePunctuation);
-			oper->m_oApproximatePosition = (*l)->m_pToken->GetCodePosition();
-			_this->left = std::move(oper);
-			CreateExpressionRecursively(dynamic_cast<bloop::ast::BinaryExpression*>(_this->left.get()), lhsOperands, lhsOperators);
+			_this->left = MakeBinary((*l)->m_pToken->m_ePunctuation, (*l)->m_pToken->GetCodePosition());
+			CreateExpressionRecursively(static_cast<bloop::ast::BinaryExpression*>(_this->left.get()), lhsOperands, lhsOperators);
 		}
 	} if (!rhsOperands.empty()) {
 		if (_this->right = GetLeaf(rhsOperands), !_this->right) {
 			const auto l = FindLowestPriorityOperator(rhsOperators);
-			auto&& oper = std::make_unique<bloop::ast::BinaryExpression>((*l)->m_pToken->m_ePunctuation);
-			oper->m_oApproximatePosition = (*l)->m_pToken->GetCodePosition();
-			_this->right = std::move(oper);
-			CreateExpressionRecursively(dynamic_cast<bloop::ast::BinaryExpression*>(_this->right.get()), rhsOperands, rhsOperators);
+			_this->right = MakeBinary((*l)->m_pToken->m_ePunctuation, (*l)->m_pToken->GetCodePosition());
+			CreateExpressionRecursively(static_cast<bloop::ast::BinaryExpression*>(_this->right.get()), rhsOperands, rhsOperators);
 		}
 	}
 

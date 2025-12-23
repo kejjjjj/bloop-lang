@@ -20,7 +20,7 @@ namespace bloop::parser {
 	struct IStatement {
 		virtual ~IStatement() = default;
 	protected:
-		[[nodiscard]] virtual UniqueStatement ToAST() = 0;
+		[[nodiscard]] virtual UniqueStatement ToStatement() = 0;
 	};
 
 	using ParserIterator = std::vector<bloop::CToken*>::iterator;
@@ -54,38 +54,3 @@ namespace bloop::parser {
 		const Type* m_pToken{};
 	};
 }
-
-#if defined(_WIN32)
-#if defined(_WIN64)
-// 64-bit Windows
-using BloopInt = long long;
-using BloopUInt = unsigned long long;
-#else
-// 32-bit Windows
-using BloopInt = int;
-using BloopUInt = unsigned int;
-#endif
-#elif defined(__APPLE__) && defined(__MACH__)
-#include <TargetConditionals.h>
-#if defined(__x86_64__) || defined(__aarch64__)
-// 64-bit macOS
-using BloopInt = long long;
-using BloopUInt = unsigned long long;
-#else
-// 32-bit macOS
-using BloopInt = int;
-using BloopUInt = unsigned int;
-#endif
-#else
-#if defined(__x86_64__) || defined(__ppc64__)
-// 64-bit non-Windows, non-macOS
-using BloopInt = long long;
-using BloopUInt = unsigned long long;
-#else
-// 32-bit non-Windows, non-macOS
-using BloopInt = int;
-using BloopUInt = unsigned int;
-#endif
-#endif
-
-using BloopDouble = double;

@@ -1,5 +1,8 @@
 #pragma once
 #include <cassert>
+#include <algorithm>
+#include <ranges>
+#include <array>
 
 #include "utils/defs.hpp"
 #include "lexer/punctuation.hpp"
@@ -8,19 +11,29 @@ namespace bloop {
 	namespace lexer {
 		class CLexer;
 	}
-	enum class ETokenType : signed char
-	{
+	enum class ETokenType : unsigned char {
 		tt_error,
-		tt_undefined,
-		tt_false,
-		tt_true,
 		tt_int,
 		tt_uint,
 		tt_double,
 		tt_string,
 		tt_name,
 		tt_operator,
+
+		#define X(name) tt_##name,
+		#include "token_keywords.def"
+		#undef X
+
 	};
+	namespace token {
+		[[nodiscard]] constexpr auto IsConstant(ETokenType t) {
+			constexpr std::array<ETokenType, 7> constants = {
+				ETokenType::tt_undefined, ETokenType::tt_false, ETokenType::tt_true,
+				ETokenType::tt_int, ETokenType::tt_uint, ETokenType::tt_double, ETokenType::tt_string
+			};
+			return std::ranges::any_of(constants, [t](ETokenType _t) { return _t == t; });
+		}
+	}
 	class CPunctuationToken;
 	class CToken
 	{

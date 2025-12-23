@@ -1,0 +1,4 @@
+R"(fn main(){
+	const a = a;
+}
+)";

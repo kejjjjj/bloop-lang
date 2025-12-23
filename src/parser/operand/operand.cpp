@@ -19,11 +19,17 @@ bloop::EStatus CParserOperand::Parse([[maybe_unused]]std::optional<PairMatcher>&
 
 	auto token = GetIteratorSafe();
 
-	if (token->Type() >= ETokenType::tt_undefined && token->Type() <= ETokenType::tt_string) {
+	if (bloop::token::IsConstant(token->Type())) {
 		m_pOperand = ParseConstant();
+	} else if (token->Type() == ETokenType::tt_name) {
+		m_pOperand = ParseIdentifier();
 	} else {
-		throw exception::ParserError(BLOOPTEXT("unsupported"), GetIteratorSafe()->GetCodePosition());
+		throw exception::ParserError(BLOOPTEXT("unsupported: ") + token->Source(), token->GetCodePosition());
 	}
+
+	//because it got overwritten
+	m_pOperand->m_oDeclPos = token->GetCodePosition();
+
 
 	if (IsEndOfBuffer())
 		throw exception::ParserError(BLOOPTEXT("unexpected end of buffer"), GetIteratorSafe()->GetCodePosition());

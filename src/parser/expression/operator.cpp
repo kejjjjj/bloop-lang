@@ -20,9 +20,9 @@ bloop::EStatus COperatorParser::Parse(std::optional<PairMatcher>& eoe, [[maybe_u
 
 	m_pToken = GetIteratorSafe()->GetPunctuation();
 
-	//if (!IsOperator(m_pToken)) {
-	//	throw exception::ParserError(BLOOPTEXT("unexpected end of expression: ") + GetIteratorSafe()->Source(), GetIteratorSafe()->GetCodePosition());
-	//}
+	if (!IsOperator(m_pToken)) {
+		throw exception::ParserError(BLOOPTEXT("unexpected end of expression: ") + GetIteratorSafe()->Source(), GetIteratorSafe()->GetCodePosition());
+	}
 
 	Advance(1); //skip the operator
 	return EStatus::success;

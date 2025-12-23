@@ -2,6 +2,7 @@
 #include "lexer/exception.hpp"
 
 #include <cassert>
+#include <unordered_map>
 
 constexpr bool IsDigit(bloop::BloopChar c) noexcept
 {
@@ -42,7 +43,7 @@ CLexer::~CLexer() = default;
 
 void CLexer::Parse() {
 	while (auto&& token = ReadToken())
-		m_oTokens.emplace_back(std::forward<std::unique_ptr<CToken>&&>(token));
+		m_oTokens.emplace_back(std::forward<std::unique_ptr<bloop::CToken>&&>(token));
 }
 
 bool CLexer::IsToken(bloop::BloopStringView t) noexcept
@@ -104,7 +105,7 @@ std::unique_ptr<bloop::CToken> CLexer::ReadToken()
 		throw exception::LexerError(BLOOPTEXT("a token without a definition"), m_oParserPosition);
 	}
 
-	return std::make_unique<CToken>(token);
+	return std::make_unique<bloop::CToken>(token);
 }
 
 bloop::EStatus CLexer::ReadWhiteSpace() noexcept
@@ -427,6 +428,13 @@ bloop::BloopChar CLexer::ReadHexCharacter()
 	auto intValue = std::stoll(hexStr, nullptr, 16);
 	return static_cast<bloop::BloopChar>(static_cast<unsigned char>(intValue)); //it's fine!!!!!
 }
+
+const std::unordered_map<bloop::BloopStringView, bloop::ETokenType> reservedKeywords = {
+#define X(name) { BLOOPTEXT(#name), bloop::ETokenType::tt_##name },
+#include "token_keywords.def"
+#undef X
+};
+
 bloop::EStatus CLexer::ReadName(bloop::CToken& token) noexcept
 {
 	auto& [_, column] = m_oParserPosition;
@@ -441,6 +449,10 @@ bloop::EStatus CLexer::ReadName(bloop::CToken& token) noexcept
 		token.m_sSource.push_back(*m_oScriptPos++);
 		if (EndOfBuffer())
 			break;
+	}
+
+	if (reservedKeywords.contains(token.m_sSource)) {
+		token.m_eTokenType = reservedKeywords.at(token.m_sSource);
 	}
 
 	column += token.m_sSource.length();

@@ -1,17 +1,24 @@
 ﻿#include "lexer/lexer.hpp"
-#include "lexer/exception.hpp"
 #include "parser/parser.hpp"
+#include "resolver/resolver.hpp"
+#include "ast/ast.hpp"
 
 #include <iostream>
 
 int main() {
-	auto lex = bloop::lexer::CLexer("1 + 1 * 3;");
+
+	constexpr auto _code = 
+#include "code.def"
+	;
+
 	try {
+		auto lex = bloop::lexer::CLexer(_code);
 		lex.Parse();
 			
 		bloop::parser::CLexParser parser(lex);
 
-		if (parser.Parse() == bloop::EStatus::success) {
+		if (const auto code = parser.Parse()) {
+			bloop::resolver::Resolve(code.get());
 			std::cout << "yippee!\n";
 		}
 

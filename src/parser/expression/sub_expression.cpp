@@ -45,7 +45,8 @@ bloop::EStatus CParserSubExpression::Parse(std::optional<PairMatcher>& eoe, EEva
 }
 
 bool CParserSubExpression::EndOfExpression(const std::optional<PairMatcher>& eoe) const noexcept {
-	assert(!IsEndOfBuffer());
+	if (IsEndOfBuffer())
+		return false; // let it fail
 
 	if (!eoe)
 		return (*m_iterPos)->IsOperator(EPunctuation::p_semicolon);

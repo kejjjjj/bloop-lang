@@ -14,7 +14,7 @@ std::unique_ptr<IOperand> CParserOperand::ParseConstant() {
 }
 
 std::unique_ptr<ASTExpression> CConstantOperand::ToExpression(){
-	auto&& ptr = std::make_unique<bloop::ast::LiteralExpression>();
+	auto&& ptr = std::make_unique<bloop::ast::LiteralExpression>(m_oDeclPos);
 	ptr->m_eDataType = GetType();
 	ptr->m_pConstant = ToData();
 	return ptr;

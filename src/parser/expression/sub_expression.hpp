@@ -16,7 +16,7 @@ namespace bloop::parser {
 
 	class CParserOperand;
 
-	class CParserSubExpression final : CParserSingle<CToken> {
+	class CParserSubExpression final : CParserSingle<bloop::CToken> {
 		friend class CParserExpression;
 		BLOOP_NONCOPYABLE(CParserSubExpression);
 	public:
