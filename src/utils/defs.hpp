@@ -16,6 +16,7 @@ namespace bloop {
 	using BloopString = std::string;
 	using BloopStringView = std::string_view;
 	using BloopChar = char;
+	using BloopBool = bool;
 
 
 #if defined(_WIN32)

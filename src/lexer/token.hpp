@@ -20,9 +20,9 @@ namespace bloop {
 		tt_name,
 		tt_operator,
 
-		#define X(name) tt_##name,
+		#define BLOOP_X(name) tt_##name,
 		#include "token_keywords.def"
-		#undef X
+		#undef BLOOP_X
 
 	};
 	namespace token {

@@ -19,20 +19,25 @@ namespace bloop::resolver {
 			bloop::BloopString m_sName;
 			bloop::BloopInt m_iDepth{};
 			bloop::BloopInt m_iSlot{};
+			bloop::BloopBool m_bIsConst{};
 		};
 
 		struct Scope {
 			std::unordered_map<bloop::BloopString, Symbol> symbols;
 		};
-
+		struct FunctionContext {
+			bloop::BloopInt m_iNextSlot = 0;
+		};
 		struct Resolver {
 			std::vector<Scope> m_oScopes;
+			std::vector<FunctionContext> m_oFunctions; // to keep track of local counts
+
 			bloop::BloopInt m_iScopeDepth{};
 			bloop::BloopUInt m_uNumFunctions{};
 			void BeginScope();
 			void EndScope();
 
-			[[maybe_unused]] Symbol* DeclareSymbol(const bloop::BloopString& name);
+			[[maybe_unused]] Symbol* DeclareSymbol(const bloop::BloopString& name, bool isConst = false);
 			[[nodiscard]] Symbol* ResolveSymbol(const bloop::BloopString& name);
 
 		};

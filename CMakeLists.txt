@@ -17,6 +17,8 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/ast/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/parser/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/resolver/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/*.cpp"
+
 )
 
 add_executable(bloop ${PROJECT_SOURCES})

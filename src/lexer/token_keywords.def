@@ -1,7 +1,7 @@
 
-X(undefined)
-X(false)
-X(true)
-X(fn)
-X(let)
-X(const)
+BLOOP_X(undefined)
+BLOOP_X(false)
+BLOOP_X(true)
+BLOOP_X(fn)
+BLOOP_X(let)
+BLOOP_X(const)

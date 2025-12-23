@@ -2,6 +2,7 @@
 #include "parser/parser.hpp"
 #include "resolver/resolver.hpp"
 #include "ast/ast.hpp"
+#include "bytecode/build.hpp"
 
 #include <iostream>
 
@@ -19,6 +20,8 @@ int main() {
 
 		if (const auto code = parser.Parse()) {
 			bloop::resolver::Resolve(code.get());
+			bloop::bytecode::BuildByteCode(code.get());
+
 			std::cout << "yippee!\n";
 		}
 

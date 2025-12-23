@@ -430,9 +430,9 @@ bloop::BloopChar CLexer::ReadHexCharacter()
 }
 
 const std::unordered_map<bloop::BloopStringView, bloop::ETokenType> reservedKeywords = {
-#define X(name) { BLOOPTEXT(#name), bloop::ETokenType::tt_##name },
+#define BLOOP_X(name) { BLOOPTEXT(#name), bloop::ETokenType::tt_##name },
 #include "token_keywords.def"
-#undef X
+#undef BLOOP_X
 };
 
 bloop::EStatus CLexer::ReadName(bloop::CToken& token) noexcept

@@ -4,6 +4,8 @@
 #include "lexer/token.hpp"
 #include "resolver/resolver.hpp"
 #include "resolver/exception.hpp"
+#include "bytecode/compile/emit.hpp"
+#include "bytecode/exception.hpp"
 
 #include <memory>
 #include <vector>
@@ -12,6 +14,8 @@
 
 namespace bloop::ast {
 	using TResolver = bloop::resolver::internal::Resolver;
+	using TBCBuilder = bloop::bytecode::CByteCodeBuilder;
+	using TOpCode = bloop::bytecode::EOpCode;
 
 	struct AbstractSyntaxTree	{
 		AbstractSyntaxTree(bloop::CodePosition cp) : m_oApproximatePosition(cp){}
@@ -22,6 +26,9 @@ namespace bloop::ast {
 	struct Statement : AbstractSyntaxTree {
 		Statement(bloop::CodePosition cp) : AbstractSyntaxTree(cp){}
 		virtual void Resolve(TResolver& resolver) = 0;
+		virtual void EmitByteCode(TBCBuilder& builder) = 0;
+		[[nodiscard]] virtual constexpr bool IsFunction() const noexcept { return false; }
+
 	};
 
 	struct BlockStatement : Statement {
@@ -36,6 +43,10 @@ namespace bloop::ast {
 			std::ranges::for_each(m_oStatements, [&resolver](const auto& s) { s->Resolve(resolver); });
 		}
 
+		void EmitByteCode(TBCBuilder& builder) override {
+			std::ranges::for_each(m_oStatements, [&builder](const auto& s) { s->EmitByteCode(builder); });
+		}
+
 		void AddStatement(std::unique_ptr<Statement>&& stmt) {
 			m_oStatements.emplace_back(std::forward<decltype(stmt)>(stmt));
 		}
@@ -47,6 +58,9 @@ namespace bloop::ast {
 		Expression(const bloop::CodePosition& cp) : AbstractSyntaxTree(cp) {}
 
 		virtual void Resolve(TResolver& resolver) = 0;
+		[[nodiscard]] virtual constexpr bool IsConst() const noexcept { return false; }
+		virtual void EmitByteCode(TBCBuilder& builder) = 0;
+
 	};
 
 	struct ExpressionStatement : Statement {
@@ -55,6 +69,9 @@ namespace bloop::ast {
 
 		void Resolve(TResolver& resolver) override {
 			return m_pExpression->Resolve(resolver);
+		}
+		void EmitByteCode(TBCBuilder& builder) override {
+			return m_pExpression->EmitByteCode(builder);
 		}
 
 		std::unique_ptr<Expression> m_pExpression;
@@ -66,10 +83,15 @@ namespace bloop::ast {
 
 	struct LiteralExpression : Expression {
 		LiteralExpression(const bloop::CodePosition& cp) : Expression(cp) {}
+		[[nodiscard]] constexpr bool IsConst() const noexcept override { return true; }
 
 		void Resolve([[maybe_unused]]TResolver& resolver) override {
 			return; // do nothing
 		}
+		void EmitByteCode(TBCBuilder& builder) override {
+			const auto idx = builder.AddConstant(bloop::bytecode::CConstant{ .m_pConstant = m_pConstant, .m_eDataType = m_eDataType });
+			builder.Emit(TOpCode::LOAD_CONST, idx);
+		};
 
 		bloop::BloopString m_pConstant;
 		bloop::EValueType m_eDataType{};
@@ -82,16 +104,22 @@ namespace bloop::ast {
 			if (const auto symbol = resolver.ResolveSymbol(m_sName)) {
 				m_iDepth = symbol->m_iDepth;
 				m_iSlot = symbol->m_iSlot;
+				m_bIsConst = symbol->m_bIsConst;
+				return;
 			}
 
 			throw bloop::exception::ResolverError(BLOOPTEXT("unknown identifier: ") + m_sName, m_oApproximatePosition);
 
 		}
+		void EmitByteCode(TBCBuilder& builder) override {
+			builder.Emit(TOpCode::LOAD_LOCAL, m_iSlot);
+		}
+		[[nodiscard]] constexpr bool IsConst() const noexcept override { return m_bIsConst; }
 
 		bloop::BloopString m_sName;
-		bloop::BloopInt m_iDepth = -1;
-		bloop::BloopInt m_iSlot = -1;
-
+		bloop::BloopInt m_iDepth{-1};
+		bloop::BloopInt m_iSlot{-1};
+		bloop::BloopBool m_bIsConst{};
 	};
 
 	struct BinaryExpression : Expression {
@@ -100,6 +128,20 @@ namespace bloop::ast {
 		void Resolve(TResolver& resolver) override {
 			left->Resolve(resolver);
 			right->Resolve(resolver);
+
+			if (left->IsConst() && m_ePunctuation >= bloop::EPunctuation::p_assign && m_ePunctuation <= bloop::EPunctuation::p_swap)
+				throw bloop::exception::ResolverError(BLOOPTEXT("lhs is declared as const"), left->m_oApproximatePosition);
+
+		}
+
+		void EmitByteCode(TBCBuilder& builder) override {
+			left->EmitByteCode(builder);
+			right->EmitByteCode(builder);
+
+			if (!bloop::bytecode::conversionTable.contains(m_ePunctuation))
+				throw bloop::exception::ByteCodeError(BLOOPTEXT("unsupported operation"), m_oApproximatePosition);
+
+			builder.Emit(bloop::bytecode::conversionTable[m_ePunctuation]);
 		}
 
 		bloop::EPunctuation m_ePunctuation{};
@@ -111,15 +153,18 @@ namespace bloop::ast {
 		FunctionDeclarationStatement(const BloopString& name, std::vector<BloopString>&& params, 
 			std::unique_ptr<BlockStatement>&& body, const bloop::CodePosition& cp)
 			: Statement(cp), m_sName(name), m_oParams(std::forward<decltype(params)>(params)), m_pBody(std::forward<decltype(body)>(body)){ }
+		[[nodiscard]] constexpr bool IsFunction() const noexcept override { return true; }
 
 		void Resolve(TResolver& resolver) override {
 
 			if (resolver.ResolveSymbol(m_sName)) {
 				throw bloop::exception::ResolverError(BLOOPTEXT("function already declared: ") + m_sName, m_oApproximatePosition);
 			}
-			resolver.DeclareSymbol(m_sName);
+
+			resolver.DeclareSymbol(m_sName, true);
 			m_iFunctionId = resolver.m_uNumFunctions++;
 
+			resolver.m_oFunctions.push_back({});
 			resolver.BeginScope();
 
 			std::ranges::for_each(m_oParams, [this, &resolver](const std::string& param) {
@@ -128,16 +173,24 @@ namespace bloop::ast {
 			});
 
 			m_pBody->ResolveNoScopeManagement(resolver);
-			m_uLocalCount = resolver.m_oScopes.back().symbols.size();
+			m_uLocalCount = resolver.m_oFunctions.back().m_iNextSlot;
 			resolver.EndScope();
+			resolver.m_oFunctions.pop_back();
+		}
+
+		void EmitByteCode(TBCBuilder& builder) override {
+			m_pBody->EmitByteCode(builder);
+			assert(!builder.m_oByteCode.empty());
+			if(builder.m_oByteCode.back().m_eOpCode != TOpCode::RETURN)
+				builder.Emit(TOpCode::RETURN);
 		}
 
 		bloop::BloopString m_sName;
 		std::vector<BloopString> m_oParams;
 		std::unique_ptr<BlockStatement> m_pBody;
 
-		bloop::BloopInt m_iFunctionId = -1;
-		bloop::BloopUInt m_uLocalCount = 0;
+		bloop::BloopInt m_iFunctionId{-1};
+		bloop::BloopUInt m_uLocalCount{0};
 	};
 
 	struct VariableDeclaration : Statement {
@@ -150,16 +203,23 @@ namespace bloop::ast {
 			}
 			
 			if (m_pInitializer)
-				return m_pInitializer->Resolve(resolver);
+				m_pInitializer->Resolve(resolver);
 
 			//prevent a = a by doing this after
-			m_iSlot = resolver.DeclareSymbol(m_sName)->m_iSlot;
+			m_iSlot = resolver.DeclareSymbol(m_sName, IsConst())->m_iSlot;
+		}
+
+		void EmitByteCode(TBCBuilder& builder) override {
+			if (m_pInitializer) {
+				m_pInitializer->EmitByteCode(builder);
+				builder.Emit(TOpCode::STORE_LOCAL, m_iSlot);
+			}
 		}
 
 		[[nodiscard]] virtual constexpr bool IsConst() const noexcept { return false; }
 		bloop::BloopString m_sName;
 		std::unique_ptr<Expression> m_pInitializer;
-		bloop::BloopInt m_iSlot = -1;
+		bloop::BloopInt m_iSlot{ -1 };
 	};
 
 	struct ConstVariableDeclaration : VariableDeclaration {
