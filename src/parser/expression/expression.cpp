@@ -89,7 +89,9 @@ bool CParserExpression::EndOfExpression(const std::optional<PairMatcher>& eoe) c
 [[nodiscard]] static auto MakeBinary(bloop::EPunctuation punct, bloop::CodePosition pos) {
 	return std::make_unique<bloop::ast::BinaryExpression>(punct, pos);
 }
-
+[[nodiscard]] static auto MakeAssignment(bloop::CodePosition pos) {
+	return std::make_unique<bloop::ast::AssignExpression>(pos);
+}
 [[nodiscard]] static UniqueExpression CreateExpression(Operands& operands, Operators& operators) {
 
 
@@ -99,7 +101,12 @@ bool CParserExpression::EndOfExpression(const std::optional<PairMatcher>& eoe) c
 	assert(!operators.empty());
 
 	auto lowestPriority = FindLowestPriorityOperator(operators);
-	auto oper = MakeBinary((*lowestPriority)->m_pToken->m_ePunctuation, (*lowestPriority)->m_pToken->GetCodePosition());
+	std::unique_ptr<bloop::ast::BinaryExpression> oper;
+	if((*lowestPriority)->m_pToken->m_ePunctuation == bloop::EPunctuation::p_assign)
+		oper = MakeAssignment((*lowestPriority)->m_pToken->GetCodePosition());
+	else
+		oper = MakeBinary((*lowestPriority)->m_pToken->m_ePunctuation, (*lowestPriority)->m_pToken->GetCodePosition());
+
 	CreateExpressionRecursively(oper.get(), operands, operators);
 	return oper;
 }
@@ -144,14 +151,23 @@ void CreateExpressionRecursively(bloop::ast::BinaryExpression* _this, Operands& 
 	if (!lhsOperands.empty()) {
 		if (_this->left = GetLeaf(lhsOperands), !_this->left) {
 			const auto l = FindLowestPriorityOperator(lhsOperators);
-			_this->left = MakeBinary((*l)->m_pToken->m_ePunctuation, (*l)->m_pToken->GetCodePosition());
-			CreateExpressionRecursively(static_cast<bloop::ast::BinaryExpression*>(_this->left.get()), lhsOperands, lhsOperators);
+			if ((*l)->m_pToken->m_ePunctuation == bloop::EPunctuation::p_assign)
+				_this->left = MakeAssignment((*l)->m_pToken->GetCodePosition());
+			else
+				_this->left = MakeBinary((*l)->m_pToken->m_ePunctuation, (*l)->m_pToken->GetCodePosition());
+
+			CreateExpressionRecursively(dynamic_cast<bloop::ast::BinaryExpression*>(_this->left.get()), lhsOperands, lhsOperators);
 		}
 	} if (!rhsOperands.empty()) {
 		if (_this->right = GetLeaf(rhsOperands), !_this->right) {
 			const auto l = FindLowestPriorityOperator(rhsOperators);
-			_this->right = MakeBinary((*l)->m_pToken->m_ePunctuation, (*l)->m_pToken->GetCodePosition());
-			CreateExpressionRecursively(static_cast<bloop::ast::BinaryExpression*>(_this->right.get()), rhsOperands, rhsOperators);
+
+			if ((*l)->m_pToken->m_ePunctuation == bloop::EPunctuation::p_assign)
+				_this->right = MakeAssignment((*l)->m_pToken->GetCodePosition());
+			else
+				_this->right = MakeBinary((*l)->m_pToken->m_ePunctuation, (*l)->m_pToken->GetCodePosition());
+
+			CreateExpressionRecursively(dynamic_cast<bloop::ast::BinaryExpression*>(_this->right.get()), rhsOperands, rhsOperators);
 		}
 	}
 

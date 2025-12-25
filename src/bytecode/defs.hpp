@@ -4,8 +4,20 @@
 
 #include <unordered_map>
 
+#ifdef NOMINMAX
+#define HAD_NOMINMAX 1
+#else
+#define HAD_NOMINMAX 0
+#endif
+
 namespace bloop::bytecode
 {
+#define NOMINMAX
+	static constexpr bloop::BloopUInt16 INVALID_SLOT =
+		std::numeric_limits<bloop::BloopUInt16>::max();
+#if (HAD_NOMINMAX == 0)
+#undef NOMINMAX
+#endif
 
 	enum class EOpCode : unsigned char {
 		#define BLOOP_OP(name) name,
@@ -13,10 +25,15 @@ namespace bloop::bytecode
 		#undef BLOOP_OP
 	};
 
+	struct CConstant {
+		bloop::BloopString m_pConstant;
+		bloop::EValueType m_eDataType{};
+	};
+
 	static std::unordered_map<EPunctuation, EOpCode> conversionTable = {
 		{ EPunctuation::p_add, EOpCode::ADD },
+		{ EPunctuation::p_less_equal, EOpCode::LESS_EQUAL },
 		{ EPunctuation::p_multiplication, EOpCode::MUL }
-
 	};
 
 	static std::unordered_map<EOpCode, bloop::BloopString> stringConversionTable = {

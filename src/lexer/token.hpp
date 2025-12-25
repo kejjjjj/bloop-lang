@@ -33,6 +33,27 @@ namespace bloop {
 			};
 			return std::ranges::any_of(constants, [t](ETokenType _t) { return _t == t; });
 		}
+
+		inline std::pair<ETokenType, bloop::BloopString> tokenNames[] = {
+			{ ETokenType::tt_error,    BLOOPTEXT("error") },
+			{ ETokenType::tt_int,      BLOOPTEXT("int") },
+			{ ETokenType::tt_uint,     BLOOPTEXT("uint") },
+			{ ETokenType::tt_double,   BLOOPTEXT("double") },
+			{ ETokenType::tt_string,   BLOOPTEXT("string") },
+			{ ETokenType::tt_name,     BLOOPTEXT("name") },
+			{ ETokenType::tt_operator, BLOOPTEXT("operator")},
+
+			#define BLOOP_X(name) { ETokenType::tt_##name, BLOOPTEXT(#name) },
+			#include "token_keywords.def"
+			#undef BLOOP_X
+		};
+
+		inline bloop::BloopString TokenName(ETokenType t) {
+			for (const auto& [k, v] : tokenNames)
+				if (k == t) return v;
+			return "unknown";
+		}
+
 	}
 	class CPunctuationToken;
 	class CToken

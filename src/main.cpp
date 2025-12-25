@@ -3,6 +3,8 @@
 #include "resolver/resolver.hpp"
 #include "ast/ast.hpp"
 #include "bytecode/build.hpp"
+#include "bytecode/function/bc_function.hpp"
+#include "vm/vm.hpp"
 
 #include <iostream>
 
@@ -20,9 +22,11 @@ int main() {
 
 		if (const auto code = parser.Parse()) {
 			bloop::resolver::Resolve(code.get());
-			bloop::bytecode::BuildByteCode(code.get());
+			bloop::vm::VM vm(bloop::bytecode::BuildByteCode(code.get()));
 
-			std::cout << "yippee!\n";
+			vm.Run("main");
+
+			std::cout << "\n\nfinished!\n";
 		}
 
 	}

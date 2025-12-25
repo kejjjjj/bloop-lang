@@ -3,66 +3,74 @@
 #include "bytecode/defs.hpp"
 
 #include <vector>
-#include <ranges>
-#include <optional>
-#include <iostream>
-#include <ranges>
-#include <algorithm>
+#include <variant>
 
 namespace bloop::bytecode
 {
-	struct CConstant {
-		bloop::BloopString m_pConstant;
-		bloop::EValueType m_eDataType{};
+
+	struct Instr0 {
+		EOpCode op;
 	};
 
+	struct Instr1 {
+		EOpCode op;
+		bloop::BloopUInt16 arg;
+	};
+	using Instruction = std::variant<Instr0, Instr1>;
+
 	struct CSingularByteCode {		
-		EOpCode m_eOpCode;
-		std::optional<bloop::BloopInt> m_iIndex;
+		Instruction ins;
 
-		auto ToString() const {
-			bloop::BloopString a = stringConversionTable[m_eOpCode];
+		[[nodiscard]] bloop::BloopUInt16 GetBytes() const {
+			bloop::BloopUInt16 result{};
+			std::visit([&](auto&& i) {
+				
+				result = 1;
+				if (std::is_same_v<Instr1, std::decay_t<decltype(i)>>)
+					result = 3;
 
-			if (m_iIndex)
-				a += ", " + std::to_string(*m_iIndex);
+				}, ins);
+			return result;
+		}
 
-			return a;
+		[[nodiscard]] EOpCode GetOpCode() {
+			EOpCode result{};
+			std::visit([&](auto&& i) {
+				result = i.op;
+			}, ins);
+			return result;
+		}
 
+		[[nodiscard]] bloop::BloopString ToString() const {
+			bloop::BloopString res;
+			std::visit([&](auto&& i) {
+				res = stringConversionTable[i.op];
+
+				if constexpr (std::is_same_v<std::decay_t<decltype(i)>, Instr1>) {
+					res += ", " + std::to_string(i.arg);
+				}
+
+			}, ins);
+
+			return res;
 		}
 	};
 
 	struct CByteCodeBuilder {
 		
-		[[nodiscard]] bloop::BloopInt AddConstant(CConstant&& c) {
+		[[nodiscard]] bloop::BloopUInt16 AddConstant(CConstant&& c);
+		void Emit(EOpCode opcode, bloop::BloopUInt16 idx);
+		void Emit(EOpCode opcode);
+		[[nodiscard]] bloop::BloopUInt16 EmitJump(EOpCode opcode); //returns the index of m_oByteCode
+		void EmitJump(EOpCode opcode, bloop::BloopUInt16 offset);
+		void PatchJump(bloop::BloopUInt16 src, bloop::BloopUInt16 dst); //dst indexes m_oByteCode
+		void Print();
 
-			if (const auto ptr = std::ranges::find_if(m_oConstants,
-				[&c](const CConstant& p) {
-					return p.m_eDataType == c.m_eDataType && p.m_pConstant == c.m_pConstant;
-				}); ptr != m_oConstants.end()) {
-				return std::distance(m_oConstants.begin(), ptr);
-			}
-
-			auto idx = m_oConstants.size();
-			m_oConstants.emplace_back(std::forward<decltype(c)>(c));
-			return static_cast<bloop::BloopInt>(idx);
-		}
-		void Emit(EOpCode opcode, bloop::BloopInt idx) {
-			m_oByteCode.emplace_back(CSingularByteCode{ .m_eOpCode = opcode, .m_iIndex = idx });
-		}
-		void Emit(EOpCode opcode) {
-			m_oByteCode.emplace_back(CSingularByteCode{ .m_eOpCode = opcode, .m_iIndex = std::nullopt });
-		}
-
-		void Print() {
-
-			std::ranges::for_each(m_oByteCode, [](const CSingularByteCode& c) {
-				std::cout << c.ToString() << '\n';
-			});
-
-		}
+		[[nodiscard]] std::vector<bloop::BloopByte> Encode();
 
 		std::vector<CConstant> m_oConstants;
 		std::vector<CSingularByteCode> m_oByteCode;
+		bloop::BloopUInt16 m_uOffset{};
 	};
 
 }

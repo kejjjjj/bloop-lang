@@ -4,6 +4,8 @@
 #include <cassert>
 #include <ranges>
 
+#define NOMINMAX
+
 using namespace bloop::resolver;
 
 void bloop::resolver::Resolve(bloop::ast::Program* code){
@@ -24,7 +26,11 @@ void Resolver::EndScope() {
 }
 Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst) {
 	auto& scope = m_oScopes.back().symbols;
-	auto slot = m_oFunctions.empty() ? static_cast<bloop::BloopInt>(scope.size()) : m_oFunctions.back().m_iNextSlot++;
+
+	if (!m_oFunctions.empty() && m_oFunctions.back().m_uNextSlot >= std::numeric_limits<bloop::BloopUInt16>::max())
+		throw exception::ResolverError(BLOOPTEXT("too many locals in a function (most recent): ") + name);
+
+	auto slot = m_oFunctions.empty() ? static_cast<bloop::BloopUInt16>(scope.size()) : m_oFunctions.back().m_uNextSlot++;
 	return &(scope[name] = Symbol{ name, m_iScopeDepth, slot, isConst });
 }
 Symbol* Resolver::ResolveSymbol(const bloop::BloopString& name) {

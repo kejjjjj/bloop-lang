@@ -7,8 +7,11 @@
 #include "parser/expression/expression.hpp"
 #include "parser/function/function.hpp"
 #include "parser/parser.hpp"
-#include "utils/defs.hpp"
 #include "parser/scope/scope.hpp"
+#include "parser/statements/while/while.hpp"
+#include "parser/statements/return/return.hpp"
+
+#include "utils/defs.hpp"
 
 #include <memory>
 
@@ -101,6 +104,10 @@ bloop::EStatus bloop::parser::ParseToken(const CParserContext& ctx) {
 	case ETokenType::tt_let:
 	case ETokenType::tt_const:
 		return CreateParser<CParserDeclaration>(ctx);
+	case ETokenType::tt_while:
+		return CreateParser<CParserWhileStatement>(ctx);
+	case ETokenType::tt_return:
+		return CreateParser<CParserReturnStatement>(ctx);
 	default:
 		throw exception::ParserError(BLOOPTEXT("unexpected token: ") + ctx.GetIterator()->Source(), ctx.GetIterator()->GetCodePosition());
 	}

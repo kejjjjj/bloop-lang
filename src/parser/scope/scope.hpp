@@ -19,7 +19,7 @@ namespace bloop::parser {
 		CParserScope(const CParserContext& ctx);
 		~CParserScope();
 
-		[[nodiscard]] std::unique_ptr<bloop::ast::BlockStatement> Parse();
+		[[nodiscard]] std::unique_ptr<bloop::ast::BlockStatement> Parse(bool allowSingleStatement=false);
 
 	private:
 		const CParserContext& m_oCtx;

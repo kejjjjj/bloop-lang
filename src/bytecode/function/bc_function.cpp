@@ -7,9 +7,17 @@ using namespace bloop::bytecode;
 CByteCodeFunction::CByteCodeFunction(bloop::ast::FunctionDeclarationStatement* funcDecl)
 	: m_pFunc(funcDecl){}
 
-void CByteCodeFunction::Generate() {
+vmdata::Function CByteCodeFunction::Generate() {
 
 	CByteCodeBuilder b;
 	m_pFunc->EmitByteCode(b);
 	b.Print();
+
+	return vmdata::Function{
+		.m_sName = m_pFunc->m_sName,
+		.m_uParamCount = static_cast<bloop::BloopUInt16>(m_pFunc->m_oParams.size()),
+		.m_uLocalCount = m_pFunc->m_uLocalCount,
+		.m_oConstants = b.m_oConstants,
+		.m_oByteCode = b.Encode()
+	};
 }

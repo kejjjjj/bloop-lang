@@ -14,14 +14,18 @@ CParserScope::CParserScope(const CParserContext& ctx)
 }
 CParserScope::~CParserScope() = default;
 
-std::unique_ptr<bloop::ast::BlockStatement> CParserScope::Parse() {
+std::unique_ptr<bloop::ast::BlockStatement> CParserScope::Parse(bool allowSingleStatement) {
 
-	assert(!IsEndOfBuffer() && GetIteratorSafe()->IsOperator(EPunctuation::p_curlybracket_open));
-	Advance(1); // skip {
+	assert(!IsEndOfBuffer() && (allowSingleStatement || GetIteratorSafe()->IsOperator(EPunctuation::p_curlybracket_open)));
 
-	if (GetIteratorSafe()->IsOperator(EPunctuation::p_curlybracket_close))
-		throw exception::ParserError(BLOOPTEXT("empty scopes aren't allowed"), GetIteratorSafe()->GetCodePosition());
+	const auto isCurlyBracket = GetIteratorSafe()->IsOperator(EPunctuation::p_curlybracket_open);
 
+	if (isCurlyBracket){
+		Advance(1); // skip {
+
+		if (GetIteratorSafe()->IsOperator(EPunctuation::p_curlybracket_close))
+			throw exception::ParserError(BLOOPTEXT("empty scopes aren't allowed"), GetIteratorSafe()->GetCodePosition());
+	}
 	auto block = std::make_unique<bloop::ast::BlockStatement>(GetIteratorSafe()->GetCodePosition());
 	auto oldBlock = m_oCtx.m_pCurrentBlock;
 
@@ -30,11 +34,15 @@ std::unique_ptr<bloop::ast::BlockStatement> CParserScope::Parse() {
 	if(IsEndOfBuffer())
 		throw exception::ParserError(BLOOPTEXT("expected a statement"), GetIteratorSafe()->GetCodePosition());
 
-	do {
-		if (ParseToken(m_oCtx) != bloop::EStatus::success)
-			break;
-		Advance(1);
-	} while (!IsEndOfBuffer() && !GetIteratorSafe()->IsOperator(EPunctuation::p_curlybracket_close));
+	if (allowSingleStatement && !isCurlyBracket) {
+		[[maybe_unused]] const auto _ = ParseToken(m_oCtx);
+	} else {
+		do {
+			if (ParseToken(m_oCtx) != bloop::EStatus::success)
+				break;
+			Advance(1);
+		} while (!IsEndOfBuffer() && !GetIteratorSafe()->IsOperator(EPunctuation::p_curlybracket_close));
+	}
 
 	if(IsEndOfBuffer())
 		throw exception::ParserError(BLOOPTEXT("expected a \"}\""), GetIteratorSafe()->GetCodePosition());

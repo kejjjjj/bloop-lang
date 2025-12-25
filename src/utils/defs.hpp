@@ -17,7 +17,8 @@ namespace bloop {
 	using BloopStringView = std::string_view;
 	using BloopChar = char;
 	using BloopBool = bool;
-
+	using BloopByte = std::uint8_t;
+	using BloopUInt16 = std::uint16_t;
 
 #if defined(_WIN32)
 #if defined(_WIN64)

@@ -18,7 +18,7 @@ namespace bloop::resolver {
 		struct Symbol {
 			bloop::BloopString m_sName;
 			bloop::BloopInt m_iDepth{};
-			bloop::BloopInt m_iSlot{};
+			bloop::BloopUInt16 m_uSlot{};
 			bloop::BloopBool m_bIsConst{};
 		};
 
@@ -26,7 +26,7 @@ namespace bloop::resolver {
 			std::unordered_map<bloop::BloopString, Symbol> symbols;
 		};
 		struct FunctionContext {
-			bloop::BloopInt m_iNextSlot = 0;
+			bloop::BloopUInt16 m_uNextSlot = 0;
 		};
 		struct Resolver {
 			std::vector<Scope> m_oScopes;
