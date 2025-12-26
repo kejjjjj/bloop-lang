@@ -1,11 +1,9 @@
 R"(
+fn add(a, b) {
+	return a + b;
+}
+
 fn main(){
-	let a = 1;
-
-	while(a <= 1000000){
-		a = a + 1;
-	}
-
-	return a;
+	return add(2, 6);
 }
 )";

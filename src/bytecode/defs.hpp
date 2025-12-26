@@ -32,8 +32,10 @@ namespace bloop::bytecode
 
 	static std::unordered_map<EPunctuation, EOpCode> conversionTable = {
 		{ EPunctuation::p_add, EOpCode::ADD },
+		{ EPunctuation::p_sub, EOpCode::SUB },
+		{ EPunctuation::p_multiplication, EOpCode::MUL },
+		{ EPunctuation::p_division, EOpCode::DIV },
 		{ EPunctuation::p_less_equal, EOpCode::LESS_EQUAL },
-		{ EPunctuation::p_multiplication, EOpCode::MUL }
 	};
 
 	static std::unordered_map<EOpCode, bloop::BloopString> stringConversionTable = {

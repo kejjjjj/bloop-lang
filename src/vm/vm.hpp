@@ -4,11 +4,13 @@
 #include <unordered_map>
 #include <cassert>
 
-#include "value.hpp"
-
+#include "vm/value.hpp"
+#include "vm/gc/gc.hpp"
+#include "vm/heap/heap.hpp"
 
 namespace bloop::bytecode {
 	enum class EOpCode : unsigned char;
+	struct CConstant;
 	namespace vmdata {
 		struct Function;
 	}
@@ -32,14 +34,19 @@ namespace bloop::vm
 	};
 
 	class VM {
+		friend class GC;
+		friend class Heap;
 	public:
 		VM(const std::vector<bloop::bytecode::vmdata::Function>& funcs);
+		~VM();
 
 		void Run(const bloop::BloopString& entryFuncName);
 		void RunFunction(Function* fn);
 
 		inline void PushFrame(Function* fn) {
-			m_pCurrentFrame = &m_oFrames.emplace_back(fn, m_oStack.size());
+			const auto frameBase = m_oStack.size() - fn->m_uParamCount;
+			m_oStack.resize(frameBase + fn->m_uLocalCount);
+			m_pCurrentFrame = &m_oFrames.emplace_back(fn, frameBase);
 		}
 		inline void PopFrame() {
 			m_oStack.resize(m_oFrames.back().m_uBase);
@@ -57,7 +64,14 @@ namespace bloop::vm
 			return v;
 		}
 	private:
-		[[nodiscard]] bool InterpretOpCode(bloop::bytecode::EOpCode op);
+		[[nodiscard]] std::vector<Value> BuildConstants(const std::vector<bloop::bytecode::CConstant>& constants);
+		
+		enum class ExecutionReturnCode : bloop::BloopByte {
+			rc_continue,
+			rc_return,
+			rc_return_value
+		};
+		[[nodiscard]] ExecutionReturnCode InterpretOpCode(bloop::bytecode::EOpCode op);
 		[[nodiscard]] bloop::BloopUInt16 FetchOperand();
 
 		std::vector<Value> m_oStack;
@@ -65,6 +79,9 @@ namespace bloop::vm
 		std::vector<Function> m_oFunctions;
 		std::unordered_map<bloop::BloopString, Function*> m_oFunctionTable;
 		CallFrame* m_pCurrentFrame{};
+
+		Heap m_oHeap;
+		GC m_oGC;
 	};
 
 }

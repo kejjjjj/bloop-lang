@@ -201,7 +201,7 @@ namespace bloop::ast {
 		void EmitByteCode(TBCBuilder& builder) override {
 			m_pBody->EmitByteCode(builder);
 			assert(!builder.m_oByteCode.empty());
-			if(builder.m_oByteCode.back().GetOpCode() != TOpCode::RETURN)
+			if(builder.m_oByteCode.back().GetOpCode() != TOpCode::RETURN && builder.m_oByteCode.back().GetOpCode() != TOpCode::RETURN_VALUE)
 				builder.Emit(TOpCode::RETURN);
 		}
 
@@ -277,8 +277,17 @@ namespace bloop::ast {
 		ReturnStatement(std::unique_ptr<Expression>&& expr, const bloop::CodePosition& cp) : 
 			ExpressionStatement(std::forward<decltype(expr)>(expr), cp){}
 
+		void Resolve(TResolver& resolver) override {
+			if (m_pExpression)
+				ExpressionStatement::Resolve(resolver);
+		}
+
 		void EmitByteCode(TBCBuilder& builder) override {
-			m_pExpression->EmitByteCode(builder);
+			if (m_pExpression) {
+				m_pExpression->EmitByteCode(builder);
+				builder.Emit(TOpCode::RETURN_VALUE);
+				return;
+			}
 			builder.Emit(TOpCode::RETURN);
 		}
 

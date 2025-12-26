@@ -7,15 +7,20 @@
 
 using namespace bloop::vm;
 
-std::vector<Value> BuildConstants(const std::vector<bloop::bytecode::CConstant>& constants) {
+std::vector<Value> VM::BuildConstants(const std::vector<bloop::bytecode::CConstant>& constants) {
 	std::vector<Value> vals;
-	for (const auto& c : constants)
-		vals.emplace_back(Value{ c.m_eDataType, c.m_pConstant });
+	for (const auto& c : constants) {
+		if (c.m_eDataType == bloop::EValueType::t_string) {
+			vals.emplace_back(Value{ m_oHeap.AllocString(const_cast<char*>(c.m_pConstant.data()), c.m_pConstant.size()) });
+		} else {
+			vals.emplace_back(Value{ c.m_eDataType, c.m_pConstant });
+		}
+	}
 	return vals;
 }
 
-VM::VM(const std::vector<bloop::bytecode::vmdata::Function>& funcs) {
-
+VM::VM(const std::vector<bloop::bytecode::vmdata::Function>& funcs) 
+	: m_oHeap(this), m_oGC(&m_oHeap) {
 	for (const auto& f : funcs) {
 		m_oFunctions.emplace_back(Function{
 			.m_uParamCount = f.m_uParamCount,
@@ -27,6 +32,10 @@ VM::VM(const std::vector<bloop::bytecode::vmdata::Function>& funcs) {
 		assert(!m_oFunctionTable.contains(f.m_sName));
 		m_oFunctionTable[f.m_sName] = &m_oFunctions.back();
 	}
+}
+VM::~VM() {
+	m_oGC.Collect(this); //in case the returned value was a dynamic object
+	assert(m_oHeap.GetAllocatedSize() == 0u);
 }
 
 #include <chrono>
@@ -49,18 +58,34 @@ void VM::Run(const bloop::BloopString& entryFuncName) {
 		throw exception::VMError(BLOOPTEXT("couldn't find the entry function: " + entryFuncName));
 
 	const auto func = m_oFunctionTable.at(entryFuncName);
-	//RunFunction(func);
-	Benchmark("main function", [&]() { RunFunction(func); });
-
+	RunFunction(func);
+	std::cout << "returned: " << m_oStack.front().ValueToString() << " : " << m_oStack.front().TypeToString() << '\n';
 }
 void VM::RunFunction(Function* fn)
 {
 	PushFrame(fn);
 	auto& bytecode = m_pCurrentFrame->m_pFunction->m_oByteCode;
+
+	ExecutionReturnCode returnCode{};
 	while (m_pCurrentFrame->m_uIp != m_pCurrentFrame->m_pFunction->m_oByteCode.size()) {
-		if (InterpretOpCode(static_cast<bloop::bytecode::EOpCode>(bytecode[m_pCurrentFrame->m_uIp++])))
+		returnCode = InterpretOpCode(static_cast<bloop::bytecode::EOpCode>(bytecode[m_pCurrentFrame->m_uIp++]));
+		
+		if(returnCode != ExecutionReturnCode::rc_continue)
 			break;
 	}
 
-	//PopFrame(); //RETURN exists at the end of each function, so InterpretOpCode handles this already
+	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
+	PopFrame();
+	if (m_oFrames.empty()) {
+		//program exit
+		Push(ret);
+		m_oGC.Collect(this);
+
+#if _DEBUG
+		if(ret.type == Value::Type::t_object)
+			assert(m_oHeap.GetAllocatedSize() == 1u); //let the return value escape to the user
+#endif
+		return;
+	}
+	Push(ret);
 }

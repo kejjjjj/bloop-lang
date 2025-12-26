@@ -2,6 +2,7 @@
 #include "lexer/token.hpp"
 #include "parser/exception.hpp"
 #include "parser/parser.hpp"
+#include "parser/expression/expression.hpp"
 
 using namespace bloop::parser;
 
@@ -10,24 +11,58 @@ COperatorParser::COperatorParser(const CParserContext& ctx)
 	assert(!IsEndOfBuffer());
 }
 
-bloop::EStatus COperatorParser::Parse(std::optional<PairMatcher>& eoe, [[maybe_unused]] EEvaluationType evalType) {
+bloop::EStatus COperatorParser::Parse(std::optional<PairMatcher>& eoe, CExpressionChain* expression, EEvaluationType evalType) {
 
 	if (EndOfExpression(eoe))
-		return EStatus::failure;
+		return bloop::EStatus::failure;
 
 	if (IsEndOfBuffer() || !CheckOperator())
 		throw exception::ParserError(BLOOPTEXT("unexpected end of expression: ") + GetIteratorSafe()->Source(), GetIteratorSafe()->GetCodePosition());
 
 	m_pToken = GetIteratorSafe()->GetPunctuation();
 
+	if (m_pToken->IsOperator(EPunctuation::p_comma)) {
+
+		//we want to stop at the comma
+		if (evalType == EEvaluationType::evaluate_singular)
+			return bloop::EStatus::failure;
+
+		if(ParseSequence(eoe, expression) != bloop::EStatus::success)
+			return bloop::EStatus::failure;
+
+	}
+
 	if (!IsOperator(m_pToken)) {
 		throw exception::ParserError(BLOOPTEXT("unexpected end of expression: ") + GetIteratorSafe()->Source(), GetIteratorSafe()->GetCodePosition());
 	}
 
 	Advance(1); //skip the operator
-	return EStatus::success;
+	return bloop::EStatus::success;
 }
+bloop::EStatus COperatorParser::ParseSequence(std::optional<PairMatcher>& m_oEndOfExpression, CExpressionChain* expression) {
 
+	// don't evaluate a sequence when parsing a list (for example arrays [1, 2, 3])
+	const auto parsingList = m_oEndOfExpression && m_oEndOfExpression->IsClosing(EPunctuation::p_comma);
+
+	if (parsingList)
+		return bloop::EStatus::failure;
+
+	Advance(1); // skip ,
+
+	//prepare next item
+	expression->m_pNext = std::make_unique<CExpressionChain>();
+
+	auto nextExpr = CParserExpression(m_oCtx);
+	if (nextExpr.Parse(m_oEndOfExpression, expression->m_pNext.get()) != bloop::EStatus::success)
+		return bloop::EStatus::failure;
+
+	if (m_oEndOfExpression && EndOfExpression(m_oEndOfExpression)) {
+		Advance(1); // skip the closing character
+		return bloop::EStatus::failure;
+	}
+
+	return bloop::EStatus::failure;
+}
 bool COperatorParser::CheckOperator() const {
 	return (*m_iterPos)->IsOperator();
 }

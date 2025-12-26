@@ -1,5 +1,7 @@
 #pragma once
 #include "vm/vm.hpp"
+#include "vm/heap/dvalue.hpp"
+#include "vm/heap/heap.hpp"
 #include "bytecode/defs.hpp"
 
 #include <iostream>
@@ -8,7 +10,7 @@ using namespace bloop::vm;
 
 using TOpCode = bloop::bytecode::EOpCode;
 
-bool VM::InterpretOpCode(TOpCode op) {
+VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 	switch (op) {
 		case TOpCode::LOAD_CONST: {
@@ -22,20 +24,42 @@ bool VM::InterpretOpCode(TOpCode op) {
 		case TOpCode::STORE_LOCAL: {
 			const auto idx = m_pCurrentFrame->m_uBase + FetchOperand();
 			assert(idx <= static_cast<bloop::BloopUInt16>(m_oStack.size()));
-			auto&& v = Pop();
-			m_oStack.empty() ? m_oStack.emplace_back(v) : (m_oStack[idx] = v);
+			m_oStack[idx] = Pop();
 			break;
 		}
 		case TOpCode::ADD: {
-			const Value b = Pop();
-			const Value a = Pop();
-			Push(a.i + b.i);
+			Value b = Pop();
+			Value a = Pop();
+
+			if (a.IsString() && b.IsString()) {
+				Push(m_oHeap.StringConcat(a.obj, b.obj));
+			} else {
+				Push(a + b);
+			}
+			break;
+		}
+		case TOpCode::SUB: {
+			Value b = Pop();
+			Value a = Pop();
+			Push(a - b);
+			break;
+		}
+		case TOpCode::MUL: {
+			Value b = Pop();
+			Value a = Pop();
+			Push(a * b);
+			break;
+		}
+		case TOpCode::DIV: {
+			Value b = Pop();
+			Value a = Pop();
+			Push(a / b);
 			break;
 		}
 		case TOpCode::LESS_EQUAL: {
-			const Value b = Pop();
-			const Value a = Pop();
-			Push(a.i <= b.i);
+			Value b = Pop();
+			Value a = Pop();
+			Push(a <= b);
 			break;
 		}
 		case TOpCode::JZ: {
@@ -50,18 +74,13 @@ bool VM::InterpretOpCode(TOpCode op) {
 			break;
 		}
 		case TOpCode::RETURN: {
-			const Value ret = Pop();
-			PopFrame();
-			if (m_oFrames.empty()) {
-				//std::cout << "program returned with: " << ret.ValueToString() << '\n';
-				//program exit
-				return true;
-			}
-			Push(ret);
-			return true;
+			return ExecutionReturnCode::rc_return;
+		}
+		case TOpCode::RETURN_VALUE: {
+			return ExecutionReturnCode::rc_return_value;
 		}
 	}
-	return false;
+	return ExecutionReturnCode::rc_continue;
 }
 #define NOMINMAX
 bloop::BloopUInt16 VM::FetchOperand() {

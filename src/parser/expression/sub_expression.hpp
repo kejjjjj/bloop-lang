@@ -13,6 +13,7 @@
 namespace bloop::parser {
 	struct CParserContext;
 	struct COperator;
+	struct CExpressionChain;
 
 	class CParserOperand;
 
@@ -24,7 +25,7 @@ namespace bloop::parser {
 		CParserSubExpression(const CParserContext& ctx);
 		~CParserSubExpression();
 
-		[[nodiscard]] bloop::EStatus Parse(std::optional<PairMatcher>& eoe, EEvaluationType evalType);
+		[[nodiscard]] bloop::EStatus Parse(std::optional<PairMatcher>& eoe, CExpressionChain* expression, EEvaluationType evalType);
 
 	private:
 

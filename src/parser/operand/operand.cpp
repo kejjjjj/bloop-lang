@@ -3,6 +3,8 @@
 #include "lexer/token.hpp"
 #include "parser/exception.hpp"
 #include "parser/operand/constant.hpp"
+#include "parser/expression/postfix/postfix.hpp"
+
 #include <cassert>
 
 using namespace bloop::parser;
@@ -21,6 +23,8 @@ bloop::EStatus CParserOperand::Parse([[maybe_unused]]std::optional<PairMatcher>&
 
 	if (bloop::token::IsConstant(token->Type())) {
 		m_pOperand = ParseConstant();
+	} else if (token->IsOperator(EPunctuation::p_par_open)) {
+		m_pOperand = ParseParentheses();
 	} else if (token->Type() == ETokenType::tt_name) {
 		m_pOperand = ParseIdentifier();
 	} else {
@@ -34,7 +38,12 @@ bloop::EStatus CParserOperand::Parse([[maybe_unused]]std::optional<PairMatcher>&
 	if (IsEndOfBuffer())
 		throw exception::ParserError(BLOOPTEXT("unexpected end of buffer"), GetIteratorSafe()->GetCodePosition());
 
-	//todo: postfix
+	CParserPostfix pf(m_oCtx);
 
-	return EStatus::success;
+	if (pf.Parse() != bloop::EStatus::success)
+		return bloop::EStatus::failure;
+
+	m_oPostfixes = pf.GetPostfixes();
+
+	return bloop::EStatus::success;
 }

@@ -1,14 +1,17 @@
 #include "vm/value.hpp"
 #include "vm/exception.hpp"
+#include "vm/heap/dvalue.hpp"
 #include "utils/fmt.hpp"
+
+
 #include <unordered_map>
 #include <cassert>
 
 using namespace bloop::vm;
 
 Value::Value(bloop::EValueType t, const bloop::BloopString& data) {
-	using VT = bloop::EValueType;
 
+	using VT = bloop::EValueType;
 
 	switch (t) {
 	case VT::t_undefined:
@@ -33,14 +36,8 @@ Value::Value(bloop::EValueType t, const bloop::BloopString& data) {
 	}
 
 }
+
 using VT = Value::Type;
-std::unordered_map<VT, bloop::BloopString> valueToType{
-	{ VT::t_undefined, "undefined"},
-	{ VT::t_bool, "boolean"},
-	{ VT::t_int, "int"},
-	{ VT::t_uint, "uint" },
-	{ VT::t_double, "double"},
-};
 
 bool Value::IsTruthy() const
 {
@@ -59,11 +56,27 @@ bool Value::IsTruthy() const
 
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to a boolean"), TypeToString()));
 }
-
+bool Value::IsString() const {
+	return type == VT::t_object && obj->type == Object::Type::ot_string;
+}
 
 bloop::BloopString Value::TypeToString() const {
-	assert(valueToType.contains(type));
-	return valueToType.at(type);
+	switch (type) {
+	case VT::t_undefined:
+		return BLOOPTEXT("undefined");
+	case VT::t_bool:
+		return BLOOPTEXT("boolean");
+	case VT::t_uint:
+		return BLOOPTEXT("uint");
+	case VT::t_int:
+		return BLOOPTEXT("int");
+	case VT::t_double:
+		return BLOOPTEXT("double");
+	case VT::t_object:
+		return obj->TypeToString();
+	default:
+		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("type \"{}\" is not convertible to a string"), TypeToString()));
+	}
 }
 
 bloop::BloopString Value::ValueToString() const {
@@ -79,6 +92,8 @@ bloop::BloopString Value::ValueToString() const {
 		return std::to_string(u);
 	case VT::t_double:
 		return std::to_string(d);
+	case VT::t_object:
+		return obj->ValueToString();
 	}
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to a string"), TypeToString()));
 

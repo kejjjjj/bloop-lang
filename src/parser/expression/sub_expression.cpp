@@ -16,7 +16,7 @@ CParserSubExpression::CParserSubExpression(const CParserContext& ctx)
 }
 CParserSubExpression::~CParserSubExpression() = default;
 
-bloop::EStatus CParserSubExpression::Parse(std::optional<PairMatcher>& eoe, EEvaluationType evalType) {
+bloop::EStatus CParserSubExpression::Parse(std::optional<PairMatcher>& eoe, CExpressionChain* expression, EEvaluationType evalType) {
 
 	//empty subexpression
 	if (EndOfExpression(eoe))
@@ -37,7 +37,7 @@ bloop::EStatus CParserSubExpression::Parse(std::optional<PairMatcher>& eoe, EEva
 
 	COperatorParser p(m_oCtx);
 
-	if (p.Parse(eoe, evalType) != EStatus::success)
+	if (p.Parse(eoe, expression, evalType) != EStatus::success)
 		return EStatus::failure;
 
 	m_oOperator = std::make_unique<COperator>(COperator{ .m_pToken = p.GetToken() });

@@ -12,12 +12,7 @@ namespace bloop::parser {
 	struct CConstantOperand final : public IOperand {
 		CConstantOperand(const bloop::CToken* token) : m_pToken(token) {}
 
-		[[nodiscard]] constexpr EOperandBaseType Type() const noexcept override {
-			return EOperandBaseType::ot_constant;
-		}
-
 		[[nodiscard]] std::unique_ptr<ASTExpression> ToExpression() override;
-
 
 	private:
 

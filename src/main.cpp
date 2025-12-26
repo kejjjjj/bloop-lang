@@ -7,6 +7,9 @@
 #include "vm/vm.hpp"
 
 #include <iostream>
+#include <thread>
+#include <chrono>
+using namespace std::chrono_literals;
 
 int main() {
 
@@ -25,6 +28,8 @@ int main() {
 			bloop::vm::VM vm(bloop::bytecode::BuildByteCode(code.get()));
 
 			vm.Run("main");
+
+			//std::this_thread::sleep_for(5s); // just to see the memory usage drop
 
 			std::cout << "\n\nfinished!\n";
 		}

@@ -14,10 +14,6 @@ namespace bloop::parser {
 	using ASTExpression = bloop::ast::Expression;
 
 	struct CParserContext;
-	enum class EOperandBaseType : char {
-		ot_constant,
-		ot_identifier
-	};
 
 	struct IOperand {
 		friend class CParserOperand;
@@ -26,7 +22,6 @@ namespace bloop::parser {
 		IOperand() = default;
 		virtual ~IOperand() = default;
 
-		[[nodiscard]] constexpr virtual EOperandBaseType Type() const noexcept = 0;
 		[[nodiscard]] virtual std::unique_ptr<ASTExpression> ToExpression() = 0;
 	protected:
 		bloop::CodePosition m_oDeclPos;
@@ -41,14 +36,17 @@ namespace bloop::parser {
 
 		[[nodiscard]] bloop::EStatus Parse(std::optional<PairMatcher>& eoe);
 
-		constexpr auto& GetOperand() noexcept { return m_pOperand; }
+		[[nodiscard]] constexpr auto& GetOperand() noexcept { return m_pOperand; }
 
 	private:
 		[[nodiscard]] std::unique_ptr<IOperand> ParseConstant();
 		[[nodiscard]] std::unique_ptr<IOperand> ParseIdentifier();
+		[[nodiscard]] std::unique_ptr<IOperand> ParseParentheses();
 
 		const CParserContext& m_oCtx;
 		std::unique_ptr<IOperand> m_pOperand;
+		std::vector<std::unique_ptr<IPostfix>> m_oPostfixes;
+
 	};
 
 }

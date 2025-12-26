@@ -2,8 +2,10 @@
 #include "bytecode/defs.hpp"
 #include "bytecode/compile/emit.hpp"
 #include "ast/ast.hpp"
-using namespace bloop::bytecode;
 
+#include <iostream>
+
+using namespace bloop::bytecode;
 CByteCodeFunction::CByteCodeFunction(bloop::ast::FunctionDeclarationStatement* funcDecl)
 	: m_pFunc(funcDecl){}
 
@@ -11,6 +13,8 @@ vmdata::Function CByteCodeFunction::Generate() {
 
 	CByteCodeBuilder b;
 	m_pFunc->EmitByteCode(b);
+
+	std::cout << '\n' << m_pFunc->m_sName << ":\n";
 	b.Print();
 
 	return vmdata::Function{
