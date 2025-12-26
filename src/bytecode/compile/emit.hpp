@@ -18,6 +18,10 @@ namespace bloop::bytecode
 	};
 	using Instruction = std::variant<Instr0, Instr1>;
 
+	struct CInstructionPosition {
+		CodePosition m_oPosition;
+	};
+
 	struct CSingularByteCode {		
 		Instruction ins;
 
@@ -56,8 +60,10 @@ namespace bloop::bytecode
 		}
 	};
 
+
 	struct CByteCodeBuilder {
-		
+		virtual ~CByteCodeBuilder() = default;
+		[[nodiscard]] virtual constexpr bool GlobalContext() const noexcept { return false; }
 		[[nodiscard]] bloop::BloopUInt16 AddConstant(CConstant&& c);
 		void Emit(EOpCode opcode, bloop::BloopUInt16 idx);
 		void Emit(EOpCode opcode);
@@ -71,6 +77,11 @@ namespace bloop::bytecode
 		std::vector<CConstant> m_oConstants;
 		std::vector<CSingularByteCode> m_oByteCode;
 		bloop::BloopUInt16 m_uOffset{};
+	};
+
+	struct CByteCodeBuilderForGlobals : CByteCodeBuilder {
+		[[nodiscard]] constexpr bool GlobalContext() const noexcept override { return true; }
+		bloop::BloopUInt16 m_uNumGlobals{};
 	};
 
 }

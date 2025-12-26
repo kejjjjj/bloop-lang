@@ -12,15 +12,12 @@ namespace bloop::ast {
 namespace bloop::bytecode {
 
 	namespace vmdata {
-
 		struct Function {
 			bloop::BloopString m_sName;
 			bloop::BloopUInt16 m_uParamCount{};
 			bloop::BloopUInt16 m_uLocalCount{};
-			std::vector<CConstant> m_oConstants;
-			std::vector<BloopByte> m_oByteCode;
+			Chunk chunk;
 		};
-
 	};
 
 	class CByteCodeFunction {

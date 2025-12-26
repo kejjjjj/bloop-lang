@@ -8,24 +8,29 @@
 
 namespace bloop::ast {
 	struct Expression;
+	struct BinaryExpression;
 }
 
 namespace bloop::parser {
 	using ASTExpression = bloop::ast::Expression;
+	using BinaryExpression = bloop::ast::BinaryExpression;
 
 	struct CParserContext;
 
-	struct IOperand {
+	template<typename T>
+	struct IntfOperand {
 		friend class CParserOperand;
-		BLOOP_NONCOPYABLE(IOperand);
+		BLOOP_NONCOPYABLE(IntfOperand);
 
-		IOperand() = default;
-		virtual ~IOperand() = default;
+		IntfOperand() = default;
+		virtual ~IntfOperand() = default;
 
-		[[nodiscard]] virtual std::unique_ptr<ASTExpression> ToExpression() = 0;
+		[[nodiscard]] virtual std::unique_ptr<T> ToExpression() = 0;
 	protected:
 		bloop::CodePosition m_oDeclPos;
 	};
+	using IOperand = IntfOperand<ASTExpression>;
+	using IPostfix = IntfOperand<BinaryExpression>;
 
 	class CParserOperand final : public CParserSingle<bloop::CToken> {
 		BLOOP_NONCOPYABLE(CParserOperand);
@@ -37,11 +42,14 @@ namespace bloop::parser {
 		[[nodiscard]] bloop::EStatus Parse(std::optional<PairMatcher>& eoe);
 
 		[[nodiscard]] constexpr auto& GetOperand() noexcept { return m_pOperand; }
+		[[nodiscard]] std::unique_ptr<ASTExpression> ToExpression();
 
 	private:
 		[[nodiscard]] std::unique_ptr<IOperand> ParseConstant();
 		[[nodiscard]] std::unique_ptr<IOperand> ParseIdentifier();
 		[[nodiscard]] std::unique_ptr<IOperand> ParseParentheses();
+
+		[[nodiscard]] std::unique_ptr<BinaryExpression> PostfixesToAST() const noexcept;
 
 		const CParserContext& m_oCtx;
 		std::unique_ptr<IOperand> m_pOperand;

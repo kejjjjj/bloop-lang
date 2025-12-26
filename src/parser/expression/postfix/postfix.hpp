@@ -2,15 +2,10 @@
 
 #include "utils/defs.hpp"
 #include "parser/defs.hpp"
-#include "parser/expression/expression_context.hpp"
 #include "parser/operand/operand.hpp"
-
-#include <optional>
 
 namespace bloop::parser {
 	struct CParserContext;
-
-	using IPostfix = IOperand;
 
 	class CParserPostfix final : public CParserSingle<bloop::CToken> {
 		BLOOP_NONCOPYABLE(CParserPostfix);

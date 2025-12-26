@@ -26,6 +26,9 @@ Object* Heap::AllocString(char* data, std::size_t len) {
 	std::memcpy(newBuf, data, len);
 	return Allocate(new Object(newBuf, len));
 }
+Object* Heap::AllocCallable(Function* callable) {
+	return Allocate(new Object(callable));
+}
 Object* Heap::StringConcat(Object* a, Object* b)
 {
 	const auto len = a->string.len + b->string.len;

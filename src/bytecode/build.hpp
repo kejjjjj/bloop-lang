@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include "bytecode/defs.hpp"
+
 namespace bloop::ast {
 	struct Program;
 }
@@ -11,6 +13,8 @@ namespace bloop::bytecode{
 		struct Function;
 	}
 
-	[[nodiscard]] std::vector<vmdata::Function> BuildByteCode(bloop::ast::Program* code);
+
+
+	[[nodiscard]] VMByteCode BuildByteCode(bloop::ast::Program* code);
 
 }

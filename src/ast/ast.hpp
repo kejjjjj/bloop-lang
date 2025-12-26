@@ -112,6 +112,8 @@ namespace bloop::ast {
 
 		}
 		void EmitByteCode(TBCBuilder& builder) override {
+			if (m_iDepth == 0)
+				return builder.Emit(TOpCode::LOAD_GLOBAL, m_uSlot);
 			builder.Emit(TOpCode::LOAD_LOCAL, m_uSlot);
 		}
 		[[nodiscard]] constexpr bool IsConst() const noexcept override { return m_bIsConst; }
@@ -123,6 +125,7 @@ namespace bloop::ast {
 	};
 
 	struct BinaryExpression : Expression {
+		BinaryExpression(const bloop::CodePosition& cp) : Expression(cp) {}
 		BinaryExpression(bloop::EPunctuation punc, const bloop::CodePosition& cp) : Expression(cp), m_ePunctuation(punc){}
 
 		virtual void Resolve(TResolver& resolver) override {
@@ -178,18 +181,19 @@ namespace bloop::ast {
 		void Resolve(TResolver& resolver) override {
 
 			if (resolver.ResolveSymbol(m_sName)) {
-				throw bloop::exception::ResolverError(BLOOPTEXT("function already declared: ") + m_sName, m_oApproximatePosition);
+				throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + m_sName, m_oApproximatePosition);
 			}
 
 			resolver.DeclareSymbol(m_sName, true);
-			m_iFunctionId = resolver.m_uNumFunctions++;
+			m_uFunctionId = resolver.m_uNumFunctions++;
 
 			resolver.m_oFunctions.push_back({});
 			resolver.BeginScope();
 
 			std::ranges::for_each(m_oParams, [this, &resolver](const std::string& param) {
 				if(resolver.ResolveSymbol(param))
-					throw bloop::exception::ResolverError(BLOOPTEXT("variable already declared: ") + param, m_oApproximatePosition);
+					throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + param, m_oApproximatePosition);
+				resolver.DeclareSymbol(param);
 			});
 
 			m_pBody->ResolveNoScopeManagement(resolver);
@@ -209,7 +213,7 @@ namespace bloop::ast {
 		std::vector<BloopString> m_oParams;
 		std::unique_ptr<BlockStatement> m_pBody;
 
-		bloop::BloopUInt m_iFunctionId{0};
+		bloop::BloopUInt16 m_uFunctionId{0};
 		bloop::BloopUInt16 m_uLocalCount{0};
 	};
 
@@ -230,9 +234,17 @@ namespace bloop::ast {
 		}
 
 		void EmitByteCode(TBCBuilder& builder) override {
+			const auto globalContext = dynamic_cast<bloop::bytecode::CByteCodeBuilderForGlobals*>(&builder);
+
 			if (m_pInitializer) {
 				m_pInitializer->EmitByteCode(builder);
-				builder.Emit(TOpCode::STORE_LOCAL, m_uSlot);
+				if (!globalContext) 
+					return builder.Emit(TOpCode::STORE_LOCAL, m_uSlot);
+			}
+
+			if (globalContext) {
+				assert(m_uSlot == globalContext->m_uNumGlobals);
+				builder.Emit(TOpCode::DEFINE_GLOBAL, globalContext->m_uNumGlobals++); // part 2
 			}
 		}
 

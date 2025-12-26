@@ -127,7 +127,9 @@ bool CParserExpression::EndOfExpression(const std::optional<PairMatcher>& eoe) c
 [[nodiscard]] static UniqueExpression GetLeaf(Operands& operands);
 [[nodiscard]] static Operators::iterator FindLowestPriorityOperator(Operators& operators);
 [[nodiscard]] static void CreateExpressionRecursively(bloop::ast::BinaryExpression* _this, Operands& operands, Operators& operators);
-
+[[nodiscard]] static auto MakeAssignment(bloop::CodePosition pos) {
+	return std::make_unique<bloop::ast::AssignExpression>(pos);
+}
 void SetBranch(UniqueExpression& getter, const bloop::CPunctuationToken* t) {
 	if (t->m_ePunctuation == bloop::EPunctuation::p_assign)
 		getter = MakeAssignment(t->GetCodePosition());
@@ -135,9 +137,7 @@ void SetBranch(UniqueExpression& getter, const bloop::CPunctuationToken* t) {
 		getter = MakeBinary(t->m_ePunctuation, t->GetCodePosition());
 }
 
-[[nodiscard]] static auto MakeAssignment(bloop::CodePosition pos) {
-	return std::make_unique<bloop::ast::AssignExpression>(pos);
-}
+
 [[nodiscard]] static UniqueExpression CreateExpression(Operands& operands, Operators& operators) {
 
 
@@ -153,7 +153,7 @@ void SetBranch(UniqueExpression& getter, const bloop::CPunctuationToken* t) {
 }
 UniqueExpression GetLeaf(Operands& operands) {
 	if (operands.size() == 1)
-		return operands.front()->GetOperand()->ToExpression() //fix me
+		return operands.front()->ToExpression();
 	return nullptr;
 }
 Operators::iterator FindLowestPriorityOperator(Operators& operators) {

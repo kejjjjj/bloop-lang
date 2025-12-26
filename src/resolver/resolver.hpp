@@ -32,8 +32,8 @@ namespace bloop::resolver {
 			std::vector<Scope> m_oScopes;
 			std::vector<FunctionContext> m_oFunctions; // to keep track of local counts
 
-			bloop::BloopInt m_iScopeDepth{};
-			bloop::BloopUInt m_uNumFunctions{};
+			bloop::BloopInt m_iScopeDepth{-1};
+			bloop::BloopUInt16 m_uNumFunctions{};
 			void BeginScope();
 			void EndScope();
 

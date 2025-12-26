@@ -59,7 +59,9 @@ bool Value::IsTruthy() const
 bool Value::IsString() const {
 	return type == VT::t_object && obj->type == Object::Type::ot_string;
 }
-
+bool Value::IsCallable() const {
+	return type == VT::t_object && obj->type == Object::Type::ot_function;
+}
 bloop::BloopString Value::TypeToString() const {
 	switch (type) {
 	case VT::t_undefined:

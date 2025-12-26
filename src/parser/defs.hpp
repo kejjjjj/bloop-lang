@@ -33,6 +33,7 @@ namespace bloop::parser {
 
 		[[nodiscard]] constexpr bool IsEndOfBuffer() const noexcept { return m_iterPos == m_iterEnd; }
 		[[nodiscard]] constexpr auto GetIteratorSafe() { return IsEndOfBuffer() ? *std::prev(m_iterPos) : *m_iterPos; }
+		[[nodiscard]] constexpr auto GetIteratorSafe() const { return IsEndOfBuffer() ? *std::prev(m_iterPos) : *m_iterPos; }
 
 		constexpr void Advance(std::ptrdiff_t amount) const noexcept { std::advance(m_iterPos, amount); }
 

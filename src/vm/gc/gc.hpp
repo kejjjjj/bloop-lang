@@ -9,7 +9,7 @@ namespace bloop::vm
 	class VM;
 
 	class GC {
-
+		friend class VM;
 	public:
 
 		GC() = delete;

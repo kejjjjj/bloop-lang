@@ -2,8 +2,8 @@
 #include "parser/parser.hpp"
 #include "lexer/token.hpp"
 #include "parser/exception.hpp"
-#include "parser/operand/constant.hpp"
 #include "parser/expression/postfix/postfix.hpp"
+#include "ast/ast.hpp"
 
 #include <cassert>
 
@@ -46,4 +46,54 @@ bloop::EStatus CParserOperand::Parse([[maybe_unused]]std::optional<PairMatcher>&
 	m_oPostfixes = pf.GetPostfixes();
 
 	return bloop::EStatus::success;
+}
+static bloop::ast::BinaryExpression* SeekASTLeftBranch(bloop::ast::BinaryExpression* src) {
+
+	auto end = src;
+
+	while (end->left) {
+		end = dynamic_cast<bloop::ast::BinaryExpression*>(end->left.get());
+	}
+	assert(end);
+	return end;
+
+}
+std::unique_ptr<ASTExpression> CParserOperand::ToExpression() {
+
+	std::unique_ptr<BinaryExpression> entry;
+
+	if (auto&& pfs = PostfixesToAST()) {
+		if (!entry)
+			entry = std::move(pfs);
+		else
+			SeekASTLeftBranch(entry.get())->left = std::move(pfs);
+	}
+
+	if (!entry) //no unaries nor postfixes
+		return GetOperand()->ToExpression();
+
+	SeekASTLeftBranch(dynamic_cast<bloop::ast::BinaryExpression*>(entry.get()))->left = GetOperand()->ToExpression();
+	return entry;
+}
+std::unique_ptr<BinaryExpression> CParserOperand::PostfixesToAST() const noexcept {
+
+	if (m_oPostfixes.empty())
+		return nullptr;
+
+	std::unique_ptr<bloop::ast::BinaryExpression> root;;
+	bloop::ast::BinaryExpression* position{};
+
+	for (auto& pf : m_oPostfixes) {
+
+		if (!root) {
+			root = pf->ToExpression();
+			position = root.get();
+			continue;
+		}
+
+		position->left = pf->ToExpression();
+		position = static_cast<bloop::ast::BinaryExpression*>(position->left.get());
+	}
+
+	return root;
 }

@@ -17,13 +17,18 @@ void GC::Collect(VM* vm) {
 }
 void GC::MarkRoots(VM* vm) {
 
+	for (auto& glob : vm->m_oGlobals) {
+		if (glob.type == Value::Type::t_object)
+			Mark(glob.obj);
+	}
+
 	for (auto& v : vm->m_oStack) {
 		if (v.type == Value::Type::t_object)
 			Mark(v.obj);
 	}
 
 	for (const auto& frame : vm->m_oFrames) {
-		for (auto& c : frame.m_pFunction->m_oConstants) {
+		for (auto& c : frame.m_pChunk->m_oConstants) {
 			if (c.type == Value::Type::t_object)
 				Mark(c.obj);
 		}

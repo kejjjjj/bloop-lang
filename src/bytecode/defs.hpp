@@ -3,6 +3,7 @@
 #include "lexer/punctuation.hpp"
 
 #include <unordered_map>
+#include <vector>
 
 #ifdef NOMINMAX
 #define HAD_NOMINMAX 1
@@ -30,6 +31,19 @@ namespace bloop::bytecode
 		bloop::EValueType m_eDataType{};
 	};
 
+	namespace vmdata {
+		struct Function;
+		struct Chunk {
+			std::vector<CConstant> m_oConstants;
+			std::size_t m_uNumGlobals{};
+			std::vector<bloop::BloopByte> m_oByteCode;
+		};
+	}
+	struct VMByteCode {
+		vmdata::Chunk chunk;
+		std::size_t numGlobals;
+		std::vector<vmdata::Function> functions;
+	};
 	static std::unordered_map<EPunctuation, EOpCode> conversionTable = {
 		{ EPunctuation::p_add, EOpCode::ADD },
 		{ EPunctuation::p_sub, EOpCode::SUB },

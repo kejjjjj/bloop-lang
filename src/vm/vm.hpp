@@ -11,6 +11,7 @@
 namespace bloop::bytecode {
 	enum class EOpCode : unsigned char;
 	struct CConstant;
+	struct VMByteCode;
 	namespace vmdata {
 		struct Function;
 	}
@@ -18,35 +19,48 @@ namespace bloop::bytecode {
 
 namespace bloop::vm
 {
-	struct Function {
-		bloop::BloopUInt16 m_uParamCount{};
-		bloop::BloopUInt16 m_uLocalCount{};
+	struct Chunk {
 		std::vector<Value> m_oConstants;
 		std::vector<BloopByte> m_oByteCode;
 	};
+	struct Function {
+		Chunk chunk;
+		bloop::BloopUInt16 m_uParamCount{};
+		bloop::BloopUInt16 m_uLocalCount{};
+	};
 
 	struct CallFrame {
-		Function* m_pFunction{};
+		Chunk* m_pChunk{};
 		std::size_t m_uIp{};
 		std::size_t m_uBase{};
 
-		CallFrame(Function* fn, std::size_t stackBase) : m_pFunction(fn), m_uBase(stackBase){}
+		CallFrame(Chunk* fn, std::size_t stackBase) : m_pChunk(fn), m_uBase(stackBase){}
 	};
 
 	class VM {
 		friend class GC;
 		friend class Heap;
 	public:
-		VM(const std::vector<bloop::bytecode::vmdata::Function>& funcs);
+		VM(const bloop::bytecode::VMByteCode& bc);
 		~VM();
 
 		void Run(const bloop::BloopString& entryFuncName);
+
+	private:
+		enum class ExecutionReturnCode : bloop::BloopByte {
+			rc_continue,
+			rc_return,
+			rc_return_value
+		};
+
+		[[nodiscard]] ExecutionReturnCode RunFrame();
+		void RunGlobal();
 		void RunFunction(Function* fn);
 
 		inline void PushFrame(Function* fn) {
 			const auto frameBase = m_oStack.size() - fn->m_uParamCount;
 			m_oStack.resize(frameBase + fn->m_uLocalCount);
-			m_pCurrentFrame = &m_oFrames.emplace_back(fn, frameBase);
+			m_pCurrentFrame = &m_oFrames.emplace_back(&fn->chunk, frameBase);
 		}
 		inline void PopFrame() {
 			m_oStack.resize(m_oFrames.back().m_uBase);
@@ -63,14 +77,9 @@ namespace bloop::vm
 			m_oStack.pop_back();
 			return v;
 		}
-	private:
 		[[nodiscard]] std::vector<Value> BuildConstants(const std::vector<bloop::bytecode::CConstant>& constants);
 		
-		enum class ExecutionReturnCode : bloop::BloopByte {
-			rc_continue,
-			rc_return,
-			rc_return_value
-		};
+
 		[[nodiscard]] ExecutionReturnCode InterpretOpCode(bloop::bytecode::EOpCode op);
 		[[nodiscard]] bloop::BloopUInt16 FetchOperand();
 
@@ -78,10 +87,12 @@ namespace bloop::vm
 		std::vector<CallFrame> m_oFrames;
 		std::vector<Function> m_oFunctions;
 		std::unordered_map<bloop::BloopString, Function*> m_oFunctionTable;
+		std::vector<Value> m_oGlobals;
 		CallFrame* m_pCurrentFrame{};
 
 		Heap m_oHeap;
 		GC m_oGC;
+		Chunk m_oGlobalChunk; //executed in the beginning
 	};
 
 }

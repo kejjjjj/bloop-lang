@@ -22,6 +22,7 @@ namespace bloop::vm {
 
         [[nodiscard]] bool IsTruthy() const;
         [[nodiscard]] bool IsString() const;
+        [[nodiscard]] bool IsCallable() const;
 
         [[nodiscard]] bloop::BloopString ValueToString() const;
         [[nodiscard]] bloop::BloopString TypeToString() const;

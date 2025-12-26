@@ -25,6 +25,6 @@ std::unique_ptr<IPostfix> CParserPostfix::ParseFunctionCall() {
 CPostfixFunctionCall::CPostfixFunctionCall(std::vector<UniqueExpression>&& args) : 
 	m_oArgs(std::forward<decltype(args)>(args)){}
 
-std::unique_ptr<ASTExpression> CPostfixFunctionCall::ToExpression() {
+std::unique_ptr<BinaryExpression> CPostfixFunctionCall::ToExpression() {
 	return std::make_unique<bloop::ast::FunctionCall>(std::move(m_oArgs), m_oDeclPos);
 }

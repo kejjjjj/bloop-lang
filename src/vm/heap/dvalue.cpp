@@ -2,6 +2,7 @@
 #include "vm/value.hpp"
 #include "vm/exception.hpp"
 #include "utils/fmt.hpp"
+#include "vm/vm.hpp"
 
 #include <cassert>
 
@@ -13,6 +14,9 @@ void Object::Free()
 	case Type::ot_string:
 		delete[] string.data;
 		return;
+	case Type::ot_function:
+		//just a handle
+		break;
 	default:
 		break;
 	}
@@ -22,7 +26,9 @@ std::size_t Object::GetSize() const
 {
 	switch (type) {
 	case Type::ot_string:
-		return string.len;
+		return string.len + sizeof(string.len);
+	case Type::ot_function:
+		return sizeof(function);
 	default:
 		return 0;
 	}
@@ -48,6 +54,8 @@ bloop::BloopString Object::ValueToString() const {
 	switch (type) {
 	case VT::ot_string:
 		return bloop::BloopString(string.data, string.len);
+	case VT::ot_function:
+		return BLOOPTEXT("function");
 	}
 
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to a string"), TypeToString()));

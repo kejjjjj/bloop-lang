@@ -21,7 +21,6 @@ vmdata::Function CByteCodeFunction::Generate() {
 		.m_sName = m_pFunc->m_sName,
 		.m_uParamCount = static_cast<bloop::BloopUInt16>(m_pFunc->m_oParams.size()),
 		.m_uLocalCount = m_pFunc->m_uLocalCount,
-		.m_oConstants = b.m_oConstants,
-		.m_oByteCode = b.Encode()
+		.chunk = {.m_oConstants = b.m_oConstants, .m_oByteCode = b.Encode()}
 	};
 }

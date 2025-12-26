@@ -4,16 +4,19 @@
 
 namespace bloop::vm
 {
+	struct Function;
 	struct Object {
 		enum class Type { ot_string, ot_array, ot_object, ot_function } type;
 
 		Object(char* _data, std::size_t _len) : type(Type::ot_string), string({.data=_data, .len=_len}) {}
+		Object(Function* chunk) : type(Type::ot_function), function(chunk){}
 
 		union {
 			struct {
 				char* data;
 				std::size_t len;
 			}string;
+			Function* function;
 		};
 
 		//managed by GC

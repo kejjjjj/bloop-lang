@@ -1,9 +1,21 @@
 R"(
-fn add(a, b) {
+
+fn add(a, b){
 	return a + b;
 }
-
-fn main(){
-	return add(2, 6);
+fn addGetter(){
+	return add;
 }
+
+fn main() {
+	const _add = addGetter();
+	let a = 0;
+
+	while(a <= 1000){
+		a = a + _add(0, 1);
+	}
+	
+	return a;
+}
+
 )";
