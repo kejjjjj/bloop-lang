@@ -1,7 +1,7 @@
 #include "bytecode/global/bc_global.hpp"
 #include "bytecode/defs.hpp"
 #include "bytecode/compile/emit.hpp"
-#include "ast/ast.hpp"
+#include "ast/function.hpp"
 
 #include <iostream>
 
@@ -16,8 +16,8 @@ vmdata::Chunk CByteCodeGlobals::Generate() {
 
 		if (stmt->IsFunction()) {
 			auto func = dynamic_cast<bloop::ast::FunctionDeclarationStatement*>(stmt.get());
-			builder.Emit(EOpCode::MAKE_FUNCTION, func->m_uFunctionId);
-			builder.Emit(EOpCode::DEFINE_GLOBAL, builder.m_uNumGlobals++);
+			stmt->Emit(builder, EOpCode::MAKE_FUNCTION, func->m_uFunctionId);
+			stmt->Emit(builder, EOpCode::DEFINE_GLOBAL, builder.m_uNumGlobals++);
 			continue;
 		}
 
@@ -31,6 +31,7 @@ vmdata::Chunk CByteCodeGlobals::Generate() {
 	return { 
 		.m_oConstants = builder.m_oConstants, 
 		.m_uNumGlobals = builder.m_uNumGlobals, 
-		.m_oByteCode = builder.Encode() 
+		.m_oByteCode = builder.Encode(),
+		.m_oPositions = builder.GetCodePositions()
 	};
 }

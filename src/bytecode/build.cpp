@@ -1,5 +1,5 @@
 #include "bytecode/build.hpp"
-#include "ast/ast.hpp"
+#include "ast/function.hpp"
 #include "bytecode/function/bc_function.hpp"
 #include "bytecode/global/bc_global.hpp"
 

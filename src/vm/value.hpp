@@ -7,8 +7,8 @@ namespace bloop::vm {
     struct Object;
     struct Value {
 
-        enum class Type : bloop::BloopByte { t_undefined, t_bool, t_uint, t_int, t_double, t_object } type{};
         union { bloop::BloopBool b{}; bloop::BloopInt i; bloop::BloopUInt u; bloop::BloopDouble d; Object* obj; };
+        enum class Type : bloop::BloopByte { t_undefined, t_bool, t_uint, t_int, t_double, t_object } type{};
 
         Value(bloop::EValueType t, const bloop::BloopString& data);
         
@@ -21,8 +21,12 @@ namespace bloop::vm {
         Value(Object* v) : type(Type::t_object), obj(v){}
 
         [[nodiscard]] bool IsTruthy() const;
+        [[nodiscard]] bool IsArithmetic() const;
+
         [[nodiscard]] bool IsString() const;
         [[nodiscard]] bool IsCallable() const;
+        [[nodiscard]] bool IsIndexable() const;
+        [[nodiscard]] bloop::BloopInt ToInt() const;
 
         [[nodiscard]] bloop::BloopString ValueToString() const;
         [[nodiscard]] bloop::BloopString TypeToString() const;

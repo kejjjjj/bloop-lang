@@ -19,6 +19,7 @@ namespace bloop::vm
 		[[nodiscard]] Object* AllocString(char* data, std::size_t len);
 		[[nodiscard]] Object* AllocString(std::size_t len);
 		[[nodiscard]] Object* AllocCallable(Function* callable);
+		[[nodiscard]] Object* AllocArray(std::size_t numValues);
 
 		[[nodiscard]] Object* StringConcat(Object* a, Object* b);
 
@@ -27,7 +28,7 @@ namespace bloop::vm
 			return m_uBytesAllocated > m_uNextGCLimit;
 		}
 
-		// don't call me directly
+		// don't call me directly, unless for globals
 		void FreeObject(Object* obj);
 
 		Object* m_pObjects{};

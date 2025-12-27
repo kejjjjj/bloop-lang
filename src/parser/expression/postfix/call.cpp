@@ -7,6 +7,7 @@ using namespace bloop::parser;
 
 std::unique_ptr<IPostfix> CParserPostfix::ParseFunctionCall() {
 
+	
 	Advance(1); //skip (
 
 	if (!IsEndOfBuffer() && GetIteratorSafe()->IsOperator(EPunctuation::p_par_close)) {

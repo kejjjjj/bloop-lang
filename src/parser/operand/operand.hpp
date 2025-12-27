@@ -20,6 +20,8 @@ namespace bloop::parser {
 	template<typename T>
 	struct IntfOperand {
 		friend class CParserOperand;
+		friend class CParserPostfix;
+
 		BLOOP_NONCOPYABLE(IntfOperand);
 
 		IntfOperand() = default;
@@ -48,6 +50,7 @@ namespace bloop::parser {
 		[[nodiscard]] std::unique_ptr<IOperand> ParseConstant();
 		[[nodiscard]] std::unique_ptr<IOperand> ParseIdentifier();
 		[[nodiscard]] std::unique_ptr<IOperand> ParseParentheses();
+		[[nodiscard]] std::unique_ptr<IOperand> ParseArray();
 
 		[[nodiscard]] std::unique_ptr<BinaryExpression> PostfixesToAST() const noexcept;
 

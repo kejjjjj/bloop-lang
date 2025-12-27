@@ -7,6 +7,7 @@
 
 namespace bloop::ast {
 	struct Program;
+	struct FunctionDeclarationStatement;
 }
 
 namespace bloop::resolver {
@@ -27,6 +28,7 @@ namespace bloop::resolver {
 		};
 		struct FunctionContext {
 			bloop::BloopUInt16 m_uNextSlot = 0;
+			bloop::ast::FunctionDeclarationStatement* m_pCurrentFunction{};
 		};
 		struct Resolver {
 			std::vector<Scope> m_oScopes;

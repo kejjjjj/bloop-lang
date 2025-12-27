@@ -3,6 +3,8 @@
 #include "vm/vm.hpp"
 #include "vm/heap/dvalue.hpp"
 
+#include <ranges>
+
 using namespace bloop::vm;
 
 void GC::Collect(VM* vm) {
@@ -56,5 +58,14 @@ void GC::Sweep() {
 	}
 }
 void GC::Trace([[maybe_unused]] Object* obj) {
+
+	switch (obj->type) {
+	case Object::Type::ot_array: 
+		for (const auto i : std::views::iota(0, obj->array.count)) {
+			if (obj->array.values[i].type == Value::Type::t_object)
+				Mark(obj->array.values[i].obj);
+		}
+		break;
+	}
 
 }

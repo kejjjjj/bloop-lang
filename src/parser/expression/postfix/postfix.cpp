@@ -27,7 +27,13 @@ bloop::EStatus CParserPostfix::Parse() {
 		case EPunctuation::p_par_open:
 			m_oPostfixes.emplace_back(ParseFunctionCall());
 			break;
+		case EPunctuation::p_bracket_open:
+			m_oPostfixes.emplace_back(ParseSubscript());
+			break;
 		}
+
+		if(!m_oPostfixes.empty())
+			m_oPostfixes.back()->m_oDeclPos = punct->GetCodePosition();
 
 	}
 

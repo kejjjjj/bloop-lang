@@ -21,6 +21,25 @@ namespace bloop::ast {
 		AbstractSyntaxTree(bloop::CodePosition cp) : m_oApproximatePosition(cp){}
 		virtual ~AbstractSyntaxTree() = default;
 		bloop::CodePosition m_oApproximatePosition;
+
+		inline void Emit(TBCBuilder& builder, TOpCode insn) const {
+			builder.Emit(insn, { m_oApproximatePosition });
+		}
+		inline void Emit(TBCBuilder& builder, TOpCode insn, bloop::BloopUInt16 arg) const {
+			builder.Emit(insn, arg, { m_oApproximatePosition });
+		}
+
+		[[nodiscard]] inline bloop::BloopUInt16 EmitJump(TBCBuilder& builder, TOpCode opcode) {
+			return builder.EmitJump(opcode, {m_oApproximatePosition});
+		}
+		inline void EmitJump(TBCBuilder& builder, TOpCode opcode, bloop::BloopUInt16 offset) {
+			builder.EmitJump(opcode, offset, { m_oApproximatePosition });
+
+		}
+		inline void PatchJump(TBCBuilder& builder, bloop::BloopUInt16 src, bloop::BloopUInt16 dst) {
+			builder.PatchJump(src, dst);
+		}
+
 	};
 
 	struct Statement : AbstractSyntaxTree {
@@ -53,13 +72,14 @@ namespace bloop::ast {
 		
 		std::vector<std::unique_ptr<Statement>> m_oStatements;
 	};
-
+	struct IdentifierExpression;
 	struct Expression : AbstractSyntaxTree {
 		Expression(const bloop::CodePosition& cp) : AbstractSyntaxTree(cp) {}
 
 		virtual void Resolve(TResolver& resolver) = 0;
 		virtual void EmitByteCode(TBCBuilder& builder) = 0;
 		[[nodiscard]] virtual constexpr bool IsConst() const noexcept { return false; }
+		[[nodiscard]] virtual IdentifierExpression* GetIdentifier() noexcept { return nullptr; }
 
 	};
 
@@ -90,7 +110,7 @@ namespace bloop::ast {
 		}
 		void EmitByteCode(TBCBuilder& builder) override {
 			const auto idx = builder.AddConstant(bloop::bytecode::CConstant{ .m_pConstant = m_pConstant, .m_eDataType = m_eDataType });
-			builder.Emit(TOpCode::LOAD_CONST, idx);
+			Emit(builder, TOpCode::LOAD_CONST, idx);
 		};
 
 		bloop::BloopString m_pConstant;
@@ -99,6 +119,7 @@ namespace bloop::ast {
 
 	struct IdentifierExpression : Expression {
 		IdentifierExpression(const bloop::CodePosition& cp) : Expression(cp) {}
+		[[nodiscard]] IdentifierExpression* GetIdentifier() noexcept override { return this; }
 
 		void Resolve(TResolver& resolver) override {
 			if (const auto symbol = resolver.ResolveSymbol(m_sName)) {
@@ -113,8 +134,8 @@ namespace bloop::ast {
 		}
 		void EmitByteCode(TBCBuilder& builder) override {
 			if (m_iDepth == 0)
-				return builder.Emit(TOpCode::LOAD_GLOBAL, m_uSlot);
-			builder.Emit(TOpCode::LOAD_LOCAL, m_uSlot);
+				return Emit(builder, TOpCode::LOAD_GLOBAL, m_uSlot);
+			Emit(builder, TOpCode::LOAD_LOCAL, m_uSlot);
 		}
 		[[nodiscard]] constexpr bool IsConst() const noexcept override { return m_bIsConst; }
 
@@ -141,14 +162,13 @@ namespace bloop::ast {
 			if (!bloop::bytecode::conversionTable.contains(m_ePunctuation))
 				throw bloop::exception::ByteCodeError(BLOOPTEXT("unsupported operation"), m_oApproximatePosition);
 
-			builder.Emit(bloop::bytecode::conversionTable[m_ePunctuation]);
+			Emit(builder, bloop::bytecode::conversionTable[m_ePunctuation]);
 		}
 
 		bloop::EPunctuation m_ePunctuation{};
 		std::unique_ptr<Expression> left;
 		std::unique_ptr<Expression> right;
 	};
-
 	struct AssignExpression : BinaryExpression {
 		AssignExpression(const bloop::CodePosition& cp) 
 			: BinaryExpression(bloop::EPunctuation::p_assign, cp) {}
@@ -160,61 +180,27 @@ namespace bloop::ast {
 				throw bloop::exception::ResolverError(BLOOPTEXT("lhs is declared as const"), left->m_oApproximatePosition);
 		}
 
-		void EmitByteCode(TBCBuilder& builder) override {
-			right->EmitByteCode(builder);
-
-			if (const auto ptr = dynamic_cast<IdentifierExpression*>(left.get())) {
-				builder.Emit(TOpCode::STORE_LOCAL, ptr->m_uSlot);
-				return;
-			}
-			throw bloop::exception::ResolverError(BLOOPTEXT("lhs wasn't an identifier"), left->m_oApproximatePosition);
-
-		}
+		void EmitByteCode(TBCBuilder& builder) override;
 	};
 
-	struct FunctionDeclarationStatement : Statement {
-		FunctionDeclarationStatement(const BloopString& name, std::vector<BloopString>&& params, 
-			std::unique_ptr<BlockStatement>&& body, const bloop::CodePosition& cp)
-			: Statement(cp), m_sName(name), m_oParams(std::forward<decltype(params)>(params)), m_pBody(std::forward<decltype(body)>(body)){ }
-		[[nodiscard]] constexpr bool IsFunction() const noexcept override { return true; }
+	struct ArrayExpression : Expression {
+
+		ArrayExpression(std::vector<std::unique_ptr<Expression>>&& inits, const bloop::CodePosition& cp) 
+			: Expression(cp), m_pInitializers(std::forward<decltype(inits)>(inits)) {}
 
 		void Resolve(TResolver& resolver) override {
-
-			if (resolver.ResolveSymbol(m_sName)) {
-				throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + m_sName, m_oApproximatePosition);
-			}
-
-			resolver.DeclareSymbol(m_sName, true);
-			m_uFunctionId = resolver.m_uNumFunctions++;
-
-			resolver.m_oFunctions.push_back({});
-			resolver.BeginScope();
-
-			std::ranges::for_each(m_oParams, [this, &resolver](const std::string& param) {
-				if(resolver.ResolveSymbol(param))
-					throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + param, m_oApproximatePosition);
-				resolver.DeclareSymbol(param);
-			});
-
-			m_pBody->ResolveNoScopeManagement(resolver);
-			m_uLocalCount = resolver.m_oFunctions.back().m_uNextSlot;
-			resolver.EndScope();
-			resolver.m_oFunctions.pop_back();
+			for (auto& v : m_pInitializers)
+				v->Resolve(resolver);
 		}
 
 		void EmitByteCode(TBCBuilder& builder) override {
-			m_pBody->EmitByteCode(builder);
-			assert(!builder.m_oByteCode.empty());
-			if(builder.m_oByteCode.back().GetOpCode() != TOpCode::RETURN && builder.m_oByteCode.back().GetOpCode() != TOpCode::RETURN_VALUE)
-				builder.Emit(TOpCode::RETURN);
+			for (auto& v : m_pInitializers)
+				v->EmitByteCode(builder);
+
+			Emit(builder, TOpCode::CREATE_ARRAY, static_cast<bloop::BloopUInt16>(m_pInitializers.size()));
 		}
 
-		bloop::BloopString m_sName;
-		std::vector<BloopString> m_oParams;
-		std::unique_ptr<BlockStatement> m_pBody;
-
-		bloop::BloopUInt16 m_uFunctionId{0};
-		bloop::BloopUInt16 m_uLocalCount{0};
+		std::vector<std::unique_ptr<Expression>> m_pInitializers;
 	};
 
 	struct VariableDeclaration : Statement {
@@ -239,12 +225,12 @@ namespace bloop::ast {
 			if (m_pInitializer) {
 				m_pInitializer->EmitByteCode(builder);
 				if (!globalContext) 
-					return builder.Emit(TOpCode::STORE_LOCAL, m_uSlot);
+					return Emit(builder, TOpCode::STORE_LOCAL, m_uSlot);
 			}
 
 			if (globalContext) {
 				assert(m_uSlot == globalContext->m_uNumGlobals);
-				builder.Emit(TOpCode::DEFINE_GLOBAL, globalContext->m_uNumGlobals++); // part 2
+				Emit(builder, TOpCode::DEFINE_GLOBAL, globalContext->m_uNumGlobals++);
 			}
 		}
 
@@ -274,11 +260,11 @@ namespace bloop::ast {
 			const auto loopStart = builder.m_uOffset;
 			m_pCondition->EmitByteCode(builder);
 
-			const auto jumpExit = builder.EmitJump(TOpCode::JZ); //get the beginning of the loop
+			const auto jumpExit = EmitJump(builder, TOpCode::JZ); //get the beginning of the loop
 			BlockStatement::EmitByteCode(builder);
 
-			builder.EmitJump(TOpCode::JMP, loopStart); //jump back to the beginning of the loop
-			builder.PatchJump(jumpExit, builder.m_uOffset); //patch the JZ statement to jump past the end of the loop
+			EmitJump(builder, TOpCode::JMP, loopStart); //jump back to the beginning of the loop
+			PatchJump(builder, jumpExit, builder.m_uOffset); //patch the JZ statement to jump past the end of the loop
 		}
 
 		std::unique_ptr<Expression> m_pCondition;
@@ -290,6 +276,10 @@ namespace bloop::ast {
 			ExpressionStatement(std::forward<decltype(expr)>(expr), cp){}
 
 		void Resolve(TResolver& resolver) override {
+
+			if(resolver.m_oFunctions.empty())
+				throw bloop::exception::ResolverError(BLOOPTEXT("don't return in the global scope"), m_oApproximatePosition);
+
 			if (m_pExpression)
 				ExpressionStatement::Resolve(resolver);
 		}
@@ -297,10 +287,10 @@ namespace bloop::ast {
 		void EmitByteCode(TBCBuilder& builder) override {
 			if (m_pExpression) {
 				m_pExpression->EmitByteCode(builder);
-				builder.Emit(TOpCode::RETURN_VALUE);
+				Emit(builder, TOpCode::RETURN_VALUE);
 				return;
 			}
-			builder.Emit(TOpCode::RETURN);
+			Emit(builder, TOpCode::RETURN);
 		}
 
 	};

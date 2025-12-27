@@ -30,13 +30,17 @@ namespace bloop::bytecode
 		bloop::BloopString m_pConstant;
 		bloop::EValueType m_eDataType{};
 	};
-
+	struct CInstructionPosition {
+		std::size_t m_uByteOffset;
+		CodePosition m_oPosition;
+	};
 	namespace vmdata {
 		struct Function;
 		struct Chunk {
 			std::vector<CConstant> m_oConstants;
 			std::size_t m_uNumGlobals{};
 			std::vector<bloop::BloopByte> m_oByteCode;
+			std::vector<CInstructionPosition> m_oPositions;
 		};
 	}
 	struct VMByteCode {

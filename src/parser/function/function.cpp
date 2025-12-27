@@ -3,7 +3,7 @@
 #include "parser/exception.hpp"
 #include "parser/scope/scope.hpp"
 #include "lexer/token.hpp"
-#include "ast/ast.hpp"
+#include "ast/function.hpp"
 
 #include <cassert>
 

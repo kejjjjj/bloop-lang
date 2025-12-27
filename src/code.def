@@ -1,21 +1,18 @@
 R"(
-
-fn add(a, b){
-	return a + b;
-}
-fn addGetter(){
-	return add;
-}
-
 fn main() {
-	const _add = addGetter();
-	let a = 0;
-
-	while(a <= 1000){
-		a = a + _add(0, 1);
-	}
 	
-	return a;
+	let a = 200;
+	let b = 200;
+
+	fn inner() {
+		b = 20;
+		const c = 10;
+		fn inner2(){
+			b = 10;
+			c = 20;
+		}
+	}
+
 }
 
 )";

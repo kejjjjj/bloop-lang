@@ -56,11 +56,43 @@ bool Value::IsTruthy() const
 
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to a boolean"), TypeToString()));
 }
+bool Value::IsArithmetic() const
+{
+	switch (type) {
+	case VT::t_undefined:
+	case VT::t_bool:
+	case VT::t_int:
+	case VT::t_uint:
+	case VT::t_double:
+		return true;
+	default:
+		return false;
+	}
+}
 bool Value::IsString() const {
 	return type == VT::t_object && obj->type == Object::Type::ot_string;
 }
 bool Value::IsCallable() const {
 	return type == VT::t_object && obj->type == Object::Type::ot_function;
+}
+bool Value::IsIndexable() const {
+	return type == VT::t_object && obj->IsIndexable();
+}
+bloop::BloopInt Value::ToInt() const {
+	switch (type) {
+	case VT::t_undefined:
+		return static_cast<bloop::BloopInt>(0);
+	case VT::t_bool:
+		return static_cast<bloop::BloopInt>(b);
+	case VT::t_int:
+		return static_cast<bloop::BloopInt>(i);
+	case VT::t_uint:
+		return static_cast<bloop::BloopInt>(u);
+	case VT::t_double:
+		return static_cast<bloop::BloopInt>(d);
+	}
+
+	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to an integer"), TypeToString()));
 }
 bloop::BloopString Value::TypeToString() const {
 	switch (type) {

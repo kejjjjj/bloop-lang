@@ -18,12 +18,11 @@ namespace bloop::bytecode
 	};
 	using Instruction = std::variant<Instr0, Instr1>;
 
-	struct CInstructionPosition {
-		CodePosition m_oPosition;
-	};
+
 
 	struct CSingularByteCode {		
 		Instruction ins;
+		CInstructionPosition loc; // for runtime error messages
 
 		[[nodiscard]] bloop::BloopUInt16 GetBytes() const {
 			bloop::BloopUInt16 result{};
@@ -65,14 +64,15 @@ namespace bloop::bytecode
 		virtual ~CByteCodeBuilder() = default;
 		[[nodiscard]] virtual constexpr bool GlobalContext() const noexcept { return false; }
 		[[nodiscard]] bloop::BloopUInt16 AddConstant(CConstant&& c);
-		void Emit(EOpCode opcode, bloop::BloopUInt16 idx);
-		void Emit(EOpCode opcode);
-		[[nodiscard]] bloop::BloopUInt16 EmitJump(EOpCode opcode); //returns the index of m_oByteCode
-		void EmitJump(EOpCode opcode, bloop::BloopUInt16 offset);
+		void Emit(EOpCode opcode, bloop::BloopUInt16 idx, CodePosition pos);
+		void Emit(EOpCode opcode, CodePosition pos);
+		[[nodiscard]] bloop::BloopUInt16 EmitJump(EOpCode opcode, CodePosition pos); //returns the index of m_oByteCode
+		void EmitJump(EOpCode opcode, bloop::BloopUInt16 offset, CodePosition pos);
 		void PatchJump(bloop::BloopUInt16 src, bloop::BloopUInt16 dst); //dst indexes m_oByteCode
 		void Print();
 
 		[[nodiscard]] std::vector<bloop::BloopByte> Encode();
+		[[nodiscard]] std::vector<CInstructionPosition> GetCodePositions();
 
 		std::vector<CConstant> m_oConstants;
 		std::vector<CSingularByteCode> m_oByteCode;

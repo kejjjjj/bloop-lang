@@ -3,6 +3,7 @@
 #include "vm/vm.hpp"
 
 #include <cassert>
+#include <ranges>
 
 using namespace bloop::vm;
 
@@ -28,6 +29,15 @@ Object* Heap::AllocString(char* data, std::size_t len) {
 }
 Object* Heap::AllocCallable(Function* callable) {
 	return Allocate(new Object(callable));
+}
+Object* Heap::AllocArray(std::size_t numValues) {
+
+	auto arr = Allocate(new Object(numValues));
+
+	for(const auto i : std::views::iota(0, arr->array.count))
+		arr->array.values[i] = Value();
+
+	return arr;
 }
 Object* Heap::StringConcat(Object* a, Object* b)
 {

@@ -6,7 +6,7 @@
 #include "vm/exception.hpp"
 #include "utils/fmt.hpp"
 
-#include <iostream>
+#include <ranges>
 
 using namespace bloop::vm;
 
@@ -26,6 +26,16 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 		case TOpCode::LOAD_GLOBAL: {
 			const auto idx = FetchOperand();
 			Push(m_oGlobals[idx]);
+			break;
+		}
+		case TOpCode::CREATE_ARRAY: {
+			const auto numInitializers = FetchOperand();
+			auto arr = m_oHeap.AllocArray(numInitializers);
+
+			for (const auto i : std::views::iota(0u, numInitializers) | std::views::reverse)
+				arr->array.values[i] = Pop();
+
+			Push(arr);
 			break;
 		}
 		case TOpCode::DEFINE_GLOBAL: {
@@ -109,6 +119,28 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->function->m_uParamCount));
 
 			RunFunction(callee.obj->function);
+			break;
+		}
+		case TOpCode::SUBSCRIPT_GET: {
+			Value index = Pop();
+			Value operand = Pop();
+
+			if (!operand.IsIndexable())
+				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not indexable"), operand.TypeToString()));
+
+			Push(operand.obj->Index(index.ToInt()));
+			break;
+		}
+		case TOpCode::SUBSCRIPT_SET: {
+			Value index = Pop();
+			Value operand = Pop();
+			Value value = Pop();
+
+			if (!operand.IsIndexable())
+				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not indexable"), operand.TypeToString()));
+
+			operand.obj->Index(index.ToInt()) = value;
+			Push(value);
 			break;
 		}
 		case TOpCode::RETURN: {

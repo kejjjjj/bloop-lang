@@ -1,5 +1,5 @@
 #include "resolver/resolver.hpp"
-#include "ast/ast.hpp"
+#include "ast/function.hpp"
 
 #include <cassert>
 #include <ranges>
@@ -35,12 +35,19 @@ Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst) {
 }
 Symbol* Resolver::ResolveSymbol(const bloop::BloopString& name) {
 	
-	const auto itr = std::ranges::find_if(m_oScopes.rbegin(), m_oScopes.rend(), [&name](Scope& s) { 
+	//exit early if it exists in this scope
+	if (m_oScopes.back().symbols.contains(name))
+		return &m_oScopes.back().symbols.at(name);
+
+	const auto itr = std::ranges::find_if(m_oScopes.rbegin(), m_oScopes.rend(), [&name](Scope& s) {
 		return s.symbols.contains(name);
 	});
 
 	if (itr == m_oScopes.rend())
 		return nullptr;
 
-	return &itr->symbols.at(name);
+	auto* symbol = &itr->symbols.at(name);
+	m_oFunctions.back().m_pCurrentFunction->m_oCaptures.emplace_back(m_iScopeDepth - symbol->m_iDepth, symbol->m_uSlot);
+	
+	return symbol;
 }

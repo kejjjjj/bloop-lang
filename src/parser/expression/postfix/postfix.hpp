@@ -22,6 +22,7 @@ namespace bloop::parser {
 		[[nodiscard]] bool IsPostfixOperator(const CPunctuationToken* token) const noexcept;
 
 		[[nodiscard]] std::unique_ptr<IPostfix> ParseFunctionCall();
+		[[nodiscard]] std::unique_ptr<IPostfix> ParseSubscript();
 
 		const CParserContext& m_oCtx;
 		std::vector<std::unique_ptr<IPostfix>> m_oPostfixes;

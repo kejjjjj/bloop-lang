@@ -19,9 +19,14 @@ namespace bloop::bytecode {
 
 namespace bloop::vm
 {
+	struct CInstructionPosition {
+		std::size_t byteOffset;
+		CodePosition pos;
+	};
 	struct Chunk {
 		std::vector<Value> m_oConstants;
 		std::vector<BloopByte> m_oByteCode;
+		std::vector<CInstructionPosition> m_oPositions; //uses the same ip as m_oByteCode
 	};
 	struct Function {
 		Chunk chunk;
@@ -30,11 +35,21 @@ namespace bloop::vm
 	};
 
 	struct CallFrame {
+		CallFrame(Chunk* fn, std::size_t stackBase) : m_pChunk(fn), m_uBase(stackBase) {}
+
+		[[nodiscard]] const CInstructionPosition& GetCurrentPosition() const {
+			auto it = std::upper_bound(m_pChunk->m_oPositions.begin(), m_pChunk->m_oPositions.end(), m_uIp,
+				[](std::size_t ip, const CInstructionPosition& p) {
+					return ip <= p.byteOffset;
+				});
+			return *(it - 1);
+		}
+
 		Chunk* m_pChunk{};
 		std::size_t m_uIp{};
 		std::size_t m_uBase{};
+		std::size_t m_uCurrentLine{};
 
-		CallFrame(Chunk* fn, std::size_t stackBase) : m_pChunk(fn), m_uBase(stackBase){}
 	};
 
 	class VM {
@@ -78,8 +93,6 @@ namespace bloop::vm
 			return v;
 		}
 		[[nodiscard]] std::vector<Value> BuildConstants(const std::vector<bloop::bytecode::CConstant>& constants);
-		
-
 		[[nodiscard]] ExecutionReturnCode InterpretOpCode(bloop::bytecode::EOpCode op);
 		[[nodiscard]] bloop::BloopUInt16 FetchOperand();
 

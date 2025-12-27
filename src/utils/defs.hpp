@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <sstream>
 #include <tuple>
 
 #ifndef BLOOP_NONCOPYABLE
@@ -14,6 +15,7 @@
 
 namespace bloop {
 	using BloopString = std::string;
+	using BloopOStringStream = std::ostringstream;
 	using BloopStringView = std::string_view;
 	using BloopChar = char;
 	using BloopBool = bool;

@@ -29,22 +29,22 @@ bloop::BloopUInt16 CByteCodeBuilder::AddConstant(CConstant&& c) {
 	m_oConstants.emplace_back(std::forward<decltype(c)>(c));
 	return static_cast<bloop::BloopUInt16>(idx);
 }
-void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopUInt16 idx) {
-	m_oByteCode.emplace_back(Instr1{ .op = opcode, .arg = idx });
+void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopUInt16 idx, CodePosition pos) {
+	m_oByteCode.emplace_back(CSingularByteCode{ .ins = Instr1{.op = opcode, .arg = idx }, .loc = { m_uOffset, pos } });
 	m_uOffset += 3; // op = 1, idx = 2
 }
-void CByteCodeBuilder::Emit(EOpCode opcode) {
-	m_oByteCode.emplace_back(Instr0{ .op = opcode });
+void CByteCodeBuilder::Emit(EOpCode opcode, CodePosition pos) {
+	m_oByteCode.emplace_back(CSingularByteCode{ .ins = Instr0{.op = opcode }, .loc = { m_uOffset, pos } });
 	m_uOffset += 1; // op = 1
 }
 
-bloop::BloopUInt16 CByteCodeBuilder::EmitJump(EOpCode opcode) {
+bloop::BloopUInt16 CByteCodeBuilder::EmitJump(EOpCode opcode, CodePosition pos) {
 	auto idx = m_oByteCode.size();
-	Emit(opcode, 0);
+	Emit(opcode, 0, pos);
 	return static_cast<bloop::BloopUInt16>(idx);
 }
-void CByteCodeBuilder::EmitJump(EOpCode opcode, bloop::BloopUInt16 offset) {
-	Emit(opcode, offset);
+void CByteCodeBuilder::EmitJump(EOpCode opcode, bloop::BloopUInt16 offset, CodePosition pos) {
+	Emit(opcode, offset, pos);
 }
 void CByteCodeBuilder::PatchJump(bloop::BloopUInt16 src, bloop::BloopUInt16 dst) {
 	std::get<1>(m_oByteCode[src].ins).arg = dst;
@@ -74,4 +74,14 @@ std::vector<bloop::BloopByte> CByteCodeBuilder::Encode() {
 		}, bc.ins);
 	}
 	return out;
+}
+
+std::vector<CInstructionPosition> CByteCodeBuilder::GetCodePositions()
+{
+	std::vector<CInstructionPosition> locs;
+	locs.reserve(m_oByteCode.size());
+	for (auto& bc : m_oByteCode)
+		locs.push_back(bc.loc);
+
+	return locs;
 }

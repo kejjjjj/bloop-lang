@@ -25,6 +25,8 @@ bloop::EStatus CParserOperand::Parse([[maybe_unused]]std::optional<PairMatcher>&
 		m_pOperand = ParseConstant();
 	} else if (token->IsOperator(EPunctuation::p_par_open)) {
 		m_pOperand = ParseParentheses();
+	} else if (token->IsOperator(EPunctuation::p_bracket_open)) {
+		m_pOperand = ParseArray();
 	} else if (token->Type() == ETokenType::tt_name) {
 		m_pOperand = ParseIdentifier();
 	} else {
@@ -33,7 +35,6 @@ bloop::EStatus CParserOperand::Parse([[maybe_unused]]std::optional<PairMatcher>&
 
 	//because it got overwritten
 	m_pOperand->m_oDeclPos = token->GetCodePosition();
-
 
 	if (IsEndOfBuffer())
 		throw exception::ParserError(BLOOPTEXT("unexpected end of buffer"), GetIteratorSafe()->GetCodePosition());
@@ -91,6 +92,7 @@ std::unique_ptr<BinaryExpression> CParserOperand::PostfixesToAST() const noexcep
 			continue;
 		}
 
+		assert(position);
 		position->left = pf->ToExpression();
 		position = static_cast<bloop::ast::BinaryExpression*>(position->left.get());
 	}

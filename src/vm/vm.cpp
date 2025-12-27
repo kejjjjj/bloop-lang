@@ -21,6 +21,14 @@ std::vector<Value> VM::BuildConstants(const std::vector<bloop::bytecode::CConsta
 	return vals;
 }
 
+[[nodiscard ]] static std::vector<CInstructionPosition> ConvertPositions(const std::vector<bloop::bytecode::CInstructionPosition>& v) {
+	std::vector<CInstructionPosition> ret;
+	ret.reserve(v.size());
+	for (auto& var : v)
+		ret.push_back(CInstructionPosition{ var.m_uByteOffset, var.m_oPosition });
+	return ret;
+}
+
 VM::VM(const bloop::bytecode::VMByteCode& data)
 	: m_oHeap(this), m_oGC(&m_oHeap) {
 
@@ -30,7 +38,11 @@ VM::VM(const bloop::bytecode::VMByteCode& data)
 
 	for (const auto& f : data.functions) {
 		m_oFunctions.emplace_back(Function{
-			.chunk = {.m_oConstants = BuildConstants(f.chunk.m_oConstants), .m_oByteCode = f.chunk.m_oByteCode  },
+			.chunk = {
+				.m_oConstants = BuildConstants(f.chunk.m_oConstants),
+				.m_oByteCode = f.chunk.m_oByteCode,
+				.m_oPositions = ConvertPositions(f.chunk.m_oPositions)
+			},
 			.m_uParamCount = f.m_uParamCount,
 			.m_uLocalCount = f.m_uLocalCount,
 		});
@@ -40,11 +52,13 @@ VM::VM(const bloop::bytecode::VMByteCode& data)
 	}
 }
 VM::~VM() {
-	m_oGC.Collect(this); //in case the returned value was a dynamic object
+	
+	// if the user never called "Run", then nothing needs to be cleared
+	if (!m_oStack.empty()) {
+		m_oStack.clear(); //free everything for the GC
+		m_oGlobals.clear(); // let the gc get rid of these
+		m_oGC.Collect(this); //clear everything
 
-	for (auto& v : m_oGlobals) {
-		if (v.type == Value::Type::t_object)
-			m_oGC.m_pHeap->FreeObject(v.obj);
 	}
 
 	assert(m_oHeap.GetAllocatedSize() == 0u);
@@ -52,7 +66,6 @@ VM::~VM() {
 
 #include <chrono>
 #include <iostream>
-#include <functional>
 template<typename Callable>
 void Benchmark(const char* name, Callable&& fn) {
 	using clock = std::chrono::high_resolution_clock;
@@ -71,12 +84,25 @@ void VM::Run(const bloop::BloopString& entryFuncName) {
 		throw exception::VMError(BLOOPTEXT("couldn't find the entry function: " + entryFuncName));
 
 	const auto func = m_oFunctionTable.at(entryFuncName);
-	RunGlobal();
-	RunFunction(func);
-	std::cout << "returned: " << m_oStack.front().ValueToString() << " : " << m_oStack.front().TypeToString() << '\n';
+
+	try {
+		RunGlobal();
+		RunFunction(func);
+	} catch (exception::VMError& ex) {
+		bloop::BloopString msg;
+		if (auto frame = m_pCurrentFrame) {
+			const auto& src = m_pCurrentFrame->GetCurrentPosition();
+			msg = bloop::fmt::format("\n\nruntime error:\n\n{}\nat [{}, {}]", ex.what(), std::get<0>(src.pos), std::get<1>(src.pos));
+		} else {
+			msg = bloop::fmt::format("\n\nruntime error:\n\n{}", ex.what());
+		}
+		std::cout << msg << '\n';
+		return;
+	}
+
+	std::cout << bloop::fmt::format("\nreturned: {} : {}\n", m_oStack.front().ValueToString(), m_oStack.front().TypeToString());
 }
-VM::ExecutionReturnCode VM::RunFrame()
-{
+VM::ExecutionReturnCode VM::RunFrame() {
 	auto& bytecode = m_pCurrentFrame->m_pChunk->m_oByteCode;
 	ExecutionReturnCode returnCode{};
 
@@ -92,25 +118,18 @@ VM::ExecutionReturnCode VM::RunFrame()
 void VM::RunGlobal() {
 	m_pCurrentFrame = &m_oFrames.emplace_back(&m_oGlobalChunk, 0u);
 	[[maybe_unused]] const auto returnCode = RunFrame();
+	m_oFrames.clear();
 	m_pCurrentFrame = nullptr;
 }
-void VM::RunFunction(Function* fn)
-{
+void VM::RunFunction(Function* fn) {
 	PushFrame(fn);
 	const auto returnCode = RunFrame();
 	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
 
+	Push(ret);
 	if (m_oFrames.empty()) {
 		//program exit
-		Push(ret);
-		m_oGC.Collect(this);
-
-#if _DEBUG
-		if(ret.type == Value::Type::t_object)
-			assert(m_oHeap.GetAllocatedSize() == 1u); //let the return value escape to the user
-#endif
-		return;
+		return m_oGC.Collect(this);
 	}
-	Push(ret);
 }
