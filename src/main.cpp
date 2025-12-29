@@ -25,6 +25,7 @@ int main() {
 
 		if (const auto code = parser.Parse()) {
 			bloop::resolver::Resolve(code.get());
+
 			bloop::vm::VM vm(bloop::bytecode::BuildByteCode(code.get()));
 
 			vm.Run("main");

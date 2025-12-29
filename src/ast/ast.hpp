@@ -99,6 +99,8 @@ namespace bloop::ast {
 
 	struct Program : BlockStatement {
 		Program(const bloop::CodePosition& cp) : BlockStatement(cp) {}
+
+		std::size_t m_uNumFunctions{};
 	};
 
 	struct LiteralExpression : Expression {
@@ -126,6 +128,7 @@ namespace bloop::ast {
 				m_iDepth = symbol->m_iDepth;
 				m_uSlot = symbol->m_uSlot;
 				m_bIsConst = symbol->m_bIsConst;
+				m_bIsUpValue = symbol->m_bIsUpValue;
 				return;
 			}
 
@@ -135,6 +138,8 @@ namespace bloop::ast {
 		void EmitByteCode(TBCBuilder& builder) override {
 			if (m_iDepth == 0)
 				return Emit(builder, TOpCode::LOAD_GLOBAL, m_uSlot);
+			if(m_bIsUpValue)
+				return Emit(builder, TOpCode::LOAD_UPVALUE, m_uSlot);
 			Emit(builder, TOpCode::LOAD_LOCAL, m_uSlot);
 		}
 		[[nodiscard]] constexpr bool IsConst() const noexcept override { return m_bIsConst; }
@@ -143,6 +148,7 @@ namespace bloop::ast {
 		bloop::BloopInt m_iDepth{ bloop::bytecode::INVALID_SLOT };
 		bloop::BloopUInt16 m_uSlot{ bloop::bytecode::INVALID_SLOT };
 		bloop::BloopBool m_bIsConst{};
+		bloop::BloopBool m_bIsUpValue{};
 	};
 
 	struct BinaryExpression : Expression {

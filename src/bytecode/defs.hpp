@@ -36,12 +36,26 @@ namespace bloop::bytecode
 	};
 	namespace vmdata {
 		struct Function;
+		struct Capture {
+			bool m_bIsLocal;
+			bloop::BloopUInt16 m_uSlot{};
+		};
 		struct Chunk {
 			std::vector<CConstant> m_oConstants;
 			std::size_t m_uNumGlobals{};
 			std::vector<bloop::BloopByte> m_oByteCode;
 			std::vector<CInstructionPosition> m_oPositions;
+			std::vector<const Function*> m_oFunctions;
 		};
+		struct Function {
+			bloop::BloopString m_sName;
+			bloop::BloopUInt16 m_uParamCount{};
+			bloop::BloopUInt16 m_uLocalCount{};
+			Chunk chunk;
+			std::vector<Capture> m_oCaptures;
+		};
+		
+	
 	}
 	struct VMByteCode {
 		vmdata::Chunk chunk;

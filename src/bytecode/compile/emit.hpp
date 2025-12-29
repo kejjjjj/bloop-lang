@@ -5,6 +5,10 @@
 #include <vector>
 #include <variant>
 
+namespace bloop::ast {
+	struct AbstractSyntaxTree;
+}
+
 namespace bloop::bytecode
 {
 
@@ -61,6 +65,8 @@ namespace bloop::bytecode
 
 
 	struct CByteCodeBuilder {
+		CByteCodeBuilder(std::vector<vmdata::Function>& allFuncs) : m_oAllFunctions(allFuncs){}
+
 		virtual ~CByteCodeBuilder() = default;
 		[[nodiscard]] virtual constexpr bool GlobalContext() const noexcept { return false; }
 		[[nodiscard]] bloop::BloopUInt16 AddConstant(CConstant&& c);
@@ -69,6 +75,12 @@ namespace bloop::bytecode
 		[[nodiscard]] bloop::BloopUInt16 EmitJump(EOpCode opcode, CodePosition pos); //returns the index of m_oByteCode
 		void EmitJump(EOpCode opcode, bloop::BloopUInt16 offset, CodePosition pos);
 		void PatchJump(bloop::BloopUInt16 src, bloop::BloopUInt16 dst); //dst indexes m_oByteCode
+		void EmitCapture(const vmdata::Capture& capture, CodePosition pos);
+		void EnsureReturn(bloop::ast::AbstractSyntaxTree* node);
+		void AddFunction(const vmdata::Function* func);
+		[[nodiscard]] inline auto FunctionCount() const noexcept { return m_oFunctions.size(); }
+		[[nodiscard]] vmdata::Chunk Finalize();
+
 		void Print();
 
 		[[nodiscard]] std::vector<bloop::BloopByte> Encode();
@@ -77,9 +89,15 @@ namespace bloop::bytecode
 		std::vector<CConstant> m_oConstants;
 		std::vector<CSingularByteCode> m_oByteCode;
 		bloop::BloopUInt16 m_uOffset{};
+
+		std::vector<vmdata::Function>& m_oAllFunctions;
+	private:
+
+		std::vector<const vmdata::Function*> m_oFunctions; // references m_oAllFunctions
 	};
 
 	struct CByteCodeBuilderForGlobals : CByteCodeBuilder {
+		CByteCodeBuilderForGlobals(std::vector<vmdata::Function>& f) : CByteCodeBuilder(f){}
 		[[nodiscard]] constexpr bool GlobalContext() const noexcept override { return true; }
 		bloop::BloopUInt16 m_uNumGlobals{};
 	};

@@ -1,5 +1,6 @@
 #include "bytecode/compile/emit.hpp"
 #include "bytecode/exception.hpp"
+#include "ast/function.hpp"
 
 #include <vector>
 #include <ranges>
@@ -49,17 +50,38 @@ void CByteCodeBuilder::EmitJump(EOpCode opcode, bloop::BloopUInt16 offset, CodeP
 void CByteCodeBuilder::PatchJump(bloop::BloopUInt16 src, bloop::BloopUInt16 dst) {
 	std::get<1>(m_oByteCode[src].ins).arg = dst;
 }
+void CByteCodeBuilder::EmitCapture(const vmdata::Capture& capture, CodePosition pos) {
+	if (capture.m_bIsLocal) {
+		return Emit(EOpCode::CAPTURE_LOCAL, capture.m_uSlot, pos);
+	}
+	return Emit(EOpCode::CAPTURE_UPVALUE, capture.m_uSlot, pos);
+}
+void CByteCodeBuilder::EnsureReturn(bloop::ast::AbstractSyntaxTree* node){
+	if (m_oByteCode.back().GetOpCode() != EOpCode::RETURN && m_oByteCode.back().GetOpCode() != EOpCode::RETURN_VALUE)
+		Emit(EOpCode::RETURN, node->m_oApproximatePosition); //implicitly add a return statement to the end
+}
+void CByteCodeBuilder::AddFunction(const vmdata::Function* func) {
+	m_oFunctions.push_back(func);
+}
+vmdata::Chunk CByteCodeBuilder::Finalize() {
+	return { 
+		.m_oConstants = m_oConstants, 
+		.m_oByteCode = Encode(), 
+		.m_oPositions = GetCodePositions(), 
+		.m_oFunctions = m_oFunctions 
+	};
+}
 
 void CByteCodeBuilder::Print() {
 
 	bloop::BloopUInt16 ip{};
-
-	std::ranges::for_each(m_oByteCode, [&ip](const CSingularByteCode& c) {
+	std::ranges::for_each(m_oByteCode, [&](CSingularByteCode& c) {
 		std::cout << ip << ": " << c.ToString() << '\n';
 		ip += c.GetBytes();
 	});
-
 }
+
+
 std::vector<bloop::BloopByte> CByteCodeBuilder::Encode() {
 	std::vector<bloop::BloopByte> out;
 

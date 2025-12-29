@@ -11,6 +11,7 @@ using namespace bloop::resolver;
 void bloop::resolver::Resolve(bloop::ast::Program* code){
 	internal::Resolver resolver;
 	code->Resolve(resolver);
+	code->m_uNumFunctions = resolver.m_oAllFunctions.size();
 }
 
 using namespace bloop::resolver::internal;
@@ -47,7 +48,13 @@ Symbol* Resolver::ResolveSymbol(const bloop::BloopString& name) {
 		return nullptr;
 
 	auto* symbol = &itr->symbols.at(name);
-	m_oFunctions.back().m_pCurrentFunction->m_oCaptures.emplace_back(m_iScopeDepth - symbol->m_iDepth, symbol->m_uSlot);
-	
+	symbol->m_bIsUpValue = true;
+
+	bloop::BloopInt depth{1};
+
+	//propagate the capture outward
+	for (auto& f : m_oFunctions | std::views::drop(symbol->m_iDepth))
+		f.m_pCurrentFunction->m_oCaptures.emplace_back(depth++, symbol->m_uSlot);
+
 	return symbol;
 }

@@ -9,18 +9,19 @@ using namespace bloop::bytecode;
 CByteCodeFunction::CByteCodeFunction(bloop::ast::FunctionDeclarationStatement* funcDecl)
 	: m_pFunc(funcDecl){}
 
-vmdata::Function CByteCodeFunction::Generate() {
+// represents a global level function (depth = 0)
+void CByteCodeFunction::Generate(std::vector<vmdata::Function>& funcs) {
 
-	CByteCodeBuilder b;
-	m_pFunc->EmitByteCode(b);
+	CByteCodeBuilder b(funcs);
+	m_pFunc->m_pBody->EmitByteCode(b);
+	b.EnsureReturn(m_pFunc->m_pBody.get());
 
-	std::cout << '\n' << m_pFunc->m_sName << ":\n";
-	b.Print();
+	m_pFunc->PrintInstructions(b);
 
-	return vmdata::Function{
-		.m_sName = m_pFunc->m_sName,
-		.m_uParamCount = static_cast<bloop::BloopUInt16>(m_pFunc->m_oParams.size()),
-		.m_uLocalCount = m_pFunc->m_uLocalCount,
-		.chunk = {.m_oConstants = b.m_oConstants, .m_oByteCode = b.Encode(), .m_oPositions=b.GetCodePositions()}
-	};
+	//return vmdata::Function{
+	//	.m_sName = m_pFunc->m_sName,
+	//	.m_uParamCount = static_cast<bloop::BloopUInt16>(m_pFunc->m_oParams.size()),
+	//	.m_uLocalCount = m_pFunc->m_uLocalCount,
+	//	.chunk = b.Finalize()
+	//};
 }

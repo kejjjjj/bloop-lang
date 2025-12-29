@@ -11,7 +11,8 @@ CByteCodeGlobals::CByteCodeGlobals(bloop::ast::Program* code)
 	: m_pCode(code) {}
 vmdata::Chunk CByteCodeGlobals::Generate() {
 
-	CByteCodeBuilderForGlobals builder;
+	std::vector<vmdata::Function> unused;
+	CByteCodeBuilderForGlobals builder(unused);
 	for (auto& stmt : m_pCode->m_oStatements) {
 
 		if (stmt->IsFunction()) {

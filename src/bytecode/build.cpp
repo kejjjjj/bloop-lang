@@ -10,11 +10,12 @@ VMByteCode bloop::bytecode::BuildByteCode(bloop::ast::Program* code) {
 	CByteCodeGlobals globals(code);
 	auto globalChunk = globals.Generate();
 
-	std::vector<vmdata::Function> functions;
+	std::vector<vmdata::Function> functions(code->m_uNumFunctions);
+
 	for (const auto& stmt : code->m_oStatements) {
 		if (stmt->IsFunction()) {
 			CByteCodeFunction f(dynamic_cast<bloop::ast::FunctionDeclarationStatement*>(stmt.get()));
-			functions.push_back(f.Generate());
+			f.Generate(functions);
 		}
 	}
 

@@ -57,7 +57,7 @@ void GC::Sweep() {
 		}
 	}
 }
-void GC::Trace([[maybe_unused]] Object* obj) {
+void GC::Trace(Object* obj) {
 
 	switch (obj->type) {
 	case Object::Type::ot_array: 

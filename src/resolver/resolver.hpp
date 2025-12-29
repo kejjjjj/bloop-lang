@@ -21,6 +21,7 @@ namespace bloop::resolver {
 			bloop::BloopInt m_iDepth{};
 			bloop::BloopUInt16 m_uSlot{};
 			bloop::BloopBool m_bIsConst{};
+			bloop::BloopBool m_bIsUpValue{};
 		};
 
 		struct Scope {
@@ -35,13 +36,13 @@ namespace bloop::resolver {
 			std::vector<FunctionContext> m_oFunctions; // to keep track of local counts
 
 			bloop::BloopInt m_iScopeDepth{-1};
-			bloop::BloopUInt16 m_uNumFunctions{};
 			void BeginScope();
 			void EndScope();
 
 			[[maybe_unused]] Symbol* DeclareSymbol(const bloop::BloopString& name, bool isConst = false);
 			[[nodiscard]] Symbol* ResolveSymbol(const bloop::BloopString& name);
 
+			std::vector<bloop::ast::FunctionDeclarationStatement*> m_oAllFunctions;
 		};
 	}
 

@@ -1,12 +1,18 @@
 #pragma once
 
 #include "ast/ast.hpp"
+#include "utils/fmt.hpp"
+#include <iostream>
 
 namespace bloop::ast {
 
 	struct Capture {
 		bloop::BloopInt m_iDepth{}; // num scopes outward
 		bloop::BloopUInt16 m_uSlot{};
+
+		constexpr bloop::bytecode::vmdata::Capture ToBC() const noexcept {
+			return { m_iDepth == 1, m_uSlot };
+		}
 	};
 
 	struct FunctionDeclarationStatement : Statement {
@@ -23,7 +29,8 @@ namespace bloop::ast {
 			}
 
 			resolver.DeclareSymbol(m_sName, true);
-			m_uFunctionId = resolver.m_uNumFunctions++;
+			m_uFunctionId = static_cast<bloop::BloopUInt16>(resolver.m_oAllFunctions.size());
+			resolver.m_oAllFunctions.push_back(this);
 
 			resolver.m_oFunctions.push_back({0, this });
 			resolver.BeginScope();
@@ -40,12 +47,12 @@ namespace bloop::ast {
 			resolver.m_oFunctions.pop_back();
 		}
 
-		void EmitByteCode(TBCBuilder& builder) override {
-			m_pBody->EmitByteCode(builder);
-			assert(!builder.m_oByteCode.empty());
-			if (builder.m_oByteCode.back().GetOpCode() != TOpCode::RETURN && builder.m_oByteCode.back().GetOpCode() != TOpCode::RETURN_VALUE)
-				Emit(builder, TOpCode::RETURN); //implicitly add a return statement to the end
+		void PrintInstructions(TBCBuilder& parent) {
+			std::cout << bloop::fmt::format("\n{}: (id: {})\n", m_sName, m_uFunctionId);
+			parent.Print();
 		}
+
+		void EmitByteCode(TBCBuilder& parent) override;
 
 		bloop::BloopString m_sName;
 		std::vector<BloopString> m_oParams;
