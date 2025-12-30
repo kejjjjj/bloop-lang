@@ -122,33 +122,32 @@ namespace bloop::ast {
 	struct IdentifierExpression : Expression {
 		IdentifierExpression(const bloop::CodePosition& cp) : Expression(cp) {}
 		[[nodiscard]] IdentifierExpression* GetIdentifier() noexcept override { return this; }
-
+		using ResolvedIdentifier = bloop::resolver::internal::ResolvedIdentifier;
 		void Resolve(TResolver& resolver) override {
-			if (const auto symbol = resolver.ResolveSymbol(m_sName)) {
-				m_iDepth = symbol->m_iDepth;
-				m_uSlot = symbol->m_uSlot;
-				m_bIsConst = symbol->m_bIsConst;
-				m_bIsUpValue = symbol->m_bIsUpValue;
-				return;
-			}
+			m_oResolver = resolver.ResolveIdentifier(m_sName);
 
-			throw bloop::exception::ResolverError(BLOOPTEXT("unknown identifier: ") + m_sName, m_oApproximatePosition);
+			if(m_oResolver.m_eKind == ResolvedIdentifier::Kind::Error)
+				throw bloop::exception::ResolverError(BLOOPTEXT("unknown identifier: ") + m_sName, m_oApproximatePosition);
 
 		}
 		void EmitByteCode(TBCBuilder& builder) override {
-			if (m_iDepth == 0)
-				return Emit(builder, TOpCode::LOAD_GLOBAL, m_uSlot);
-			if(m_bIsUpValue)
-				return Emit(builder, TOpCode::LOAD_UPVALUE, m_uSlot);
-			Emit(builder, TOpCode::LOAD_LOCAL, m_uSlot);
+			switch (m_oResolver.m_eKind) {
+			case ResolvedIdentifier::Kind::Local:
+				Emit(builder, TOpCode::LOAD_LOCAL, m_oResolver.m_uSlot);
+				break;
+			case ResolvedIdentifier::Kind::Upvalue:
+				Emit(builder, TOpCode::LOAD_UPVALUE, m_oResolver.m_uSlot);
+				break;
+			case ResolvedIdentifier::Kind::Global:
+				Emit(builder, TOpCode::LOAD_GLOBAL, m_oResolver.m_uSlot);
+				break;
+			}
 		}
 		[[nodiscard]] constexpr bool IsConst() const noexcept override { return m_bIsConst; }
 
 		bloop::BloopString m_sName;
-		bloop::BloopInt m_iDepth{ bloop::bytecode::INVALID_SLOT };
-		bloop::BloopUInt16 m_uSlot{ bloop::bytecode::INVALID_SLOT };
 		bloop::BloopBool m_bIsConst{};
-		bloop::BloopBool m_bIsUpValue{};
+		bloop::resolver::internal::ResolvedIdentifier m_oResolver{};
 	};
 
 	struct BinaryExpression : Expression {

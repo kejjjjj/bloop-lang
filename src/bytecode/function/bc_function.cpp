@@ -16,6 +16,14 @@ void CByteCodeFunction::Generate(std::vector<vmdata::Function>& funcs) {
 	m_pFunc->m_pBody->EmitByteCode(b);
 	b.EnsureReturn(m_pFunc->m_pBody.get());
 
+	funcs[m_pFunc->m_uFunctionId] = vmdata::Function {
+		.m_sName = m_pFunc->m_sName,
+		.m_uParamCount = static_cast<bloop::BloopUInt16>(m_pFunc->m_oParams.size()),
+		.m_uLocalCount = m_pFunc->m_uLocalCount,
+		.chunk = b.Finalize(),
+		.m_oCaptures = {} //can't have captures
+	};
+
 	m_pFunc->PrintInstructions(b);
 
 	//return vmdata::Function{

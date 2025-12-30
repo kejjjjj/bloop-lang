@@ -14,8 +14,18 @@ void AssignExpression::EmitByteCode(TBCBuilder& builder) {
 			return pf->left->EmitByteCode(builder);
 		}
 
-		Emit(builder, TOpCode::STORE_LOCAL, ptr->m_uSlot);
-		//left->EmitByteCode(builder);
+		switch (ptr->m_oResolver.m_eKind) {
+		case IdentifierExpression::ResolvedIdentifier::Kind::Local:
+			Emit(builder, TOpCode::STORE_LOCAL, ptr->m_oResolver.m_uSlot);
+			break;
+		case IdentifierExpression::ResolvedIdentifier::Kind::Upvalue:
+			Emit(builder, TOpCode::STORE_UPVALUE, ptr->m_oResolver.m_uSlot);
+			break;
+		case IdentifierExpression::ResolvedIdentifier::Kind::Global:
+			Emit(builder, TOpCode::STORE_GLOBAL, ptr->m_oResolver.m_uSlot);
+			break;
+		}
+
 		return;
 	}
 

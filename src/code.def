@@ -1,16 +1,15 @@
 R"(
-fn main() {
-	const x = 2; // slot 0
-
-	fn mid(){
-		const y = 2; // slot 0 
-		fn inner() {
-			//LOAD_UPVALUE, 0 -> x
-			//LOAD_UPVALUE, 0 -> y
-			return x + y;
-		}
-	}
-	return 1;
+fn outer() {
+    let x = 1;
+    fn mid() {
+        const y = x;
+        fn inner() {
+            return x + y;
+        }
+        return inner;
+    }
+    return mid;
 }
+
 
 )";

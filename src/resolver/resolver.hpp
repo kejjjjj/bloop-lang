@@ -21,15 +21,20 @@ namespace bloop::resolver {
 			bloop::BloopInt m_iDepth{};
 			bloop::BloopUInt16 m_uSlot{};
 			bloop::BloopBool m_bIsConst{};
-			bloop::BloopBool m_bIsUpValue{};
 		};
 
 		struct Scope {
-			std::unordered_map<bloop::BloopString, Symbol> symbols;
+
+			std::unordered_map<bloop::BloopString, std::shared_ptr<Symbol>> symbols;
 		};
 		struct FunctionContext {
 			bloop::BloopUInt16 m_uNextSlot = 0;
 			bloop::ast::FunctionDeclarationStatement* m_pCurrentFunction{};
+		};
+		struct ResolvedIdentifier {
+			enum class Kind { Error, Local, Upvalue, Global };
+			Kind m_eKind;
+			bloop::BloopUInt16 m_uSlot;
 		};
 		struct Resolver {
 			std::vector<Scope> m_oScopes;
@@ -41,8 +46,15 @@ namespace bloop::resolver {
 
 			[[maybe_unused]] Symbol* DeclareSymbol(const bloop::BloopString& name, bool isConst = false);
 			[[nodiscard]] Symbol* ResolveSymbol(const bloop::BloopString& name);
+			[[nodiscard]] ResolvedIdentifier ResolveIdentifier(const bloop::BloopString& name);
 
 			std::vector<bloop::ast::FunctionDeclarationStatement*> m_oAllFunctions;
+
+		private:
+			[[nodiscard]] Symbol* ResolveLocal(const bloop::BloopString& name);
+			[[nodiscard]] Symbol* ResolveGlobal(const bloop::BloopString& name);
+			[[nodiscard]] Symbol* ResolveOuter(const bloop::BloopString& name);
+
 		};
 	}
 
