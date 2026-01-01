@@ -83,6 +83,7 @@ namespace bloop::ast {
 		virtual void Resolve(TResolver& resolver) = 0;
 		virtual void EmitByteCode(TBCBuilder& builder) = 0;
 		[[nodiscard]] virtual constexpr bool IsConst() const noexcept { return false; }
+
 		[[nodiscard]] virtual IdentifierExpression* GetIdentifier() noexcept { return nullptr; }
 
 	};
@@ -182,13 +183,7 @@ namespace bloop::ast {
 		AssignExpression(const bloop::CodePosition& cp) 
 			: BinaryExpression(bloop::EPunctuation::p_assign, cp) {}
 
-		void Resolve(TResolver& resolver) override {
-			BinaryExpression::Resolve(resolver);
-
-			if (left->IsConst())
-				throw bloop::exception::ResolverError(BLOOPTEXT("lhs is declared as const"), left->m_oApproximatePosition);
-		}
-
+		void Resolve(TResolver& resolver) override;
 		void EmitByteCode(TBCBuilder& builder) override;
 	};
 

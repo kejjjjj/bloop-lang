@@ -9,6 +9,9 @@ void AssignExpression::EmitByteCode(TBCBuilder& builder) {
 	//look for the identifier from the unary/postfix chain
 	if (const auto ptr = left->GetIdentifier()) {
 
+		if (auto pf = dynamic_cast<FunctionCall*>(left.get()))
+			throw exception::ResolverError(BLOOPTEXT("invalid lhs operand"), m_oApproximatePosition);
+
 		if (auto pf = dynamic_cast<Subscript*>(left.get())) {
 			pf->EmitSet(builder);
 			return pf->left->EmitByteCode(builder);
@@ -30,5 +33,15 @@ void AssignExpression::EmitByteCode(TBCBuilder& builder) {
 	}
 
 	throw bloop::exception::ResolverError(BLOOPTEXT("lhs wasn't an identifier"), left->m_oApproximatePosition);
+
+}
+void AssignExpression::Resolve(TResolver& resolver) {
+	BinaryExpression::Resolve(resolver);
+
+	if (auto pf = dynamic_cast<FunctionCall*>(left.get()))
+		throw exception::ResolverError(BLOOPTEXT("can't assign function calls"), m_oApproximatePosition);
+
+	if (left->IsConst())
+		throw bloop::exception::ResolverError(BLOOPTEXT("lhs is declared as const"), left->m_oApproximatePosition);
 
 }

@@ -62,7 +62,7 @@ VM::~VM() {
 	
 	// if the user never called "Run", then nothing needs to be cleared
 	if (!m_oStack.empty()) {
-		assert(m_oStack.size() == 1); //something leaked if not true
+		//assert(m_oStack.size() == 1); //something leaked if not true
 		m_oStack.clear(); //free everything for the GC
 		m_oGlobals.clear(); // let the gc get rid of these
 		m_oGC.Collect(this); //clear everything

@@ -3,15 +3,11 @@ R"(
 
 fn main() {
 
-	let nig = 3;
-	{{{
-		fn ass() {
-			return nig;
-		}
+	fn func(){
+		return 1;
+	}
 
-		return ass();
-	}}}
-
+	func() = 2;
 }
 
 
