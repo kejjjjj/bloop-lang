@@ -9,7 +9,7 @@ inline static auto ConvertCaptures(const auto& captures) {
 	std::vector<bloop::bytecode::vmdata::Capture> c;
 	c.reserve(captures.size());
 
-	for (auto& [_, cap] : captures)
+	for (auto& cap : captures)
 		c.emplace_back(cap.ToBC());
 
 	return c;
@@ -17,9 +17,7 @@ inline static auto ConvertCaptures(const auto& captures) {
 
 void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 
-	TBCBuilder fnBuilder2(parent.m_oAllFunctions);
-	auto& fnBuilder = parent.m_uDepth == 0 ? parent : fnBuilder2;
-	fnBuilder.m_uDepth++;
+	TBCBuilder fnBuilder(parent.m_oAllFunctions);
 
 	m_pBody->EmitByteCode(fnBuilder);
 	fnBuilder.EnsureReturn(this);
@@ -37,13 +35,15 @@ void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 
 	if (m_oCaptures.empty()) {
 		Emit(parent, TOpCode::MAKE_FUNCTION, m_uFunctionId);
-	} else {
+	}
+	else {
 		Emit(parent, TOpCode::MAKE_CLOSURE, m_uFunctionId);
 
-		for (auto& [_, cap] : m_oCaptures) {
+		for (auto& cap : m_oCaptures) {
 			parent.EmitCapture({ cap.kind == Capture::Kind::Local, cap.m_uSlot }, m_oApproximatePosition);
 		}
 	}
+	
 
 	switch (m_oIdentifier.m_eKind) {
 	case ResolvedIdentifier::Kind::Local:
@@ -56,5 +56,7 @@ void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 		Emit(parent, TOpCode::STORE_GLOBAL, m_oIdentifier.m_uSlot);
 		break;
 	}
+
+
 }
 

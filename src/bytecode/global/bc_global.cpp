@@ -21,7 +21,7 @@ vmdata::Chunk CByteCodeGlobals::Generate() {
 			stmt->Emit(builder, EOpCode::DEFINE_GLOBAL, builder.m_uNumGlobals++);
 			continue;
 		}
-
+		
 		stmt->EmitByteCode(builder);
 
 	}

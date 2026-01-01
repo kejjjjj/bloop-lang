@@ -57,12 +57,12 @@ ResolvedIdentifier Resolver::ResolveIdentifier(const bloop::BloopString& name) {
 		return { ResolvedIdentifier::Kind::Global, sym->m_uSlot };
 
 	if (auto* sym = ResolveOuter(name)) {
-		auto funcs = m_oFunctions | std::views::drop(sym->m_iDepth - 1);
+
+		auto funcs = m_oFunctions | std::views::drop(sym->m_iDepth);
 		auto t = std::list<FunctionContext>(funcs.begin(), funcs.end());
 
-		t.front().m_pCurrentFunction->PropagateCaptureInward(nullptr, t, sym); // create CAPTURE_LOCAL and CAPTURE_UPVALUE
-		//todo: create LOAD_UPVALUE
-		return ResolvedIdentifier{ ResolvedIdentifier::Kind::Upvalue, m_oFunctions.back().m_pCurrentFunction->m_oUpValues.at(sym).m_uSlot};
+		t.front().m_pCurrentFunction->PropagateCaptureInward(nullptr, t, sym);
+		return ResolvedIdentifier{ ResolvedIdentifier::Kind::Upvalue, m_oFunctions.back().m_pCurrentFunction->m_uNextUpValues->at(sym)};
 	}
 
 	return ResolvedIdentifier{ ResolvedIdentifier::Kind::Error, {} };

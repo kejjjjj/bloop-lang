@@ -56,28 +56,46 @@ namespace bloop::ast {
 		}
 
 		using FunctionContext = bloop::resolver::internal::FunctionContext;
-		using CaptureT = std::unordered_map<const Symbol*, Capture>;
-		void PropagateCaptureInward(FunctionDeclarationStatement* prevFunc , std::list<FunctionContext>& nextFunctions, const Symbol* symbol) {
+		using CaptureT = std::unordered_map<const Symbol*, bloop::BloopUInt16>;
+		void PropagateCaptureInward(FunctionDeclarationStatement* prevFunc, std::list<FunctionContext>& nextFunctions, const Symbol* symbol) {
+
+			if(!m_uNextUpValues)
+				m_uNextUpValues = std::make_unique<CaptureT>();
+
 
 			if (prevFunc) {
-				assert(prevFunc->m_oCaptures.contains(symbol));
-				auto oldSize = static_cast<bloop::BloopUInt16>(prevFunc->m_oCaptures.size());
-				auto& cap = prevFunc->m_oCaptures[symbol] = prevFunc->m_oCaptures.at(symbol);
 
-				//transform into an upvalue when it escapes the local scope
-				if (cap.kind == Capture::Kind::Local) {
-					cap.kind = Capture::Kind::Upvalue;
-					cap.m_uSlot = oldSize;
+				auto& theseVals = prevFunc->m_uNextUpValues;
+
+				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopUInt16>(m_uNextUpValues->size());
+				if (theseVals->contains(symbol)) {
+					m_oCaptures.push_back({ Capture::Kind::Upvalue, theseVals->at(symbol) });
+				} else {
+					m_oCaptures.push_back({ Capture::Kind::Local, symbol->m_uSlot });
 				}
+
 			} else {
-				m_oCaptures[symbol] = { Capture::Kind::Local, symbol->m_uSlot };
+				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopUInt16>(m_uNextUpValues->size());
+				m_oCaptures.push_back({ Capture::Kind::Local, symbol->m_uSlot });
 			}
 
 			nextFunctions.pop_front();
 			if(!nextFunctions.empty())
 				return nextFunctions.front().m_pCurrentFunction->PropagateCaptureInward(this, nextFunctions, symbol);
 		}
+		void PropagateUpvalueInward(FunctionDeclarationStatement* prevFunc, std::list<FunctionContext>& nextFunctions, const Symbol* symbol) {
 
+			if (prevFunc) {
+
+			}
+
+			//!prevFunc means there can't be any upvalues, since it's the root
+
+			nextFunctions.pop_front();
+			if (!nextFunctions.empty())
+				return nextFunctions.front().m_pCurrentFunction->PropagateUpvalueInward(this, nextFunctions, symbol);
+
+		}
 		void EmitByteCode(TBCBuilder& parent) override;
 
 		bloop::BloopString m_sName;
@@ -89,11 +107,8 @@ namespace bloop::ast {
 
 		bloop::resolver::internal::ResolvedIdentifier m_oIdentifier{};
 
-		//when creating CAPTURE_LOCAL / CAPTURE_UPVALUE
-		CaptureT m_oCaptures;
-
-		//when creating LOAD_UPVALUE
-		CaptureT m_oUpValues;
+		std::vector<Capture> m_oCaptures;
+		std::unique_ptr<CaptureT> m_uNextUpValues;
 	};
 
 }
