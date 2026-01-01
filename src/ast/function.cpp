@@ -9,7 +9,7 @@ inline static auto ConvertCaptures(const auto& captures) {
 	std::vector<bloop::bytecode::vmdata::Capture> c;
 	c.reserve(captures.size());
 
-	for (auto& cap : captures)
+	for (auto& [_, cap] : captures)
 		c.emplace_back(cap.ToBC());
 
 	return c;
@@ -17,29 +17,30 @@ inline static auto ConvertCaptures(const auto& captures) {
 
 void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 
-	TBCBuilder fnBuilder(parent.m_oAllFunctions);
+	TBCBuilder fnBuilder2(parent.m_oAllFunctions);
+	auto& fnBuilder = parent.m_uDepth == 0 ? parent : fnBuilder2;
+	fnBuilder.m_uDepth++;
+
 	m_pBody->EmitByteCode(fnBuilder);
 	fnBuilder.EnsureReturn(this);
 	PrintInstructions(fnBuilder);
-
-	const auto c = ConvertCaptures(m_oCaptureMap.m_oCaptures);
 
 	fnBuilder.m_oAllFunctions[m_uFunctionId] = {
 		.m_sName = m_sName,
 		.m_uParamCount = static_cast<bloop::BloopUInt16>(m_oParams.size()),
 		.m_uLocalCount = m_uLocalCount,
 		.chunk = fnBuilder.Finalize(),
-		.m_oCaptures = c
+		.m_oCaptures = ConvertCaptures(m_oCaptures)
 	};
 
 	parent.AddFunction(&fnBuilder.m_oAllFunctions[m_uFunctionId]);
 
-	if (m_oCaptureMap.m_oCaptures.empty()) {
+	if (m_oCaptures.empty()) {
 		Emit(parent, TOpCode::MAKE_FUNCTION, m_uFunctionId);
 	} else {
 		Emit(parent, TOpCode::MAKE_CLOSURE, m_uFunctionId);
 
-		for (auto& cap : m_oCaptureMap.m_oCaptures) {
+		for (auto& [_, cap] : m_oCaptures) {
 			parent.EmitCapture({ cap.kind == Capture::Kind::Local, cap.m_uSlot }, m_oApproximatePosition);
 		}
 	}

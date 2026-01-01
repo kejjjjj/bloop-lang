@@ -48,6 +48,8 @@ namespace bloop::resolver {
 			[[nodiscard]] Symbol* ResolveSymbol(const bloop::BloopString& name);
 			[[nodiscard]] ResolvedIdentifier ResolveIdentifier(const bloop::BloopString& name);
 
+			[[nodiscard]] bloop::ast::FunctionDeclarationStatement* GetOuterMostFunction() const;
+
 			std::vector<bloop::ast::FunctionDeclarationStatement*> m_oAllFunctions;
 
 		private:

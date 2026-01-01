@@ -1,12 +1,14 @@
 R"(
 fn outer() {
+    const x0 = 2;
+    const x1 = 2;
+
     let x = 1;
     fn mid() {
-        const y = x;
-        fn inner() {
-            return x + y;
+        let y = 0;
+        fn inner(){
+            return y + x;
         }
-        return inner;
     }
     return mid;
 }

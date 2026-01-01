@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <ranges>
+#include <list>
 
 #define NOMINMAX
 
@@ -33,7 +34,6 @@ Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst) {
 
 	auto slot = m_oFunctions.empty() ? static_cast<bloop::BloopUInt16>(scope.size()) : m_oFunctions.back().m_uNextSlot++;
 	auto& result = (scope[name] = std::make_shared<Symbol>(name, m_iScopeDepth, slot, isConst));
-	std::cout << "declare: " << name << " ptr: " << std::hex << result.get() << '\n';
 	return result.get();
 }
 Symbol* Resolver::ResolveSymbol(const bloop::BloopString& name) {
@@ -57,16 +57,12 @@ ResolvedIdentifier Resolver::ResolveIdentifier(const bloop::BloopString& name) {
 		return { ResolvedIdentifier::Kind::Global, sym->m_uSlot };
 
 	if (auto* sym = ResolveOuter(name)) {
-		bloop::BloopInt depth{ 1 };
-		bloop::BloopUInt16 currentUpSlot{};
+		auto funcs = m_oFunctions | std::views::drop(sym->m_iDepth - 1);
+		auto t = std::list<FunctionContext>(funcs.begin(), funcs.end());
 
-		for (auto& f : m_oFunctions | std::views::drop(sym->m_iDepth)) {
-			std::cout << "func: " << f.m_pCurrentFunction->m_sName << '\n';
-			currentUpSlot = f.m_pCurrentFunction->m_oCaptureMap.AddUpValue(sym, depth == 1);
-			depth++;
-		}
-
-		return ResolvedIdentifier{ ResolvedIdentifier::Kind::Upvalue, currentUpSlot };
+		t.front().m_pCurrentFunction->PropagateCaptureInward(nullptr, t, sym); // create CAPTURE_LOCAL and CAPTURE_UPVALUE
+		//todo: create LOAD_UPVALUE
+		return ResolvedIdentifier{ ResolvedIdentifier::Kind::Upvalue, m_oFunctions.back().m_pCurrentFunction->m_oUpValues.at(sym).m_uSlot};
 	}
 
 	return ResolvedIdentifier{ ResolvedIdentifier::Kind::Error, {} };
@@ -93,4 +89,9 @@ Symbol* Resolver::ResolveOuter(const bloop::BloopString& name)
 		return nullptr;
 
 	return itr->symbols.at(name).get();
+}
+
+bloop::ast::FunctionDeclarationStatement* Resolver::GetOuterMostFunction() const {
+	assert(!m_oFunctions.empty());
+	return m_oFunctions.front().m_pCurrentFunction;
 }

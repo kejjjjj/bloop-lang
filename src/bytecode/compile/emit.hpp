@@ -91,8 +91,9 @@ namespace bloop::bytecode
 		bloop::BloopUInt16 m_uOffset{};
 
 		std::vector<vmdata::Function>& m_oAllFunctions;
-	private:
+		bloop::BloopUInt m_uDepth{}; // 0 = outer most function
 
+	private:
 		std::vector<const vmdata::Function*> m_oFunctions; // references m_oAllFunctions
 	};
 
