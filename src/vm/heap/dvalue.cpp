@@ -10,8 +10,10 @@
 using namespace bloop::vm;
 using namespace std::string_literals;
 
-Object::Object(bloop::BloopInt ucount) : type(Type::ot_array), array({ .values = new Value[ucount], .count = ucount }) {}
+Object::Object(Function* function, UpValue** upVals, bloop::BloopUInt numVals) 
+	: type(Type::ot_closure), closure({ .function = function, .upvalues = upVals, .numValues= numVals }) {}
 
+Object::Object(bloop::BloopInt ucount) : type(Type::ot_array), array({ .values = new Value[ucount], .count = ucount }) {}
 
 void Object::Free()
 {
@@ -25,6 +27,12 @@ void Object::Free()
 	case Type::ot_function:
 		//just a handle
 		break;
+	case Type::ot_closure:
+		delete[] closure.upvalues;
+		break;
+	case Type::ot_upvalue:
+		delete upvalue;
+		break;
 	default:
 		break;
 	}
@@ -34,11 +42,15 @@ std::size_t Object::GetSize() const
 {
 	switch (type) {
 	case Type::ot_string:
-		return sizeof(Object) + string.len + sizeof(string.len);
+		return sizeof(Object) + string.len;
 	case Type::ot_array:
-		return sizeof(Object) + (sizeof(Value) * array.count + sizeof(array.count));
+		return sizeof(Object) + (sizeof(array.values) * array.count);
 	case Type::ot_function:
 		return sizeof(Object); //just a handle, has no allocated size
+	case Type::ot_closure:
+		return sizeof(Object) + (sizeof(closure.upvalues) * closure.numValues);
+	case Type::ot_upvalue:
+		return sizeof(Object) + sizeof(upvalue);
 	default:
 		return sizeof(Object);
 	}
@@ -72,8 +84,11 @@ bloop::BloopString Object::TypeToString() const {
 		return BLOOPTEXT("object");
 	case VT::ot_function:
 		return BLOOPTEXT("function");
+	case VT::ot_closure:
+		return BLOOPTEXT("closure");
 	}
-	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("type \"{}\" is not convertible to a string"), TypeToString()));
+
+	throw exception::VMError(BLOOPTEXT("type is not convertible to a string"));
 }
 
 bloop::BloopString Object::ValueToString() const {
@@ -108,7 +123,8 @@ bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object
 	}
 	case VT::ot_function:
 		return BLOOPTEXT("function");
-
+	case VT::ot_closure:
+		return BLOOPTEXT("closure");
 	}
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to a string"), TypeToString()));
 

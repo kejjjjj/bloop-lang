@@ -19,6 +19,11 @@ namespace bloop::bytecode {
 
 namespace bloop::vm
 {
+	struct Closure;
+	struct Capture {
+		bloop::BloopUInt16 m_uSlot{};
+		bool m_bIsLocal;
+	};
 	struct CInstructionPosition {
 		std::size_t byteOffset;
 		CodePosition pos;
@@ -32,23 +37,19 @@ namespace bloop::vm
 		Chunk chunk;
 		bloop::BloopUInt16 m_uParamCount{};
 		bloop::BloopUInt16 m_uLocalCount{};
+		std::vector<Capture> m_oCaptures{};
 	};
 
 	struct CallFrame {
-		CallFrame(Chunk* fn, std::size_t stackBase) : m_pChunk(fn), m_uBase(stackBase) {}
+		CallFrame(Chunk* fn, std::size_t stackBase);
+		CallFrame(Closure* closure, std::size_t stackBase);
 
-		[[nodiscard]] const CInstructionPosition& GetCurrentPosition() const {
-			auto it = std::upper_bound(m_pChunk->m_oPositions.begin(), m_pChunk->m_oPositions.end(), m_uIp,
-				[](std::size_t ip, const CInstructionPosition& p) {
-					return ip <= p.byteOffset;
-				});
-			return *(it - 1);
-		}
+		[[nodiscard]] const CInstructionPosition& GetCurrentPosition() const;
 
+		Closure* m_pClosure{};
 		Chunk* m_pChunk{};
 		std::size_t m_uIp{};
 		std::size_t m_uBase{};
-		std::size_t m_uCurrentLine{};
 
 	};
 
@@ -71,30 +72,20 @@ namespace bloop::vm
 		[[nodiscard]] ExecutionReturnCode RunFrame();
 		void RunGlobal();
 		void RunFunction(Function* fn);
+		void RunClosure(Closure* closure);
 
-		inline void PushFrame(Function* fn) {
-			const auto frameBase = m_oStack.size() - fn->m_uParamCount;
-			m_oStack.resize(frameBase + fn->m_uLocalCount);
-			m_pCurrentFrame = &m_oFrames.emplace_back(&fn->chunk, frameBase);
-		}
-		inline void PopFrame() {
-			m_oStack.resize(m_oFrames.back().m_uBase);
-			m_oFrames.pop_back();
-			m_pCurrentFrame = m_oFrames.empty() ? nullptr : &m_oFrames.back();
-		}
+		void PushFrame(Function* fn);
+		void PushFrame(Closure* fn);
+		void PopFrame();
+		void Push(const Value& v);
+		[[nodiscard]] Value Pop();
 
-		inline void Push(const Value& v) {
-			m_oStack.push_back(v);
-		}
-		[[nodiscard]] inline Value Pop() {
-			assert(!m_oStack.empty());
-			Value v = m_oStack.back();
-			m_oStack.pop_back();
-			return v;
-		}
 		[[nodiscard]] std::vector<Value> BuildConstants(const std::vector<bloop::bytecode::CConstant>& constants);
 		[[nodiscard]] ExecutionReturnCode InterpretOpCode(bloop::bytecode::EOpCode op);
 		[[nodiscard]] bloop::BloopUInt16 FetchOperand();
+
+		UpValue* CaptureUpValue(Value* slot);
+		void CloseUpValues(Value* lastSlot);
 
 		std::vector<Value> m_oStack;
 		std::vector<CallFrame> m_oFrames;
@@ -106,6 +97,8 @@ namespace bloop::vm
 		Heap m_oHeap;
 		GC m_oGC;
 		Chunk m_oGlobalChunk; //executed in the beginning
+
+		UpValue* m_pOpenUpValues{};
 	};
 
 }

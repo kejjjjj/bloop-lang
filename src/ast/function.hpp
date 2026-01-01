@@ -37,6 +37,7 @@ namespace bloop::ast {
 
 			resolver.m_oFunctions.push_back({0, this });
 			resolver.BeginScope();
+			m_iScopeDepth = resolver.m_iScopeDepth;
 
 			std::ranges::for_each(m_oParams, [this, &resolver](const std::string& param) {
 				if (resolver.ResolveSymbol(param))
@@ -62,40 +63,33 @@ namespace bloop::ast {
 			if(!m_uNextUpValues)
 				m_uNextUpValues = std::make_unique<CaptureT>();
 
-
-			if (prevFunc) {
-
-				auto& theseVals = prevFunc->m_uNextUpValues;
-
-				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopUInt16>(m_uNextUpValues->size());
-				if (theseVals->contains(symbol)) {
-					m_oCaptures.push_back({ Capture::Kind::Upvalue, theseVals->at(symbol) });
-				} else {
-					m_oCaptures.push_back({ Capture::Kind::Local, symbol->m_uSlot });
-				}
-
-			} else {
+			auto AddLocal = [&] { 
 				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopUInt16>(m_uNextUpValues->size());
 				m_oCaptures.push_back({ Capture::Kind::Local, symbol->m_uSlot });
+			};
+
+			auto AddUpvalue = [&](bloop::BloopUInt16 slot) {
+				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopUInt16>(m_uNextUpValues->size());
+				m_oCaptures.push_back({ Capture::Kind::Upvalue, slot });
+			};
+
+			if (prevFunc) {
+				auto& prevVals = prevFunc->m_uNextUpValues;
+				if (prevVals->contains(symbol)) {
+					if (!m_uNextUpValues->contains(symbol))
+						AddUpvalue(prevVals->at(symbol));
+				} else {
+					AddLocal();
+				}
+			} else if (!m_uNextUpValues->contains(symbol)) {
+				AddLocal();
 			}
 
 			nextFunctions.pop_front();
 			if(!nextFunctions.empty())
 				return nextFunctions.front().m_pCurrentFunction->PropagateCaptureInward(this, nextFunctions, symbol);
 		}
-		void PropagateUpvalueInward(FunctionDeclarationStatement* prevFunc, std::list<FunctionContext>& nextFunctions, const Symbol* symbol) {
 
-			if (prevFunc) {
-
-			}
-
-			//!prevFunc means there can't be any upvalues, since it's the root
-
-			nextFunctions.pop_front();
-			if (!nextFunctions.empty())
-				return nextFunctions.front().m_pCurrentFunction->PropagateUpvalueInward(this, nextFunctions, symbol);
-
-		}
 		void EmitByteCode(TBCBuilder& parent) override;
 
 		bloop::BloopString m_sName;
@@ -104,6 +98,7 @@ namespace bloop::ast {
 
 		bloop::BloopUInt16 m_uFunctionId{ 0 };
 		bloop::BloopUInt16 m_uLocalCount{ 0 };
+		bloop::BloopInt m_iScopeDepth{ 0 };
 
 		bloop::resolver::internal::ResolvedIdentifier m_oIdentifier{};
 

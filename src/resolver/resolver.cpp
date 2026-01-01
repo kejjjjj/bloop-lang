@@ -11,6 +11,14 @@ using namespace bloop::resolver;
 
 void bloop::resolver::Resolve(bloop::ast::Program* code){
 	internal::Resolver resolver;
+
+	//clear out any silly business
+	for (auto& globalStatement : code->m_oStatements) {
+		if (dynamic_cast<bloop::ast::UnnamedScopeStatement*>(globalStatement.get()))
+			throw exception::ResolverError(BLOOPTEXT("unnamed scopes aren't allowed in the global scope"), globalStatement->m_oApproximatePosition);
+
+	}
+
 	code->Resolve(resolver);
 	code->m_uNumFunctions = resolver.m_oAllFunctions.size();
 }
@@ -69,8 +77,19 @@ ResolvedIdentifier Resolver::ResolveIdentifier(const bloop::BloopString& name) {
 }
 
 Symbol* Resolver::ResolveLocal(const bloop::BloopString& name) {
-	if (m_oScopes.back().symbols.contains(name))
-		return m_oScopes.back().symbols.at(name).get();
+	//if (m_oScopes.back().symbols.contains(name))
+	//	return m_oScopes.back().symbols.at(name).get();
+
+	if (m_oFunctions.empty())
+		return nullptr;
+
+	auto& func = m_oFunctions.back().m_pCurrentFunction;
+	auto range = std::vector<Scope>(m_oScopes.begin() + func->m_iScopeDepth, m_oScopes.end());
+
+	if (const auto itr = std::ranges::find_if(range.rbegin(), range.rend(), [&name](Scope& s) {
+		return s.symbols.contains(name); }); itr != range.rend()) {
+		return itr->symbols.at(name).get();
+	}
 
 	return nullptr;
 }

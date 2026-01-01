@@ -73,7 +73,7 @@ bool Value::IsString() const {
 	return type == VT::t_object && obj->type == Object::Type::ot_string;
 }
 bool Value::IsCallable() const {
-	return type == VT::t_object && obj->type == Object::Type::ot_function;
+	return type == VT::t_object && (obj->type == Object::Type::ot_function || obj->type == Object::Type::ot_closure);
 }
 bool Value::IsIndexable() const {
 	return type == VT::t_object && obj->IsIndexable();

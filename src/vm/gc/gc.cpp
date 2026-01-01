@@ -66,6 +66,11 @@ void GC::Trace(Object* obj) {
 				Mark(obj->array.values[i].obj);
 		}
 		break;
+	case Object::Type::ot_closure:
+		for (const auto i : std::views::iota(0u, obj->closure.numValues)) {
+			Mark(obj->closure.upvalues[i]->owner);
+		}
+		break;
 	}
 
 }

@@ -14,9 +14,10 @@ CParserScope::CParserScope(const CParserContext& ctx)
 }
 CParserScope::~CParserScope() = default;
 
-std::unique_ptr<bloop::ast::BlockStatement> CParserScope::Parse(bool allowSingleStatement) {
+std::unique_ptr<bloop::ast::UnnamedScopeStatement> CParserScope::Parse(bool allowSingleStatement) {
 
 	assert(!IsEndOfBuffer() && (allowSingleStatement || GetIteratorSafe()->IsOperator(EPunctuation::p_curlybracket_open)));
+	const auto iterPos = GetIteratorSafe()->GetCodePosition();
 
 	const auto isCurlyBracket = GetIteratorSafe()->IsOperator(EPunctuation::p_curlybracket_open);
 
@@ -26,7 +27,7 @@ std::unique_ptr<bloop::ast::BlockStatement> CParserScope::Parse(bool allowSingle
 		if (GetIteratorSafe()->IsOperator(EPunctuation::p_curlybracket_close))
 			throw exception::ParserError(BLOOPTEXT("empty scopes aren't allowed"), GetIteratorSafe()->GetCodePosition());
 	}
-	auto block = std::make_unique<bloop::ast::BlockStatement>(GetIteratorSafe()->GetCodePosition());
+	auto block = std::make_unique<bloop::ast::UnnamedScopeStatement>(iterPos);
 	auto oldBlock = m_oCtx.m_pCurrentBlock;
 
 	m_oCtx.m_pCurrentBlock = block.get();

@@ -39,6 +39,16 @@ Object* Heap::AllocArray(std::size_t numValues) {
 
 	return arr;
 }
+Object* Heap::AllocClosure(Function* function, bloop::BloopUInt numVals) {
+	auto vals = new UpValue*[numVals];
+	return Allocate(new Object(function, vals, numVals));
+}
+Object* Heap::AllocUpValue(Value* slot, UpValue* location) {
+	auto up = new UpValue{ nullptr, slot, {}, location };
+	auto r = Allocate(new Object(up));
+	up->owner = r;
+	return r;
+}
 Object* Heap::StringConcat(Object* a, Object* b)
 {
 	const auto len = a->string.len + b->string.len;

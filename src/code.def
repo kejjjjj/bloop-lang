@@ -1,18 +1,19 @@
 R"(
-fn outer() {
-    const x0 = 2;
 
-    let x = 1; 
-    fn mid() {
-        let y = 0;
-        fn inner(){
-            let z = 0;
-            fn innermore(){
-                return z + y + x;
-            }
-        }
-    }
+
+fn main() {
+
+	let nig = 3;
+	{{{
+		fn ass() {
+			return nig;
+		}
+
+		return ass();
+	}}}
+
 }
+
 
 
 )";

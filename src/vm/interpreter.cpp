@@ -28,6 +28,11 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			Push(m_oGlobals[idx]);
 			break;
 		}
+		case TOpCode::LOAD_UPVALUE: {
+			const auto idx = FetchOperand();
+			Push(*m_pCurrentFrame->m_pClosure->upvalues[idx]->location);
+			break;
+		}
 		case TOpCode::CREATE_ARRAY: {
 			const auto numInitializers = FetchOperand();
 			auto arr = m_oHeap.AllocArray(numInitializers);
@@ -53,6 +58,12 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			const auto idx = FetchOperand();
 			assert(idx <= static_cast<bloop::BloopUInt16>(m_oStack.size()));
 			m_oGlobals[idx] = Pop();
+			break;
+		}
+		case TOpCode::STORE_UPVALUE: {
+			const auto idx = FetchOperand();
+			assert(idx <= static_cast<bloop::BloopUInt16>(m_pCurrentFrame->m_pClosure->numValues));
+			m_pCurrentFrame->m_pClosure->upvalues[idx]->closed = Pop();
 			break;
 		}
 		case TOpCode::MAKE_FUNCTION: {
@@ -115,10 +126,18 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			if (!callee.IsCallable())
 				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not callable"), callee.TypeToString()));
 
-			if(callee.obj->function->m_uParamCount != argc)
-				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->function->m_uParamCount));
+			if (callee.obj->type == Object::Type::ot_function) {
+				if (callee.obj->function->m_uParamCount != argc)
+					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->function->m_uParamCount));
 
-			RunFunction(callee.obj->function);
+				RunFunction(callee.obj->function);
+			}
+			else if (callee.obj->type == Object::Type::ot_closure) {
+				if (callee.obj->closure.function->m_uParamCount != argc)
+					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->function->m_uParamCount));
+
+				RunClosure(&callee.obj->closure);
+			}
 			break;
 		}
 		case TOpCode::SUBSCRIPT_GET: {
@@ -148,6 +167,25 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 		}
 		case TOpCode::RETURN_VALUE: {
 			return ExecutionReturnCode::rc_return_value;
+		}
+		case TOpCode::MAKE_CLOSURE: {
+			const auto funcIdx = FetchOperand();
+			assert(funcIdx < static_cast<bloop::BloopUInt16>(m_oFunctions.size()));
+			auto& func = m_oFunctions[funcIdx];
+
+			auto obj = m_oHeap.AllocClosure(&func, func.m_oCaptures.size());
+
+			for (const auto i : std::views::iota(0u, obj->closure.numValues)) {
+				const auto opcode = static_cast<TOpCode>(m_pCurrentFrame->m_pChunk->m_oByteCode[m_pCurrentFrame->m_uIp++]);
+				const auto slot = FetchOperand();
+
+				if (opcode == TOpCode::CAPTURE_LOCAL)
+					obj->closure.upvalues[i] = CaptureUpValue(&m_oStack[m_pCurrentFrame->m_uBase + slot]);
+				else
+					obj->closure.upvalues[i] = m_pCurrentFrame->m_pClosure->upvalues[slot];
+			}
+			Push(obj);
+			break;
 		}
 	}
 	return ExecutionReturnCode::rc_continue;

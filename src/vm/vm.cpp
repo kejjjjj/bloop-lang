@@ -21,14 +21,20 @@ std::vector<Value> VM::BuildConstants(const std::vector<bloop::bytecode::CConsta
 	return vals;
 }
 
-[[nodiscard ]] static std::vector<CInstructionPosition> ConvertPositions(const std::vector<bloop::bytecode::CInstructionPosition>& v) {
+[[nodiscard]] static auto ConvertPositions(const std::vector<bloop::bytecode::CInstructionPosition>& v) {
 	std::vector<CInstructionPosition> ret;
 	ret.reserve(v.size());
 	for (auto& var : v)
 		ret.push_back(CInstructionPosition{ var.m_uByteOffset, var.m_oPosition });
 	return ret;
 }
-
+[[nodiscard]] static auto ConvertCaptures(const std::vector<bloop::bytecode::vmdata::Capture>& v) {
+	std::vector<Capture> ret;
+	ret.reserve(v.size());
+	for (auto& var : v)
+		ret.push_back(Capture{ .m_uSlot = var.m_uSlot, .m_bIsLocal = var.m_bIsLocal });
+	return ret;
+}
 VM::VM(const bloop::bytecode::VMByteCode& data)
 	: m_oHeap(this), m_oGC(&m_oHeap) {
 
@@ -45,16 +51,18 @@ VM::VM(const bloop::bytecode::VMByteCode& data)
 			},
 			.m_uParamCount = f.m_uParamCount,
 			.m_uLocalCount = f.m_uLocalCount,
+			.m_oCaptures = ConvertCaptures(f.m_oCaptures)
 		});
-
-		assert(!m_oFunctionTable.contains(f.m_sName));
-		m_oFunctionTable[f.m_sName] = &m_oFunctions.back();
 	}
+
+	for (auto idx = std::size_t{ 0 }; auto& f : m_oFunctions)
+		m_oFunctionTable[data.functions[idx++].m_sName ] = &f;
 }
 VM::~VM() {
 	
 	// if the user never called "Run", then nothing needs to be cleared
 	if (!m_oStack.empty()) {
+		assert(m_oStack.size() == 1); //something leaked if not true
 		m_oStack.clear(); //free everything for the GC
 		m_oGlobals.clear(); // let the gc get rid of these
 		m_oGC.Collect(this); //clear everything
@@ -88,6 +96,8 @@ void VM::Run(const bloop::BloopString& entryFuncName) {
 	try {
 		RunGlobal();
 		RunFunction(func);
+		m_oGC.Collect(this);
+
 	} catch (exception::VMError& ex) {
 		bloop::BloopString msg;
 		if (auto frame = m_pCurrentFrame) {
@@ -109,8 +119,9 @@ VM::ExecutionReturnCode VM::RunFrame() {
 	while (m_pCurrentFrame->m_uIp != m_pCurrentFrame->m_pChunk->m_oByteCode.size()) {
 		returnCode = InterpretOpCode(static_cast<bloop::bytecode::EOpCode>(bytecode[m_pCurrentFrame->m_uIp++]));
 
-		if (returnCode != ExecutionReturnCode::rc_continue)
+		if (returnCode != ExecutionReturnCode::rc_continue) {
 			break;
+		}
 	}
 
 	return returnCode;
@@ -124,12 +135,18 @@ void VM::RunGlobal() {
 void VM::RunFunction(Function* fn) {
 	PushFrame(fn);
 	const auto returnCode = RunFrame();
+	CloseUpValues(&m_oStack[m_pCurrentFrame->m_uBase]);
+	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
+	PopFrame();
+	Push(ret);
+}
+void VM::RunClosure(Closure* closure)
+{
+	PushFrame(closure);
+	const auto returnCode = RunFrame();
+	CloseUpValues(m_oStack.data() + m_oStack.size() - m_pCurrentFrame->m_uBase);
 	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
 
 	Push(ret);
-	if (m_oFrames.empty()) {
-		//program exit
-		return m_oGC.Collect(this);
-	}
 }

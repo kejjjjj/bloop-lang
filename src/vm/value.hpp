@@ -5,6 +5,7 @@
 
 namespace bloop::vm {
     struct Object;
+
     struct Value {
 
         union { bloop::BloopBool b{}; bloop::BloopInt i; bloop::BloopUInt u; bloop::BloopDouble d; Object* obj; };
@@ -41,6 +42,14 @@ namespace bloop::vm {
 
     private:
         void Promote(Value::Type target);
+    };
+
+
+    struct UpValue {
+        Object* owner{};
+        Value* location{}; //stack slot or &closed
+        Value closed; //when stack slot goes out of scope
+        UpValue* next{};
     };
 
 }

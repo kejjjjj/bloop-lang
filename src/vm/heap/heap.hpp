@@ -6,8 +6,9 @@ namespace bloop::vm
 {
 	class VM;
 	struct Function;
-
+	struct Value;
 	struct Object;
+	struct UpValue;
 
 	class Heap {
 		friend class GC;
@@ -20,6 +21,8 @@ namespace bloop::vm
 		[[nodiscard]] Object* AllocString(std::size_t len);
 		[[nodiscard]] Object* AllocCallable(Function* callable);
 		[[nodiscard]] Object* AllocArray(std::size_t numValues);
+		[[nodiscard]] Object* AllocClosure(Function* function, bloop::BloopUInt numVals);
+		[[nodiscard]] Object* AllocUpValue(Value* slot, UpValue* location);
 
 		[[nodiscard]] Object* StringConcat(Object* a, Object* b);
 

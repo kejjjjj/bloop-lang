@@ -72,6 +72,10 @@ namespace bloop::ast {
 		
 		std::vector<std::unique_ptr<Statement>> m_oStatements;
 	};
+	struct UnnamedScopeStatement : BlockStatement {
+		UnnamedScopeStatement(const bloop::CodePosition& cp) : BlockStatement(cp) {}
+	};
+
 	struct IdentifierExpression;
 	struct Expression : AbstractSyntaxTree {
 		Expression(const bloop::CodePosition& cp) : AbstractSyntaxTree(cp) {}

@@ -6,7 +6,7 @@
 #include <memory>
 
 namespace bloop::ast {
-	struct BlockStatement;
+	struct UnnamedScopeStatement;
 }
 
 namespace bloop::parser {
@@ -19,7 +19,7 @@ namespace bloop::parser {
 		CParserScope(const CParserContext& ctx);
 		~CParserScope();
 
-		[[nodiscard]] std::unique_ptr<bloop::ast::BlockStatement> Parse(bool allowSingleStatement=false);
+		[[nodiscard]] std::unique_ptr<bloop::ast::UnnamedScopeStatement> Parse(bool allowSingleStatement=false);
 
 	private:
 		const CParserContext& m_oCtx;
