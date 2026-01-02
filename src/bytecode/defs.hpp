@@ -5,20 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
-#ifdef NOMINMAX
-#define HAD_NOMINMAX 1
-#else
-#define HAD_NOMINMAX 0
-#endif
-
 namespace bloop::bytecode
 {
-#define NOMINMAX
-	static constexpr bloop::BloopUInt16 INVALID_SLOT =
-		std::numeric_limits<bloop::BloopUInt16>::max();
-#if (HAD_NOMINMAX == 0)
-#undef NOMINMAX
-#endif
 
 	enum class EOpCode : unsigned char {
 		#define BLOOP_OP(name) name,
@@ -31,26 +19,26 @@ namespace bloop::bytecode
 		bloop::EValueType m_eDataType{};
 	};
 	struct CInstructionPosition {
-		std::size_t m_uByteOffset;
+		bloop::BloopIndex m_uByteOffset;
 		CodePosition m_oPosition;
 	};
 	namespace vmdata {
 		struct Function;
 		struct Capture {
 			bool m_bIsLocal;
-			bloop::BloopUInt16 m_uSlot{};
+			bloop::BloopIndex m_uSlot{};
 		};
 		struct Chunk {
 			std::vector<CConstant> m_oConstants;
-			std::size_t m_uNumGlobals{};
+			bloop::BloopIndex m_uNumGlobals{};
 			std::vector<bloop::BloopByte> m_oByteCode;
 			std::vector<CInstructionPosition> m_oPositions;
 			std::vector<const Function*> m_oFunctions;
 		};
 		struct Function {
 			bloop::BloopString m_sName;
-			bloop::BloopUInt16 m_uParamCount{};
-			bloop::BloopUInt16 m_uLocalCount{};
+			bloop::BloopIndex m_uParamCount{};
+			bloop::BloopIndex m_uLocalCount{};
 			Chunk chunk;
 			std::vector<Capture> m_oCaptures;
 		};
@@ -59,7 +47,7 @@ namespace bloop::bytecode
 	}
 	struct VMByteCode {
 		vmdata::Chunk chunk;
-		std::size_t numGlobals;
+		bloop::BloopIndex numGlobals;
 		std::vector<vmdata::Function> functions;
 	};
 	static std::unordered_map<EPunctuation, EOpCode> conversionTable = {

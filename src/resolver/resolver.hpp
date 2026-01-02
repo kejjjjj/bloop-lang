@@ -19,7 +19,7 @@ namespace bloop::resolver {
 		struct Symbol {
 			bloop::BloopString m_sName;
 			bloop::BloopInt m_iDepth{};
-			bloop::BloopUInt16 m_uSlot{};
+			bloop::BloopIndex m_uSlot{};
 			bloop::BloopBool m_bIsConst{};
 		};
 
@@ -28,13 +28,13 @@ namespace bloop::resolver {
 			std::unordered_map<bloop::BloopString, std::shared_ptr<Symbol>> symbols;
 		};
 		struct FunctionContext {
-			bloop::BloopUInt16 m_uNextSlot = 0;
+			bloop::BloopIndex m_uNextSlot = 0;
 			bloop::ast::FunctionDeclarationStatement* m_pCurrentFunction{};
 		};
 		struct ResolvedIdentifier {
 			enum class Kind { Error, Local, Upvalue, Global };
 			Kind m_eKind;
-			bloop::BloopUInt16 m_uSlot;
+			bloop::BloopIndex m_uSlot;
 		};
 		struct Resolver {
 			std::vector<Scope> m_oScopes;

@@ -8,7 +8,7 @@ namespace bloop::ast {
 
 	struct Capture {
 		enum class Kind { Local, Upvalue } kind{};
-		bloop::BloopUInt16 m_uSlot{};
+		bloop::BloopIndex m_uSlot{};
 
 		constexpr bloop::bytecode::vmdata::Capture ToBC() const noexcept {
 			return { kind == Kind::Local, m_uSlot };
@@ -32,7 +32,10 @@ namespace bloop::ast {
 			resolver.DeclareSymbol(m_sName, true);
 			m_oIdentifier = resolver.ResolveIdentifier(m_sName);
 
-			m_uFunctionId = static_cast<bloop::BloopUInt16>(resolver.m_oAllFunctions.size());
+			if(resolver.m_oAllFunctions.size() >= bloop::INVALID_SLOT)
+				throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the code has more than {} functions"), bloop::INVALID_SLOT), m_oApproximatePosition);
+
+			m_uFunctionId = static_cast<bloop::BloopIndex>(resolver.m_oAllFunctions.size());
 			resolver.m_oAllFunctions.push_back(this);
 
 			resolver.m_oFunctions.push_back({0, this });
@@ -52,32 +55,32 @@ namespace bloop::ast {
 		}
 
 		void PrintInstructions(TBCBuilder& parent) {
-			std::cout << bloop::fmt::format("\n{}: (id: {})\n", m_sName, m_uFunctionId);
+			std::cout << bloop::fmt::format(BLOOPTEXT("\n{}: (id: {})\n"), m_sName, m_uFunctionId);
 			parent.Print();
 		}
 
 		using FunctionContext = bloop::resolver::internal::FunctionContext;
-		using CaptureT = std::unordered_map<const Symbol*, bloop::BloopUInt16>;
+		using CaptureT = std::unordered_map<const Symbol*, bloop::BloopIndex>;
 		void PropagateCaptureInward(FunctionDeclarationStatement* prevFunc, std::list<FunctionContext>& nextFunctions, const Symbol* symbol) {
 
 			if(!m_uNextUpValues)
 				m_uNextUpValues = std::make_unique<CaptureT>();
 
-			auto AddLocal = [&] { 
-				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopUInt16>(m_uNextUpValues->size());
+			const auto AddLocal = [&] { 
+				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopIndex>(m_uNextUpValues->size());
 				m_oCaptures.push_back({ Capture::Kind::Local, symbol->m_uSlot });
 			};
 
-			auto AddUpvalue = [&](bloop::BloopUInt16 slot) {
-				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopUInt16>(m_uNextUpValues->size());
+			const auto AddUpvalue = [&](bloop::BloopIndex slot) {
+				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopIndex>(m_uNextUpValues->size());
 				m_oCaptures.push_back({ Capture::Kind::Upvalue, slot });
 			};
 
 			if (prevFunc) {
-				auto& prevVals = prevFunc->m_uNextUpValues;
-				if (prevVals->contains(symbol)) {
+				const auto& theseVals = prevFunc->m_uNextUpValues;
+				if (theseVals->contains(symbol)) {
 					if (!m_uNextUpValues->contains(symbol))
-						AddUpvalue(prevVals->at(symbol));
+						AddUpvalue(theseVals->at(symbol));
 				} else {
 					AddLocal();
 				}
@@ -96,8 +99,8 @@ namespace bloop::ast {
 		std::vector<BloopString> m_oParams;
 		std::unique_ptr<BlockStatement> m_pBody;
 
-		bloop::BloopUInt16 m_uFunctionId{ 0 };
-		bloop::BloopUInt16 m_uLocalCount{ 0 };
+		bloop::BloopIndex m_uFunctionId{ 0 };
+		bloop::BloopIndex m_uLocalCount{ 0 };
 		bloop::BloopInt m_iScopeDepth{ 0 };
 
 		bloop::resolver::internal::ResolvedIdentifier m_oIdentifier{};

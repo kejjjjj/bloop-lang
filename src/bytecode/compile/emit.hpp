@@ -18,7 +18,7 @@ namespace bloop::bytecode
 
 	struct Instr1 {
 		EOpCode op;
-		bloop::BloopUInt16 arg;
+		bloop::BloopIndex arg;
 	};
 	using Instruction = std::variant<Instr0, Instr1>;
 
@@ -28,13 +28,13 @@ namespace bloop::bytecode
 		Instruction ins;
 		CInstructionPosition loc; // for runtime error messages
 
-		[[nodiscard]] bloop::BloopUInt16 GetBytes() const {
-			bloop::BloopUInt16 result{};
+		[[nodiscard]] bloop::BloopIndex GetBytes() const {
+			bloop::BloopIndex result{};
 			std::visit([&](auto&& i) {
 				
-				result = 1;
+				result = 1u;
 				if (std::is_same_v<Instr1, std::decay_t<decltype(i)>>)
-					result = 3;
+					result = 1u + sizeof(bloop::BloopIndex);
 
 				}, ins);
 			return result;
@@ -69,12 +69,12 @@ namespace bloop::bytecode
 
 		virtual ~CByteCodeBuilder() = default;
 		[[nodiscard]] virtual constexpr bool GlobalContext() const noexcept { return false; }
-		[[nodiscard]] bloop::BloopUInt16 AddConstant(CConstant&& c);
-		void Emit(EOpCode opcode, bloop::BloopUInt16 idx, CodePosition pos);
+		[[nodiscard]] bloop::BloopIndex AddConstant(CConstant&& c);
+		void Emit(EOpCode opcode, bloop::BloopIndex idx, CodePosition pos);
 		void Emit(EOpCode opcode, CodePosition pos);
-		[[nodiscard]] bloop::BloopUInt16 EmitJump(EOpCode opcode, CodePosition pos); //returns the index of m_oByteCode
-		void EmitJump(EOpCode opcode, bloop::BloopUInt16 offset, CodePosition pos);
-		void PatchJump(bloop::BloopUInt16 src, bloop::BloopUInt16 dst); //dst indexes m_oByteCode
+		[[nodiscard]] bloop::BloopIndex EmitJump(EOpCode opcode, CodePosition pos); //returns the index of m_oByteCode
+		void EmitJump(EOpCode opcode, bloop::BloopIndex offset, CodePosition pos);
+		void PatchJump(bloop::BloopIndex src, bloop::BloopIndex dst); //dst indexes m_oByteCode
 		void EmitCapture(const vmdata::Capture& capture, CodePosition pos);
 		void EnsureReturn(bloop::ast::AbstractSyntaxTree* node);
 		void AddFunction(const vmdata::Function* func);
@@ -88,7 +88,7 @@ namespace bloop::bytecode
 
 		std::vector<CConstant> m_oConstants;
 		std::vector<CSingularByteCode> m_oByteCode;
-		bloop::BloopUInt16 m_uOffset{};
+		bloop::BloopIndex m_uOffset{};
 
 		std::vector<vmdata::Function>& m_oAllFunctions;
 
@@ -99,7 +99,7 @@ namespace bloop::bytecode
 	struct CByteCodeBuilderForGlobals : CByteCodeBuilder {
 		CByteCodeBuilderForGlobals(std::vector<vmdata::Function>& f) : CByteCodeBuilder(f){}
 		[[nodiscard]] constexpr bool GlobalContext() const noexcept override { return true; }
-		bloop::BloopUInt16 m_uNumGlobals{};
+		bloop::BloopIndex m_uNumGlobals{};
 	};
 
 }

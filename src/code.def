@@ -3,7 +3,54 @@ R"(
 
 fn main() {
 	
+	let func = 2;
 	let a = 0;
+
+	while(func <= 200){
+		func = func + 1;
+		func = func + 1;
+	}
+
+	for(let i = 0; i <= 10; i = i + 1){
+		a = i;
+	}
+
+	if(true)
+		return 2 + 2;
+	else if(true)
+		return 2 + 2 + 2;
+	else return 2 + 2 + 2;
+
+		while(func <= 200){
+		func = func + 1;
+		func = func + 1;
+	}
+
+	for(let i = 0; i <= 10; i = i + 1){
+		a = i;
+	}
+
+	if(true)
+		return 2 + 2;
+	else if(true)
+		return 2 + 2 + 2;
+	else return 2 + 2 + 2;
+
+	if(true)
+		return 2 + 2;
+	else if(true)
+		return 2 + 2 + 2;
+	else return 2 + 2 + 2;
+
+	while(func <= 200){
+		func = func + 1;
+		func = func + 1;
+	}
+
+	for(let i = 0; i <= 10; i = i + 1){
+		a = i;
+	}
+
 	for(let i = 0; i <= 10; i = i + 1){
 		a = i;
 	}

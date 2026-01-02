@@ -25,7 +25,7 @@ void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 
 	fnBuilder.m_oAllFunctions[m_uFunctionId] = {
 		.m_sName = m_sName,
-		.m_uParamCount = static_cast<bloop::BloopUInt16>(m_oParams.size()),
+		.m_uParamCount = static_cast<bloop::BloopIndex>(m_oParams.size()),
 		.m_uLocalCount = m_uLocalCount,
 		.chunk = fnBuilder.Finalize(),
 		.m_oCaptures = ConvertCaptures(m_oCaptures)

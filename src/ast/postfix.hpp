@@ -48,7 +48,7 @@ namespace bloop::ast {
 				arg->EmitByteCode(builder); // load args
 
 			left->EmitByteCode(builder); // load operand
-			Emit(builder, TOpCode::CALL, static_cast<bloop::BloopUInt16>(m_oArguments.size()));
+			Emit(builder, TOpCode::CALL, static_cast<bloop::BloopIndex>(m_oArguments.size()));
 		}
 
 		std::vector<std::unique_ptr<Expression>> m_oArguments;

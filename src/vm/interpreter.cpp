@@ -44,22 +44,22 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			break;
 		} case TOpCode::STORE_LOCAL: {
 			const auto idx = m_pCurrentFrame->m_uBase + FetchOperand();
-			assert(idx <= static_cast<bloop::BloopUInt16>(m_oStack.size()));
+			assert(idx <= static_cast<bloop::BloopIndex>(m_oStack.size()));
 			m_oStack[idx] = Pop();
 			break;
 		} case TOpCode::STORE_GLOBAL: {
 			const auto idx = FetchOperand();
-			assert(idx <= static_cast<bloop::BloopUInt16>(m_oStack.size()));
+			assert(idx <= static_cast<bloop::BloopIndex>(m_oStack.size()));
 			m_oGlobals[idx] = Pop();
 			break;
 		} case TOpCode::STORE_UPVALUE: {
 			const auto idx = FetchOperand();
-			assert(idx <= static_cast<bloop::BloopUInt16>(m_pCurrentFrame->m_pClosure->numValues));
+			assert(idx <= static_cast<bloop::BloopIndex>(m_pCurrentFrame->m_pClosure->numValues));
 			m_pCurrentFrame->m_pClosure->upvalues[idx]->closed = Pop();
 			break;
 		} case TOpCode::MAKE_FUNCTION: {
 			const auto idx = FetchOperand();
-			assert(idx <= static_cast<bloop::BloopUInt16>(m_oFunctions.size()));
+			assert(idx <= static_cast<bloop::BloopIndex>(m_oFunctions.size()));
 			Push(m_oHeap.AllocCallable(&m_oFunctions.at(idx)));
 			break;
 		} case TOpCode::ADD: {
@@ -148,7 +148,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			return ExecutionReturnCode::rc_return_value;
 		} case TOpCode::MAKE_CLOSURE: {
 			const auto funcIdx = FetchOperand();
-			assert(funcIdx < static_cast<bloop::BloopUInt16>(m_oFunctions.size()));
+			assert(funcIdx < static_cast<bloop::BloopIndex>(m_oFunctions.size()));
 			auto& func = m_oFunctions[funcIdx];
 
 			auto obj = m_oHeap.AllocClosure(&func, func.m_oCaptures.size());
@@ -169,10 +169,12 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 	return ExecutionReturnCode::rc_continue;
 }
 #define NOMINMAX
-bloop::BloopUInt16 VM::FetchOperand() {
-	auto& bytecode = m_pCurrentFrame->m_pChunk->m_oByteCode;
-	const auto ret = bytecode[m_pCurrentFrame->m_uIp] | (bytecode[m_pCurrentFrame->m_uIp + 1] << 8);
-	m_pCurrentFrame->m_uIp += 2; //because operands are 2 bits
-	assert(ret <= std::numeric_limits<bloop::BloopUInt16>::max());
-	return static_cast<bloop::BloopUInt16>(ret);
+bloop::BloopIndex VM::FetchOperand() {
+	auto* p = &m_pCurrentFrame->m_pChunk->m_oByteCode[m_pCurrentFrame->m_uIp];
+
+	bloop::BloopIndex value;
+	std::memcpy(&value, p, sizeof(value));
+
+	m_pCurrentFrame->m_uIp += sizeof(value);
+	return value;
 }

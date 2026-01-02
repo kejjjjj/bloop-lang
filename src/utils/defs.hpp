@@ -2,6 +2,7 @@
 #include <string>
 #include <sstream>
 #include <tuple>
+#include <numeric>
 
 #ifndef BLOOP_NONCOPYABLE
 #define BLOOP_NONCOPYABLE(className) \
@@ -13,6 +14,9 @@
 #define BLOOPTEXT(str) str
 #endif
 
+#define BLOOP16
+
+
 namespace bloop {
 	using BloopString = std::string;
 	using BloopOStringStream = std::ostringstream;
@@ -20,7 +24,20 @@ namespace bloop {
 	using BloopChar = char;
 	using BloopBool = bool;
 	using BloopByte = std::uint8_t;
+	using BloopUInt8 = std::uint8_t;
 	using BloopUInt16 = std::uint16_t;
+	using BloopUInt32 = std::uint32_t;
+	using BloopUInt64 = std::uint64_t;
+
+#ifdef BLOOP8
+	using BloopIndex = bloop::BloopUInt8; //255 max for everything is a wild limit!
+#elif defined(BLOOP16)
+	using BloopIndex = bloop::BloopUInt16;
+#elif defined(BLOOP32)
+	using BloopIndex = bloop::BloopUInt32;
+#elif defined(BLOOP64)
+	using BloopIndex = bloop::BloopUInt64;
+#endif
 
 #define BLOOP_MAX_STACK 0xffffu
 #define BLOOP_MAX_FRAMES 0x400u
@@ -80,4 +97,5 @@ namespace bloop {
 	};
 
 	using CodePosition = std::tuple<std::size_t, std::size_t>;
+	static constexpr BloopIndex INVALID_SLOT = std::numeric_limits<BloopIndex>::max();
 }

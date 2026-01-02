@@ -21,11 +21,11 @@ namespace bloop::vm
 {
 	struct Closure;
 	struct Capture {
-		bloop::BloopUInt16 m_uSlot{};
+		bloop::BloopIndex m_uSlot{};
 		bool m_bIsLocal;
 	};
 	struct CInstructionPosition {
-		std::size_t byteOffset;
+		bloop::BloopIndex byteOffset;
 		CodePosition pos;
 	};
 	struct Chunk {
@@ -35,8 +35,8 @@ namespace bloop::vm
 	};
 	struct Function {
 		Chunk chunk;
-		bloop::BloopUInt16 m_uParamCount{};
-		bloop::BloopUInt16 m_uLocalCount{};
+		bloop::BloopIndex m_uParamCount{};
+		bloop::BloopIndex m_uLocalCount{};
 		std::vector<Capture> m_oCaptures{};
 	};
 
@@ -82,7 +82,7 @@ namespace bloop::vm
 
 		[[nodiscard]] std::vector<Value> BuildConstants(const std::vector<bloop::bytecode::CConstant>& constants);
 		[[nodiscard]] ExecutionReturnCode InterpretOpCode(bloop::bytecode::EOpCode op);
-		[[nodiscard]] bloop::BloopUInt16 FetchOperand();
+		[[nodiscard]] bloop::BloopIndex FetchOperand();
 
 		UpValue* CaptureUpValue(Value* slot);
 		void CloseUpValues(Value* lastSlot);

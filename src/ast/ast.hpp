@@ -25,18 +25,18 @@ namespace bloop::ast {
 		inline void Emit(TBCBuilder& builder, TOpCode insn) const {
 			builder.Emit(insn, { m_oApproximatePosition });
 		}
-		inline void Emit(TBCBuilder& builder, TOpCode insn, bloop::BloopUInt16 arg) const {
+		inline void Emit(TBCBuilder& builder, TOpCode insn, bloop::BloopIndex arg) const {
 			builder.Emit(insn, arg, { m_oApproximatePosition });
 		}
 
-		[[nodiscard]] inline bloop::BloopUInt16 EmitJump(TBCBuilder& builder, TOpCode opcode) {
+		[[nodiscard]] inline bloop::BloopIndex EmitJump(TBCBuilder& builder, TOpCode opcode) {
 			return builder.EmitJump(opcode, {m_oApproximatePosition});
 		}
-		inline void EmitJump(TBCBuilder& builder, TOpCode opcode, bloop::BloopUInt16 offset) {
+		inline void EmitJump(TBCBuilder& builder, TOpCode opcode, bloop::BloopIndex offset) {
 			builder.EmitJump(opcode, offset, { m_oApproximatePosition });
 
 		}
-		inline void PatchJump(TBCBuilder& builder, bloop::BloopUInt16 src, bloop::BloopUInt16 dst) {
+		inline void PatchJump(TBCBuilder& builder, bloop::BloopIndex src, bloop::BloopIndex dst) {
 			builder.PatchJump(src, dst);
 		}
 
@@ -124,7 +124,7 @@ namespace bloop::ast {
 	struct Program : BlockStatement {
 		Program(const bloop::CodePosition& cp) : BlockStatement(cp) {}
 
-		std::size_t m_uNumFunctions{};
+		bloop::BloopIndex m_uNumFunctions{};
 	};
 
 	struct LiteralExpression : Expression {
@@ -220,7 +220,7 @@ namespace bloop::ast {
 			for (auto& v : m_pInitializers)
 				v->EmitByteCode(builder);
 
-			Emit(builder, TOpCode::CREATE_ARRAY, static_cast<bloop::BloopUInt16>(m_pInitializers.size()));
+			Emit(builder, TOpCode::CREATE_ARRAY, static_cast<bloop::BloopIndex>(m_pInitializers.size()));
 		}
 
 		std::vector<std::unique_ptr<Expression>> m_pInitializers;
@@ -249,7 +249,7 @@ namespace bloop::ast {
 		[[nodiscard]] virtual constexpr bool IsConst() const noexcept { return false; }
 		bloop::BloopString m_sName;
 		std::unique_ptr<Expression> m_pExpression;
-		bloop::BloopUInt16 m_uSlot{ bloop::bytecode::INVALID_SLOT };
+		bloop::BloopIndex m_uSlot{ bloop::INVALID_SLOT };
 	};
 
 	struct ConstVariableDeclaration : VariableDeclaration {
@@ -304,8 +304,8 @@ namespace bloop::ast {
 
 		void EmitByteCode(TBCBuilder& builder) override {
 
-			std::vector<bloop::BloopUInt16> m_oBlockEndJmps;
-			std::optional<bloop::BloopUInt16> nextJump;
+			std::vector<bloop::BloopIndex> m_oBlockEndJmps;
+			std::optional<bloop::BloopIndex> nextJump;
 
 			const auto jumpRequired = m_oIf.size() > 1u || m_pElse;
 

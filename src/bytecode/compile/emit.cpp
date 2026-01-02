@@ -11,7 +11,7 @@
 
 using namespace bloop::bytecode;
 
-bloop::BloopUInt16 CByteCodeBuilder::AddConstant(CConstant&& c) {
+bloop::BloopIndex CByteCodeBuilder::AddConstant(CConstant&& c) {
 
 	if (const auto ptr = std::ranges::find_if(m_oConstants,
 		[&c](const CConstant& p) {
@@ -20,34 +20,48 @@ bloop::BloopUInt16 CByteCodeBuilder::AddConstant(CConstant&& c) {
 
 		const auto dist = std::distance(m_oConstants.begin(), ptr);
 
-		if (dist > std::numeric_limits<bloop::BloopUInt16>::max())
-			throw exception::ByteCodeError(BLOOPTEXT("more than 65536 constants in a function"));
+		if (static_cast<bloop::BloopIndex>(dist) > std::numeric_limits<bloop::BloopIndex>::max())
+			throw exception::ByteCodeError(BLOOPTEXT("too many constants in a function"));
 
-		return static_cast<bloop::BloopUInt16>(std::distance(m_oConstants.begin(), ptr));
+		return static_cast<bloop::BloopIndex>(std::distance(m_oConstants.begin(), ptr));
 	}
 
 	auto idx = m_oConstants.size();
 	m_oConstants.emplace_back(std::forward<decltype(c)>(c));
-	return static_cast<bloop::BloopUInt16>(idx);
+	return static_cast<bloop::BloopIndex>(idx);
 }
-void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopUInt16 idx, CodePosition pos) {
+void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex idx, CodePosition pos) {
 	m_oByteCode.emplace_back(CSingularByteCode{ .ins = Instr1{.op = opcode, .arg = idx }, .loc = { m_uOffset, pos } });
-	m_uOffset += 3; // op = 1, idx = 2
+	
+	constexpr auto offset = 1 + sizeof(bloop::BloopIndex);
+
+	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset > bloop::INVALID_SLOT)
+		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode has more than {} bytes"), bloop::INVALID_SLOT), pos);
+
+
+	m_uOffset += offset; // op = 1
+
 }
 void CByteCodeBuilder::Emit(EOpCode opcode, CodePosition pos) {
 	m_oByteCode.emplace_back(CSingularByteCode{ .ins = Instr0{.op = opcode }, .loc = { m_uOffset, pos } });
-	m_uOffset += 1; // op = 1
+
+	constexpr auto offset = 1;
+
+	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset > bloop::INVALID_SLOT)
+		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode has more than {} bytes"), bloop::INVALID_SLOT), pos);
+
+	m_uOffset += offset; // op = 1
 }
 
-bloop::BloopUInt16 CByteCodeBuilder::EmitJump(EOpCode opcode, CodePosition pos) {
+bloop::BloopIndex CByteCodeBuilder::EmitJump(EOpCode opcode, CodePosition pos) {
 	auto idx = m_oByteCode.size();
 	Emit(opcode, 0, pos);
-	return static_cast<bloop::BloopUInt16>(idx);
+	return static_cast<bloop::BloopIndex>(idx);
 }
-void CByteCodeBuilder::EmitJump(EOpCode opcode, bloop::BloopUInt16 offset, CodePosition pos) {
+void CByteCodeBuilder::EmitJump(EOpCode opcode, bloop::BloopIndex offset, CodePosition pos) {
 	Emit(opcode, offset, pos);
 }
-void CByteCodeBuilder::PatchJump(bloop::BloopUInt16 src, bloop::BloopUInt16 dst) {
+void CByteCodeBuilder::PatchJump(bloop::BloopIndex src, bloop::BloopIndex dst) {
 	std::get<1>(m_oByteCode[src].ins).arg = dst;
 }
 void CByteCodeBuilder::EmitCapture(const vmdata::Capture& capture, CodePosition pos) {
@@ -74,9 +88,9 @@ vmdata::Chunk CByteCodeBuilder::Finalize() {
 
 void CByteCodeBuilder::Print() {
 
-	bloop::BloopUInt16 ip{};
+	bloop::BloopIndex ip{};
 	std::ranges::for_each(m_oByteCode, [&](CSingularByteCode& c) {
-		std::cout << ip << ": " << c.ToString() << '\n';
+		std::cout << std::dec << static_cast<bloop::BloopInt>(ip) << ": " << c.ToString() << '\n';
 		ip += c.GetBytes();
 	});
 }
@@ -90,11 +104,16 @@ std::vector<bloop::BloopByte> CByteCodeBuilder::Encode() {
 			out.push_back(static_cast<bloop::BloopByte>(i.op));
 
 			if constexpr (std::is_same_v<std::decay_t<decltype(i)>, Instr1>) {
-				out.push_back(i.arg & 0xFF);
-				out.push_back((i.arg >> 8) & 0xFF);
+				for(const auto b : std::views::iota(0u, sizeof(bloop::BloopIndex)))
+					out.push_back(static_cast<bloop::BloopByte>((i.arg >> (8 * b)) & 0xFF));
+				
 			}
 		}, bc.ins);
 	}
+
+	if(out.size() > bloop::INVALID_SLOT)
+		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode has more than {} bytes"), bloop::INVALID_SLOT));
+
 	return out;
 }
 

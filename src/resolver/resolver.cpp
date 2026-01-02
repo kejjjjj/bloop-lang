@@ -19,8 +19,11 @@ void bloop::resolver::Resolve(bloop::ast::Program* code){
 
 	}
 
+	if(resolver.m_oAllFunctions.size() >= bloop::INVALID_SLOT)
+		throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the code has more than {} functions"), bloop::INVALID_SLOT));
+
 	code->Resolve(resolver);
-	code->m_uNumFunctions = resolver.m_oAllFunctions.size();
+	code->m_uNumFunctions = static_cast<bloop::BloopIndex>(resolver.m_oAllFunctions.size());
 }
 
 using namespace bloop::resolver::internal;
@@ -37,10 +40,22 @@ void Resolver::EndScope() {
 Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst) {
 	auto& scope = m_oScopes.back().symbols;
 
-	if (!m_oFunctions.empty() && m_oFunctions.back().m_uNextSlot >= std::numeric_limits<bloop::BloopUInt16>::max())
+	if (!m_oFunctions.empty() && m_oFunctions.back().m_uNextSlot >= std::numeric_limits<bloop::BloopIndex>::max())
 		throw exception::ResolverError(BLOOPTEXT("too many locals in a function (most recent): ") + name);
 
-	auto slot = m_oFunctions.empty() ? static_cast<bloop::BloopUInt16>(scope.size()) : m_oFunctions.back().m_uNextSlot++;
+	bloop::BloopIndex slot{};
+	if (m_oFunctions.empty()) {
+		if (scope.size() >= bloop::INVALID_SLOT)
+			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the code has more than {} globals"), bloop::INVALID_SLOT));
+
+		slot = static_cast<bloop::BloopIndex>(scope.size());
+	} else {
+		if (m_oFunctions.back().m_uNextSlot >= bloop::INVALID_SLOT) {
+			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the function \"{}\" has more than {} symbols"),
+				m_oFunctions.back().m_pCurrentFunction->m_sName, bloop::INVALID_SLOT));
+		}
+		slot = m_oFunctions.back().m_uNextSlot++;
+	}
 	auto& result = (scope[name] = std::make_shared<Symbol>(name, m_iScopeDepth, slot, isConst));
 	return result.get();
 }

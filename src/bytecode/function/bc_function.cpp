@@ -21,7 +21,7 @@ void CByteCodeFunction::Generate(std::vector<vmdata::Function>& funcs) {
 
 	b.m_oAllFunctions[m_pFunc->m_uFunctionId] = {
 		.m_sName = m_pFunc->m_sName,
-		.m_uParamCount = static_cast<bloop::BloopUInt16>(m_pFunc->m_oParams.size()),
+		.m_uParamCount = static_cast<bloop::BloopIndex>(m_pFunc->m_oParams.size()),
 		.m_uLocalCount = m_pFunc->m_uLocalCount,
 		.chunk = b.Finalize(),
 		.m_oCaptures = {}
