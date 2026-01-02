@@ -3,12 +3,12 @@ R"(
 
 fn main() {
 	
-	if(true)
-		return 0;
-	else
-		return 1;
+	let a = 0;
+	for(let i = 0; i <= 10; i = i + 1){
+		a = i;
+	}
 
-
+	return a;
 }
 
 

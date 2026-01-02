@@ -52,22 +52,26 @@ bloop::EStatus CParserDeclaration::ParseInitializer() {
 	if(!GetIteratorSafe()->IsOperator(EPunctuation::p_assign))
 		throw exception::ParserError(BLOOPTEXT("expected \";\" or \"=\""), GetIteratorSafe()->GetCodePosition());
 
-	Advance(1); // skip =
+	Advance(-1); // go back to the identifier to get the full expression
 
 	CParserExpression expr(m_oCtx);
 
 	if (expr.Parse() != bloop::EStatus::success)
 		return bloop::EStatus::failure;
 
-	m_pInitializer = expr.ToExpression();
+	m_pExpression = expr.ToExpression();
 	return bloop::EStatus::success;
 
 }
 UniqueStatement CParserDeclaration::ToStatement() {
 	if (m_bIsConst)
-		return std::make_unique<bloop::ast::ConstVariableDeclaration>(m_pIdentifier->Source(), std::move(m_pInitializer), m_pIdentifier->GetCodePosition());
+		return std::make_unique<bloop::ast::ConstVariableDeclaration>(m_pIdentifier->Source(), ToExpression(), m_pIdentifier->GetCodePosition());
 
-	return std::make_unique<bloop::ast::VariableDeclaration>(m_pIdentifier->Source(), std::move(m_pInitializer), m_pIdentifier->GetCodePosition());
+	return std::make_unique<bloop::ast::VariableDeclaration>(m_pIdentifier->Source(), ToExpression(), m_pIdentifier->GetCodePosition());
+}
+UniqueExpression CParserDeclaration::ToExpression() {
+	assert(m_pExpression);
+	return std::move(m_pExpression);
 }
 bool bloop::parser::IsDeclaration(const bloop::CToken* token) noexcept {
 	return token && (token->Type() == bloop::ETokenType::tt_const || token->Type() == bloop::ETokenType::tt_let);

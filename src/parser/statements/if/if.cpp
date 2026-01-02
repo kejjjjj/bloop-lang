@@ -11,9 +11,8 @@ CParserIfStatement::CParserIfStatement(const CParserContext& ctx)
 CParserIfStatement::~CParserIfStatement() = default;
 
 bloop::EStatus CParserIfStatement::Parse() {
-	ParseIdentifier(bloop::ETokenType::tt_if);
-	
 
+	ParseIdentifier(bloop::ETokenType::tt_if);
 	auto&& expr = ParseExpression();
 	auto&& scope = ParseScope();
 	m_oIf.emplace_back(std::make_unique<Structure>(Structure{ std::move(expr), std::move(scope) }));

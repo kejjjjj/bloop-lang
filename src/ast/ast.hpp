@@ -77,15 +77,15 @@ namespace bloop::ast {
 
 	private:
 		void ResolveStatements(TResolver& resolver) {
-			auto returnFound = false;
+			//auto returnFound = false;
 
 			std::ranges::for_each(m_oStatements, [&](const auto& s) {
 
-				if (returnFound)
-					throw exception::ResolverError(BLOOPTEXT("unreachable code"), s->m_oApproximatePosition);
+				//if (returnFound)
+				//	throw exception::ResolverError(BLOOPTEXT("unreachable code"), s->m_oApproximatePosition);
 
-				if (s->IsReturn())
-					returnFound = true;
+				//if (s->IsReturn())
+				//	returnFound = true;
 
 				s->Resolve(resolver);
 			});
@@ -228,38 +228,27 @@ namespace bloop::ast {
 
 	struct VariableDeclaration : Statement {
 		VariableDeclaration(const bloop::BloopString& name, std::unique_ptr<Expression>&& init, const bloop::CodePosition& cp)
-			: Statement(cp), m_sName(name), m_pInitializer(std::forward<decltype(init)>(init)) {}
+			: Statement(cp), m_sName(name), m_pExpression(std::forward<decltype(init)>(init)) {}
 
 		void Resolve(TResolver& resolver) override {
 			if (resolver.ResolveSymbol(m_sName)) {
 				throw bloop::exception::ResolverError(BLOOPTEXT("variable already declared: ") + m_sName, m_oApproximatePosition);
 			}
 			
-			if (m_pInitializer)
-				m_pInitializer->Resolve(resolver);
-
-			//prevent a = a by doing this after
+			//prevent a = a by doing this after -> or not lol
 			m_uSlot = resolver.DeclareSymbol(m_sName, IsConst())->m_uSlot;
+
+			m_pExpression->Resolve(resolver);
 		}
 
 		void EmitByteCode(TBCBuilder& builder) override {
-			const auto globalContext = dynamic_cast<bloop::bytecode::CByteCodeBuilderForGlobals*>(&builder);
-
-			if (m_pInitializer) {
-				m_pInitializer->EmitByteCode(builder);
-				if (!globalContext) 
-					return Emit(builder, TOpCode::STORE_LOCAL, m_uSlot);
-			}
-
-			if (globalContext) {
-				assert(m_uSlot == globalContext->m_uNumGlobals);
-				Emit(builder, TOpCode::DEFINE_GLOBAL, globalContext->m_uNumGlobals++);
-			}
+			assert(m_pExpression);
+			m_pExpression->EmitByteCode(builder);
 		}
 
 		[[nodiscard]] virtual constexpr bool IsConst() const noexcept { return false; }
 		bloop::BloopString m_sName;
-		std::unique_ptr<Expression> m_pInitializer;
+		std::unique_ptr<Expression> m_pExpression;
 		bloop::BloopUInt16 m_uSlot{ bloop::bytecode::INVALID_SLOT };
 	};
 
@@ -355,6 +344,53 @@ namespace bloop::ast {
 		std::vector<std::unique_ptr<Structure>> m_oIf;
 		std::unique_ptr<BlockStatement> m_pElse;
 
+	};
+
+	struct ForStatement : BlockStatement {
+		[[nodiscard]] constexpr bool IsReturn() const noexcept override { return true; }
+
+		ForStatement(const bloop::CodePosition& cp) : BlockStatement(cp) {}
+
+		void Resolve(TResolver& resolver) override {
+
+			resolver.BeginScope();
+
+			if (m_pInitializer)
+				m_pInitializer->Resolve(resolver);
+
+			if (m_pCondition)
+				m_pCondition->Resolve(resolver);
+
+			if (m_pOnEnd)
+				m_pOnEnd->Resolve(resolver);
+
+			BlockStatement::ResolveNoScopeManagement(resolver);
+			resolver.EndScope();
+		}
+
+		void EmitByteCode(TBCBuilder& builder) override {
+
+			if (m_pInitializer)
+				m_pInitializer->EmitByteCode(builder);
+
+			const auto loopStart = builder.m_uOffset;
+
+			if (m_pCondition)
+				m_pCondition->EmitByteCode(builder);
+			
+			const auto jumpExit = EmitJump(builder, TOpCode::JZ); //get the beginning of the loop
+			BlockStatement::EmitByteCode(builder);
+
+			if (m_pOnEnd)
+				m_pOnEnd->EmitByteCode(builder);
+
+			EmitJump(builder, TOpCode::JMP, loopStart); //jump back to the beginning of the loop
+			PatchJump(builder, jumpExit, builder.m_uOffset); //patch the JZ statement to jump past the end of the loop
+		}
+
+		std::unique_ptr<Statement> m_pInitializer;
+		std::unique_ptr<Expression> m_pCondition;
+		std::unique_ptr<Expression> m_pOnEnd;
 	};
 
 	struct ReturnStatement : ExpressionStatement {

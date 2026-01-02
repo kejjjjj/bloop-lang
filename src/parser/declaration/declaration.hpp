@@ -25,6 +25,7 @@ namespace bloop::parser {
 
 		[[nodiscard]] bloop::EStatus Parse();
 		[[nodiscard]] UniqueStatement ToStatement() override;
+		[[nodiscard]] UniqueExpression ToExpression();
 
 	private:
 		[[nodiscard]] bloop::EStatus ParseIdentifier();
@@ -32,8 +33,8 @@ namespace bloop::parser {
 
 		const CParserContext& m_oCtx;
 		bool m_bIsConst{};
-		const bloop::CToken* m_pIdentifier;
-		std::unique_ptr<bloop::ast::Expression> m_pInitializer;
+		const bloop::CToken* m_pIdentifier{};
+		std::unique_ptr<bloop::ast::Expression> m_pExpression;
 	};
 
 	[[nodiscard]] bool IsDeclaration(const bloop::CToken* token) noexcept;

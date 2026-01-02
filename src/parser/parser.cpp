@@ -10,6 +10,8 @@
 #include "parser/scope/scope.hpp"
 #include "parser/statements/while/while.hpp"
 #include "parser/statements/if/if.hpp"
+#include "parser/statements/for/for.hpp"
+
 #include "parser/statements/return/return.hpp"
 
 #include "utils/defs.hpp"
@@ -109,6 +111,8 @@ bloop::EStatus bloop::parser::ParseToken(const CParserContext& ctx) {
 		return CreateParser<CParserWhileStatement>(ctx);
 	case ETokenType::tt_if:
 		return CreateParser<CParserIfStatement>(ctx);
+	case ETokenType::tt_for:
+		return CreateParser<CParserForStatement>(ctx);
 	case ETokenType::tt_else:
 		throw exception::ParserError(BLOOPTEXT("unexpected else statement"), ctx.GetIterator()->GetCodePosition());
 	case ETokenType::tt_return:
