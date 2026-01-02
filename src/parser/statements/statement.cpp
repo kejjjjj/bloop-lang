@@ -37,7 +37,7 @@ UniqueExpression CParserStatement::ParseExpression() {
 
 	return expr.ToExpression();
 }
-UniqueStatement CParserStatement::ParseScope() {
+std::unique_ptr<bloop::ast::BlockStatement> CParserStatement::ParseScope() {
 
 	if (IsEndOfBuffer())
 		throw exception::ParserError(BLOOPTEXT("expected a \"{\" or a statement"), GetIteratorSafe()->GetCodePosition());

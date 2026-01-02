@@ -1,5 +1,7 @@
 #include "vm/vm.hpp"
 #include "vm/heap/dvalue.hpp"
+#include "vm/exception.hpp"
+#include "utils/fmt.hpp"
 
 using namespace bloop::vm;
 
@@ -18,11 +20,27 @@ const CInstructionPosition& CallFrame::GetCurrentPosition() const {
 
 void VM::PushFrame(Function* fn) {
 	const auto frameBase = m_oStack.size() - fn->m_uParamCount;
+	const auto needed = fn->m_uParamCount + fn->m_uLocalCount;
+
+	if (m_oStack.size() + static_cast<bloop::BloopUInt>(needed) > BLOOP_MAX_STACK)
+		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} stack values"), BLOOP_MAX_STACK));
+
+	if (m_oFrames.size() >= BLOOP_MAX_FRAMES)
+		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} call frames"), BLOOP_MAX_FRAMES));
+
 	m_oStack.resize(frameBase + fn->m_uLocalCount);
 	m_pCurrentFrame = &m_oFrames.emplace_back(&fn->chunk, frameBase);
 }
 void VM::PushFrame(Closure* closure) {
 	const auto frameBase = m_oStack.size() - closure->function->m_uParamCount;
+	const auto needed = closure->function->m_uParamCount + closure->function->m_uLocalCount;
+
+	if (m_oStack.size() + static_cast<bloop::BloopUInt>(needed) > BLOOP_MAX_STACK)
+		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} stack values"), BLOOP_MAX_STACK));
+
+	if (m_oFrames.size() >= BLOOP_MAX_FRAMES)
+		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} call frames"), BLOOP_MAX_FRAMES));
+
 	m_oStack.resize(frameBase + closure->function->m_uLocalCount);
 	m_pCurrentFrame = &m_oFrames.emplace_back(closure, frameBase);
 }

@@ -57,6 +57,9 @@ VM::VM(const bloop::bytecode::VMByteCode& data)
 
 	for (auto idx = std::size_t{ 0 }; auto& f : m_oFunctions)
 		m_oFunctionTable[data.functions[idx++].m_sName ] = &f;
+
+	m_oStack.reserve(BLOOP_MAX_STACK);
+	m_oFrames.reserve(BLOOP_MAX_FRAMES);
 }
 VM::~VM() {
 	

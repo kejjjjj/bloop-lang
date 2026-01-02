@@ -18,22 +18,18 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 		case TOpCode::LOAD_CONST: {
 			Push(m_pCurrentFrame->m_pChunk->m_oConstants[FetchOperand()]);
 			break;
-		}
-		case TOpCode::LOAD_LOCAL: {
+		} case TOpCode::LOAD_LOCAL: {
 			Push(m_oStack[m_pCurrentFrame->m_uBase + FetchOperand()]);
 			break;
-		}
-		case TOpCode::LOAD_GLOBAL: {
+		} case TOpCode::LOAD_GLOBAL: {
 			const auto idx = FetchOperand();
 			Push(m_oGlobals[idx]);
 			break;
-		}
-		case TOpCode::LOAD_UPVALUE: {
+		} case TOpCode::LOAD_UPVALUE: {
 			const auto idx = FetchOperand();
 			Push(*m_pCurrentFrame->m_pClosure->upvalues[idx]->location);
 			break;
-		}
-		case TOpCode::CREATE_ARRAY: {
+		} case TOpCode::CREATE_ARRAY: {
 			const auto numInitializers = FetchOperand();
 			auto arr = m_oHeap.AllocArray(numInitializers);
 
@@ -42,37 +38,31 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 			Push(arr);
 			break;
-		}
-		case TOpCode::DEFINE_GLOBAL: {
+		} case TOpCode::DEFINE_GLOBAL: {
 			const auto idx = FetchOperand();
 			m_oGlobals[idx] = Pop();
 			break;
-		}
-		case TOpCode::STORE_LOCAL: {
+		} case TOpCode::STORE_LOCAL: {
 			const auto idx = m_pCurrentFrame->m_uBase + FetchOperand();
 			assert(idx <= static_cast<bloop::BloopUInt16>(m_oStack.size()));
 			m_oStack[idx] = Pop();
 			break;
-		}
-		case TOpCode::STORE_GLOBAL: {
+		} case TOpCode::STORE_GLOBAL: {
 			const auto idx = FetchOperand();
 			assert(idx <= static_cast<bloop::BloopUInt16>(m_oStack.size()));
 			m_oGlobals[idx] = Pop();
 			break;
-		}
-		case TOpCode::STORE_UPVALUE: {
+		} case TOpCode::STORE_UPVALUE: {
 			const auto idx = FetchOperand();
 			assert(idx <= static_cast<bloop::BloopUInt16>(m_pCurrentFrame->m_pClosure->numValues));
 			m_pCurrentFrame->m_pClosure->upvalues[idx]->closed = Pop();
 			break;
-		}
-		case TOpCode::MAKE_FUNCTION: {
+		} case TOpCode::MAKE_FUNCTION: {
 			const auto idx = FetchOperand();
 			assert(idx <= static_cast<bloop::BloopUInt16>(m_oFunctions.size()));
 			Push(m_oHeap.AllocCallable(&m_oFunctions.at(idx)));
 			break;
-		}
-		case TOpCode::ADD: {
+		} case TOpCode::ADD: {
 			Value b = Pop();
 			Value a = Pop();
 
@@ -82,43 +72,36 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 				Push(a + b);
 			}
 			break;
-		}
-		case TOpCode::SUB: {
+		} case TOpCode::SUB: {
 			Value b = Pop();
 			Value a = Pop();
 			Push(a - b);
 			break;
-		}
-		case TOpCode::MUL: {
+		} case TOpCode::MUL: {
 			Value b = Pop();
 			Value a = Pop();
 			Push(a * b);
 			break;
-		}
-		case TOpCode::DIV: {
+		} case TOpCode::DIV: {
 			Value b = Pop();
 			Value a = Pop();
 			Push(a / b);
 			break;
-		}
-		case TOpCode::LESS_EQUAL: {
+		} case TOpCode::LESS_EQUAL: {
 			Value b = Pop();
 			Value a = Pop();
 			Push(a <= b);
 			break;
-		}
-		case TOpCode::JZ: {
+		} case TOpCode::JZ: {
 			const auto target = FetchOperand();
 			const Value v = Pop();
 			if (!v.IsTruthy())
 				m_pCurrentFrame->m_uIp = target; // skip to the end of the loop
 			break;
-		}
-		case TOpCode::JMP: {
+		} case TOpCode::JMP: {
 			m_pCurrentFrame->m_uIp = FetchOperand();
 			break;
-		}
-		case TOpCode::CALL: {
+		} case TOpCode::CALL: {
 			const auto argc = FetchOperand();
 
 			Value callee = Pop();
@@ -139,8 +122,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 				RunClosure(&callee.obj->closure);
 			}
 			break;
-		}
-		case TOpCode::SUBSCRIPT_GET: {
+		} case TOpCode::SUBSCRIPT_GET: {
 			Value index = Pop();
 			Value operand = Pop();
 
@@ -149,8 +131,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 			Push(operand.obj->Index(index.ToInt()));
 			break;
-		}
-		case TOpCode::SUBSCRIPT_SET: {
+		} case TOpCode::SUBSCRIPT_SET: {
 			Value index = Pop();
 			Value operand = Pop();
 			Value value = Pop();
@@ -161,14 +142,11 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			operand.obj->Index(index.ToInt()) = value;
 			Push(value);
 			break;
-		}
-		case TOpCode::RETURN: {
+		} case TOpCode::RETURN: {
 			return ExecutionReturnCode::rc_return;
-		}
-		case TOpCode::RETURN_VALUE: {
+		} case TOpCode::RETURN_VALUE: {
 			return ExecutionReturnCode::rc_return_value;
-		}
-		case TOpCode::MAKE_CLOSURE: {
+		} case TOpCode::MAKE_CLOSURE: {
 			const auto funcIdx = FetchOperand();
 			assert(funcIdx < static_cast<bloop::BloopUInt16>(m_oFunctions.size()));
 			auto& func = m_oFunctions[funcIdx];

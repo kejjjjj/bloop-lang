@@ -4,6 +4,10 @@
 
 namespace bloop {
 	enum class ETokenType : unsigned char;
+
+	namespace ast {
+		struct BlockStatement;
+	}
 }
 
 namespace bloop::parser {
@@ -21,7 +25,7 @@ namespace bloop::parser {
 	protected:
 		void ParseIdentifier(bloop::ETokenType tt);
 		[[nodiscard]] virtual UniqueExpression ParseExpression();
-		[[nodiscard]] virtual UniqueStatement ParseScope();
+		[[nodiscard]] virtual std::unique_ptr<bloop::ast::BlockStatement> ParseScope();
 
 		const CParserContext& m_oCtx;
 		bloop::CodePosition m_oDeclPos;

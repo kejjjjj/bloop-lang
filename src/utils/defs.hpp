@@ -22,6 +22,9 @@ namespace bloop {
 	using BloopByte = std::uint8_t;
 	using BloopUInt16 = std::uint16_t;
 
+#define BLOOP_MAX_STACK 0xffffu
+#define BLOOP_MAX_FRAMES 0x400u
+
 #if defined(_WIN32)
 #if defined(_WIN64)
 	// 64-bit Windows

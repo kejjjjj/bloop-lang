@@ -36,7 +36,8 @@ namespace bloop::parser {
 		[[nodiscard]] constexpr auto GetIteratorSafe() const { return IsEndOfBuffer() ? *std::prev(m_iterPos) : *m_iterPos; }
 
 		constexpr void Advance(std::ptrdiff_t amount) const noexcept { std::advance(m_iterPos, amount); }
-
+		[[nodiscard]] constexpr bool CanPeek(std::ptrdiff_t amount) const noexcept { return std::next(m_iterPos, amount) != m_iterEnd; }
+		[[nodiscard]] constexpr auto Peek(std::ptrdiff_t amount) const noexcept { return std::next(m_iterPos, amount); }
 
 	protected:
 		ParserIterator& m_iterPos;

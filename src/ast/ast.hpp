@@ -10,7 +10,7 @@
 #include <memory>
 #include <vector>
 #include <utility>
-
+#include <optional>
 
 namespace bloop::ast {
 	using TResolver = bloop::resolver::internal::Resolver;
@@ -47,19 +47,22 @@ namespace bloop::ast {
 		virtual void Resolve(TResolver& resolver) = 0;
 		virtual void EmitByteCode(TBCBuilder& builder) = 0;
 		[[nodiscard]] virtual constexpr bool IsFunction() const noexcept { return false; }
+		[[nodiscard]] virtual constexpr bool IsReturn() const noexcept { return false; }
 
 	};
 
 	struct BlockStatement : Statement {
 		BlockStatement(const bloop::CodePosition& cp) : Statement(cp){}
+
+
 		virtual void Resolve(TResolver& resolver) override {
 			resolver.BeginScope();
-			std::ranges::for_each(m_oStatements, [&resolver](const auto& s) { s->Resolve(resolver); });
+			ResolveStatements(resolver);
 			resolver.EndScope();
 		}
 
 		void ResolveNoScopeManagement(TResolver& resolver) {
-			std::ranges::for_each(m_oStatements, [&resolver](const auto& s) { s->Resolve(resolver); });
+			ResolveStatements(resolver);
 		}
 
 		virtual void EmitByteCode(TBCBuilder& builder) override {
@@ -71,6 +74,22 @@ namespace bloop::ast {
 		}
 		
 		std::vector<std::unique_ptr<Statement>> m_oStatements;
+
+	private:
+		void ResolveStatements(TResolver& resolver) {
+			auto returnFound = false;
+
+			std::ranges::for_each(m_oStatements, [&](const auto& s) {
+
+				if (returnFound)
+					throw exception::ResolverError(BLOOPTEXT("unreachable code"), s->m_oApproximatePosition);
+
+				if (s->IsReturn())
+					returnFound = true;
+
+				s->Resolve(resolver);
+			});
+		}
 	};
 	struct UnnamedScopeStatement : BlockStatement {
 		UnnamedScopeStatement(const bloop::CodePosition& cp) : BlockStatement(cp) {}
@@ -274,7 +293,72 @@ namespace bloop::ast {
 		std::unique_ptr<Expression> m_pCondition;
 	};
 
+	struct IfStatement : Statement {
+
+		struct Structure {
+			std::unique_ptr<Expression> m_pCondition;
+			std::unique_ptr<BlockStatement> m_pBody;
+		};
+
+		IfStatement(const CodePosition& cp) : Statement(cp) {}
+
+		void Resolve(TResolver& resolver) override {
+			std::ranges::for_each(m_oIf, [&resolver](std::unique_ptr<Structure>& v) -> void {
+				assert(v->m_pCondition && v->m_pBody);
+				v->m_pCondition->Resolve(resolver);
+				v->m_pBody->Resolve(resolver);
+			});
+
+			if (m_pElse)
+				m_pElse->Resolve(resolver);
+		}
+
+		void EmitByteCode(TBCBuilder& builder) override {
+
+			std::vector<bloop::BloopUInt16> m_oBlockEndJmps;
+			std::optional<bloop::BloopUInt16> nextJump;
+
+			const auto jumpRequired = m_oIf.size() > 1u || m_pElse;
+
+			for (auto& block : m_oIf) {
+
+				if (nextJump) { //previous JZ jumps here
+					PatchJump(builder, *nextJump, builder.m_uOffset);
+					nextJump = std::nullopt;
+				}
+				block->m_pCondition->EmitByteCode(builder);
+				nextJump = EmitJump(builder, TOpCode::JZ);
+				block->m_pBody->EmitByteCode(builder);
+				
+				assert(!block->m_pBody->m_oStatements.empty());
+				const auto lastIsReturn = block->m_pBody->m_oStatements.back()->IsReturn();
+
+				if(jumpRequired && !lastIsReturn)
+					m_oBlockEndJmps.push_back(EmitJump(builder, TOpCode::JMP)); //each block must jump to the end of this chain
+			}
+
+			if (nextJump) { //previous JZ jumps here
+				PatchJump(builder, *nextJump, builder.m_uOffset);
+				nextJump = std::nullopt;
+			}
+
+			if (m_pElse) {
+				m_pElse->EmitByteCode(builder);
+			}
+
+			//make every block jump here after they're done
+			for (const auto jmp : m_oBlockEndJmps)
+				PatchJump(builder, jmp, builder.m_uOffset);
+
+
+		}
+		std::vector<std::unique_ptr<Structure>> m_oIf;
+		std::unique_ptr<BlockStatement> m_pElse;
+
+	};
+
 	struct ReturnStatement : ExpressionStatement {
+		[[nodiscard]] constexpr bool IsReturn() const noexcept override { return true; }
 
 		ReturnStatement(std::unique_ptr<Expression>&& expr, const bloop::CodePosition& cp) : 
 			ExpressionStatement(std::forward<decltype(expr)>(expr), cp){}

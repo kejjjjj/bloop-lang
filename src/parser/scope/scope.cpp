@@ -35,9 +35,9 @@ std::unique_ptr<bloop::ast::UnnamedScopeStatement> CParserScope::Parse(bool allo
 	if(IsEndOfBuffer())
 		throw exception::ParserError(BLOOPTEXT("expected a statement"), GetIteratorSafe()->GetCodePosition());
 
-	if (allowSingleStatement && !isCurlyBracket) {
+	if (allowSingleStatement && !isCurlyBracket) { // if() statement 
 		[[maybe_unused]] const auto _ = ParseToken(m_oCtx);
-	} else {
+	} else { //if() { statements }
 		do {
 			if (ParseToken(m_oCtx) != bloop::EStatus::success)
 				break;

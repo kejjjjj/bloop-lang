@@ -2,12 +2,13 @@ R"(
 
 
 fn main() {
-
-	fn func(){
+	
+	if(true)
+		return 0;
+	else
 		return 1;
-	}
 
-	func() = 2;
+
 }
 
 
