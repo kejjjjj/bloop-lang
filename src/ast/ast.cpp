@@ -14,18 +14,26 @@ void AssignExpression::EmitByteCode(TBCBuilder& builder) {
 
 		if (auto pf = dynamic_cast<Subscript*>(left.get())) {
 			pf->EmitSet(builder);
+			if (!IsStatement())
+				pf->EmitGet(builder); // (arr[0] = 2) < 10
 			return pf->left->EmitByteCode(builder);
 		}
 
 		switch (ptr->m_oResolver.m_eKind) {
 		case IdentifierExpression::ResolvedIdentifier::Kind::Local:
 			Emit(builder, TOpCode::STORE_LOCAL, ptr->m_oResolver.m_uSlot);
+			if(!IsStatement())
+				Emit(builder, TOpCode::LOAD_LOCAL, ptr->m_oResolver.m_uSlot);
 			break;
 		case IdentifierExpression::ResolvedIdentifier::Kind::Upvalue:
 			Emit(builder, TOpCode::STORE_UPVALUE, ptr->m_oResolver.m_uSlot);
+			if (!IsStatement())
+				Emit(builder, TOpCode::LOAD_UPVALUE, ptr->m_oResolver.m_uSlot);
 			break;
 		case IdentifierExpression::ResolvedIdentifier::Kind::Global:
 			Emit(builder, TOpCode::STORE_GLOBAL, ptr->m_oResolver.m_uSlot);
+			if (!IsStatement())
+				Emit(builder, TOpCode::LOAD_GLOBAL, ptr->m_oResolver.m_uSlot);
 			break;
 		}
 

@@ -30,17 +30,24 @@ namespace bloop::resolver {
 		struct FunctionContext {
 			bloop::BloopIndex m_uNextSlot = 0;
 			bloop::ast::FunctionDeclarationStatement* m_pCurrentFunction{};
+
+
+
 		};
+
+
 		struct ResolvedIdentifier {
 			enum class Kind { Error, Local, Upvalue, Global };
 			Kind m_eKind;
 			bloop::BloopIndex m_uSlot;
+			bool m_bConst{};
 		};
 		struct Resolver {
 			std::vector<Scope> m_oScopes;
 			std::vector<FunctionContext> m_oFunctions; // to keep track of local counts
-
+			bloop::BloopInt m_iLoopDepth{};
 			bloop::BloopInt m_iScopeDepth{-1};
+
 			void BeginScope();
 			void EndScope();
 

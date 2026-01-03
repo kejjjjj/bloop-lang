@@ -74,10 +74,10 @@ Symbol* Resolver::ResolveSymbol(const bloop::BloopString& name) {
 ResolvedIdentifier Resolver::ResolveIdentifier(const bloop::BloopString& name) {
 
 	if (auto* sym = ResolveLocal(name))
-		return { ResolvedIdentifier::Kind::Local, sym->m_uSlot };
+		return { ResolvedIdentifier::Kind::Local, sym->m_uSlot, sym->m_bIsConst };
 
 	if (auto* sym = ResolveGlobal(name))
-		return { ResolvedIdentifier::Kind::Global, sym->m_uSlot };
+		return { ResolvedIdentifier::Kind::Global, sym->m_uSlot, sym->m_bIsConst };
 
 	if (auto* sym = ResolveOuter(name)) {
 
@@ -85,10 +85,14 @@ ResolvedIdentifier Resolver::ResolveIdentifier(const bloop::BloopString& name) {
 		auto t = std::list<FunctionContext>(funcs.begin(), funcs.end());
 
 		t.front().m_pCurrentFunction->PropagateCaptureInward(nullptr, t, sym);
-		return ResolvedIdentifier{ ResolvedIdentifier::Kind::Upvalue, m_oFunctions.back().m_pCurrentFunction->m_uNextUpValues->at(sym)};
+		return ResolvedIdentifier{ 
+			ResolvedIdentifier::Kind::Upvalue, 
+			m_oFunctions.back().m_pCurrentFunction->m_uNextUpValues->at(sym),
+			sym->m_bIsConst
+		};
 	}
 
-	return ResolvedIdentifier{ ResolvedIdentifier::Kind::Error, {} };
+	return ResolvedIdentifier{ ResolvedIdentifier::Kind::Error, {}, false };
 }
 
 Symbol* Resolver::ResolveLocal(const bloop::BloopString& name) {

@@ -1,11 +1,11 @@
-#include "ast/ast.hpp"
+#include "ast/control.hpp"
 #include "lexer/token.hpp"
 #include "parser/declaration/declaration.hpp"
 #include "parser/exception.hpp"
 #include "parser/expression/expression.hpp"
 #include "parser/parser.hpp"
 #include "parser/scope/scope.hpp"
-#include "parser/statements/for/for.hpp"
+#include "parser/control/for/for.hpp"
 
 using namespace bloop::parser;
 
@@ -62,7 +62,7 @@ bloop::EStatus CParserForStatement::ParseInitializer() {
 
 		m_pInitializer = parser.ToStatement();
 	} else {
-		CParserExpression expr(m_oCtx);
+		CParserExpressionStatement expr(m_oCtx);
 		if (expr.Parse() != bloop::EStatus::success)
 			return bloop::EStatus::failure;
 

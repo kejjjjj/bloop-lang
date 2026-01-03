@@ -54,7 +54,7 @@ bloop::EStatus CParserDeclaration::ParseInitializer() {
 
 	Advance(-1); // go back to the identifier to get the full expression
 
-	CParserExpression expr(m_oCtx);
+	CParserExpressionStatement expr(m_oCtx);
 
 	if (expr.Parse() != bloop::EStatus::success)
 		return bloop::EStatus::failure;

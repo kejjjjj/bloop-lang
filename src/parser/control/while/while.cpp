@@ -1,6 +1,6 @@
-#include "parser/statements/while/while.hpp"
+#include "parser/control/while/while.hpp"
 #include "parser/parser.hpp"
-#include "ast/ast.hpp"
+#include "ast/control.hpp"
 #include "lexer/token.hpp"
 
 using namespace bloop::parser;

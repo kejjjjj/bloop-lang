@@ -4,7 +4,7 @@
 #pragma once
 #include "parser/defs.hpp"
 #include "utils/defs.hpp"
-#include "parser/statements/statement.hpp"
+#include "parser/control/control.hpp"
 
 namespace bloop {
 	enum class ETokenType : unsigned char;

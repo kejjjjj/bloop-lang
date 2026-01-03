@@ -30,7 +30,7 @@ void CParserScope::ParseNoScope(bool allowSingleStatement) {
 	const auto [_ ,isCurlyBracket] = ParseFirstPart(allowSingleStatement);
 	ParseSecondPart(allowSingleStatement, isCurlyBracket);
 }
-CParserScope::FirstData CParserScope::ParseFirstPart(bool allowSingleStatement) {
+CParserScope::FirstData CParserScope::ParseFirstPart([[maybe_unused]] bool allowSingleStatement) {
 	assert(!IsEndOfBuffer() && (allowSingleStatement || GetIteratorSafe()->IsOperator(EPunctuation::p_curlybracket_open)));
 	const auto iterPos = GetIteratorSafe()->GetCodePosition();
 
@@ -53,7 +53,7 @@ void CParserScope::ParseSecondPart(bool allowSingleStatement, bool isCurlyBracke
 	if (allowSingleStatement && !isCurlyBracket) { // if() statement 
 		[[maybe_unused]] const auto _ = ParseToken(m_oCtx);
 	}
-	else { //if() { statements }
+	else { //if() { control }
 		do {
 			if (ParseToken(m_oCtx) != bloop::EStatus::success)
 				break;

@@ -19,7 +19,9 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			Push(m_pCurrentFrame->m_pChunk->m_oConstants[FetchOperand()]);
 			break;
 		} case TOpCode::LOAD_LOCAL: {
-			Push(m_oStack[m_pCurrentFrame->m_uBase + FetchOperand()]);
+			const auto idx = FetchOperand();
+			assert(m_pCurrentFrame->m_uBase + idx < m_oStack.size());
+			Push(m_oStack[m_pCurrentFrame->m_uBase + idx]);
 			break;
 		} case TOpCode::LOAD_GLOBAL: {
 			const auto idx = FetchOperand();
@@ -38,10 +40,6 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 			Push(arr);
 			break;
-		} case TOpCode::DEFINE_GLOBAL: {
-			const auto idx = FetchOperand();
-			m_oGlobals[idx] = Pop();
-			break;
 		} case TOpCode::STORE_LOCAL: {
 			const auto idx = m_pCurrentFrame->m_uBase + FetchOperand();
 			assert(idx <= static_cast<bloop::BloopIndex>(m_oStack.size()));
@@ -49,7 +47,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			break;
 		} case TOpCode::STORE_GLOBAL: {
 			const auto idx = FetchOperand();
-			assert(idx <= static_cast<bloop::BloopIndex>(m_oStack.size()));
+			assert(idx <= static_cast<bloop::BloopIndex>(m_oGlobals.size()));
 			m_oGlobals[idx] = Pop();
 			break;
 		} case TOpCode::STORE_UPVALUE: {

@@ -1,6 +1,6 @@
-#include "parser/statements/return/return.hpp"
+#include "parser/control/return/return.hpp"
 #include "parser/parser.hpp"
-#include "ast/ast.hpp"
+#include "ast/control.hpp"
 #include "lexer/token.hpp"
 #include "parser/expression/expression.hpp"
 #include "parser/exception.hpp"
@@ -16,8 +16,6 @@ bloop::EStatus CParserReturnStatement::Parse() {
 	//return;
 	if (!IsEndOfBuffer() && GetIteratorSafe()->IsOperator(bloop::EPunctuation::p_semicolon))
 		return bloop::EStatus::success;
-
-
 
 	m_pExpression = ParseExpression();
 	return bloop::EStatus::success;

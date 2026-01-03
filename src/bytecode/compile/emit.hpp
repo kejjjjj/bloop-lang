@@ -63,6 +63,11 @@ namespace bloop::bytecode
 		}
 	};
 
+	//contains the instruction offsets
+	struct LoopContext {
+		std::vector<bloop::BloopIndex> m_oBreakStatements;
+		std::vector<bloop::BloopIndex> m_oContinueStatements;
+	};
 
 	struct CByteCodeBuilder {
 		CByteCodeBuilder(std::vector<vmdata::Function>& allFuncs) : m_oAllFunctions(allFuncs){}
@@ -91,6 +96,7 @@ namespace bloop::bytecode
 		bloop::BloopIndex m_uOffset{};
 
 		std::vector<vmdata::Function>& m_oAllFunctions;
+		std::vector<LoopContext> m_oLoops;
 
 	private:
 		std::vector<const vmdata::Function*> m_oFunctions; // references m_oAllFunctions

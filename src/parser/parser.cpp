@@ -8,11 +8,11 @@
 #include "parser/function/function.hpp"
 #include "parser/parser.hpp"
 #include "parser/scope/scope.hpp"
-#include "parser/statements/while/while.hpp"
-#include "parser/statements/if/if.hpp"
-#include "parser/statements/for/for.hpp"
-
-#include "parser/statements/return/return.hpp"
+#include "parser/control/while/while.hpp"
+#include "parser/control/if/if.hpp"
+#include "parser/control/for/for.hpp"
+#include "parser/control/return/return.hpp"
+#include "parser/control/control_flow/control_flow.hpp"
 
 #include "utils/defs.hpp"
 
@@ -85,7 +85,7 @@ static auto ParseOperator(const CParserContext& ctx) {
 	}
 
 	// normal expression otherwise
-	return CreateParser<CParserExpression>(ctx);
+	return CreateParser<CParserExpressionStatement>(ctx);
 }
 
 bloop::EStatus bloop::parser::ParseToken(const CParserContext& ctx) {
@@ -99,7 +99,7 @@ bloop::EStatus bloop::parser::ParseToken(const CParserContext& ctx) {
 	case ETokenType::tt_double:
 	case ETokenType::tt_string:
 	case ETokenType::tt_name:
-		return CreateParser<CParserExpression>(ctx);
+		return CreateParser<CParserExpressionStatement>(ctx);
 	case ETokenType::tt_operator:
 		return ParseOperator(ctx);
 	case ETokenType::tt_fn:
@@ -117,6 +117,9 @@ bloop::EStatus bloop::parser::ParseToken(const CParserContext& ctx) {
 		throw exception::ParserError(BLOOPTEXT("unexpected else statement"), ctx.GetIterator()->GetCodePosition());
 	case ETokenType::tt_return:
 		return CreateParser<CParserReturnStatement>(ctx);
+	case ETokenType::tt_continue:
+	case ETokenType::tt_break:
+		return CreateParser<CParserControlStatement>(ctx);
 	default:
 		throw exception::ParserError(BLOOPTEXT("unexpected token: ") + ctx.GetIterator()->Source(), ctx.GetIterator()->GetCodePosition());
 	}

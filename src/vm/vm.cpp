@@ -97,9 +97,11 @@ void VM::Run(const bloop::BloopString& entryFuncName) {
 	const auto func = m_oFunctionTable.at(entryFuncName);
 
 	try {
-		RunGlobal();
-		RunFunction(func);
-		m_oGC.Collect(this);
+		Benchmark("glob+main", [&]() {
+			RunGlobal();
+			RunFunction(func);
+			m_oGC.Collect(this);
+		});
 
 	} catch (exception::VMError& ex) {
 		bloop::BloopString msg;
@@ -147,9 +149,8 @@ void VM::RunClosure(Closure* closure)
 {
 	PushFrame(closure);
 	const auto returnCode = RunFrame();
-	CloseUpValues(m_oStack.data() + m_oStack.size() - m_pCurrentFrame->m_uBase);
+	CloseUpValues(&m_oStack[m_pCurrentFrame->m_uBase]);
 	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
-
 	Push(ret);
 }

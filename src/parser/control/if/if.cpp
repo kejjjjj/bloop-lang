@@ -1,6 +1,6 @@
-#include "parser/statements/if/if.hpp"
+#include "parser/control/if/if.hpp"
 #include "parser/parser.hpp"
-#include "ast/ast.hpp"
+#include "ast/control.hpp"
 #include "lexer/token.hpp"
 #include "parser/exception.hpp"
 
