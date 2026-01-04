@@ -18,7 +18,7 @@ namespace bloop::ast {
 		void EmitByteCode(TBCBuilder& builder) override {
 
 			const auto loopStart = builder.m_uOffset;
-			m_pCondition->EmitByteCode(builder);
+			m_pCondition->EmitByteCode(builder, true);
 
 			const auto jumpExit = EmitJump(builder, TOpCode::JZ); //get the beginning of the loop
 			builder.m_oLoops.push_back({});
@@ -72,7 +72,7 @@ namespace bloop::ast {
 					PatchJump(builder, *nextJump, builder.m_uOffset);
 					nextJump = std::nullopt;
 				}
-				block->m_pCondition->EmitByteCode(builder);
+				block->m_pCondition->EmitByteCode(builder, true);
 				nextJump = EmitJump(builder, TOpCode::JZ);
 				block->m_pBody->EmitByteCode(builder);
 
@@ -136,7 +136,7 @@ namespace bloop::ast {
 			const auto loopStart = builder.m_uOffset;
 
 			if (m_pCondition)
-				m_pCondition->EmitByteCode(builder);
+				m_pCondition->EmitByteCode(builder, true);
 
 			const auto jumpExit = EmitJump(builder, TOpCode::JZ); //get the beginning of the loop
 			builder.m_oLoops.push_back({});
@@ -161,7 +161,7 @@ namespace bloop::ast {
 
 		std::unique_ptr<Statement> m_pInitializer;
 		std::unique_ptr<Expression> m_pCondition;
-		std::unique_ptr<Expression> m_pOnEnd;
+		std::unique_ptr<ExpressionStatement> m_pOnEnd;
 	};
 
 	struct ReturnStatement : ExpressionStatement {
@@ -182,7 +182,7 @@ namespace bloop::ast {
 
 		void EmitByteCode(TBCBuilder& builder) override {
 			if (m_pExpression) {
-				m_pExpression->EmitByteCode(builder);
+				m_pExpression->EmitByteCode(builder, true);
 				Emit(builder, TOpCode::RETURN_VALUE);
 				return;
 			}

@@ -59,19 +59,19 @@ bloop::EStatus CParserDeclaration::ParseInitializer() {
 	if (expr.Parse() != bloop::EStatus::success)
 		return bloop::EStatus::failure;
 
-	m_pExpression = expr.ToExpression();
+	m_pExpression = std::make_unique<bloop::ast::ExpressionStatement>(expr.ToExpression(), GetIteratorSafe()->GetCodePosition());
 	return bloop::EStatus::success;
 
 }
 UniqueStatement CParserDeclaration::ToStatement() {
 	if (m_bIsConst)
-		return std::make_unique<bloop::ast::ConstVariableDeclaration>(m_pIdentifier->Source(), ToExpression(), m_pIdentifier->GetCodePosition());
+		return std::make_unique<bloop::ast::ConstVariableDeclaration>(m_pIdentifier->Source(), std::move(m_pExpression), m_pIdentifier->GetCodePosition());
 
-	return std::make_unique<bloop::ast::VariableDeclaration>(m_pIdentifier->Source(), ToExpression(), m_pIdentifier->GetCodePosition());
+	return std::make_unique<bloop::ast::VariableDeclaration>(m_pIdentifier->Source(), std::move(m_pExpression), m_pIdentifier->GetCodePosition());
 }
 UniqueExpression CParserDeclaration::ToExpression() {
 	assert(m_pExpression);
-	return std::move(m_pExpression);
+	return std::move(m_pExpression->m_pExpression);
 }
 bool bloop::parser::IsDeclaration(const bloop::CToken* token) noexcept {
 	return token && (token->Type() == bloop::ETokenType::tt_const || token->Type() == bloop::ETokenType::tt_let);

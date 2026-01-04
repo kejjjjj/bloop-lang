@@ -3,8 +3,8 @@
 
 using namespace bloop::ast;
 
-void AssignExpression::EmitByteCode(TBCBuilder& builder) {
-	right->EmitByteCode(builder);
+void AssignExpression::EmitByteCode(TBCBuilder& builder, bool want_value) {
+	right->EmitByteCode(builder, true);
 
 	//look for the identifier from the unary/postfix chain
 	if (const auto ptr = left->GetIdentifier()) {
@@ -13,29 +13,15 @@ void AssignExpression::EmitByteCode(TBCBuilder& builder) {
 			throw exception::ResolverError(BLOOPTEXT("invalid lhs operand"), m_oApproximatePosition);
 
 		if (auto pf = dynamic_cast<Subscript*>(left.get())) {
-			pf->EmitSet(builder);
-			if (!IsStatement())
-				pf->EmitGet(builder); // (arr[0] = 2) < 10
-			return pf->left->EmitByteCode(builder);
+			pf->EmitSet(builder, want_value);
+			pf->EmitGet(builder, want_value); // (arr[0] = 2) < 10
+			pf->left->EmitByteCode(builder, want_value);
+		} else {
+			ptr->Store(builder, true);
 		}
 
-		switch (ptr->m_oResolver.m_eKind) {
-		case IdentifierExpression::ResolvedIdentifier::Kind::Local:
-			Emit(builder, TOpCode::STORE_LOCAL, ptr->m_oResolver.m_uSlot);
-			if(!IsStatement())
-				Emit(builder, TOpCode::LOAD_LOCAL, ptr->m_oResolver.m_uSlot);
-			break;
-		case IdentifierExpression::ResolvedIdentifier::Kind::Upvalue:
-			Emit(builder, TOpCode::STORE_UPVALUE, ptr->m_oResolver.m_uSlot);
-			if (!IsStatement())
-				Emit(builder, TOpCode::LOAD_UPVALUE, ptr->m_oResolver.m_uSlot);
-			break;
-		case IdentifierExpression::ResolvedIdentifier::Kind::Global:
-			Emit(builder, TOpCode::STORE_GLOBAL, ptr->m_oResolver.m_uSlot);
-			if (!IsStatement())
-				Emit(builder, TOpCode::LOAD_GLOBAL, ptr->m_oResolver.m_uSlot);
-			break;
-		}
+		if (!want_value)
+			Emit(builder, TOpCode::POP);
 
 		return;
 	}

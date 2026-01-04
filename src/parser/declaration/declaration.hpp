@@ -11,6 +11,7 @@ namespace bloop{
 
 namespace bloop::ast {
 	struct Expression;
+	struct ExpressionStatement;
 }
 
 namespace bloop::parser {
@@ -34,7 +35,7 @@ namespace bloop::parser {
 		const CParserContext& m_oCtx;
 		bool m_bIsConst{};
 		const bloop::CToken* m_pIdentifier{};
-		std::unique_ptr<bloop::ast::Expression> m_pExpression;
+		std::unique_ptr<bloop::ast::ExpressionStatement> m_pExpression;
 	};
 
 	[[nodiscard]] bool IsDeclaration(const bloop::CToken* token) noexcept;

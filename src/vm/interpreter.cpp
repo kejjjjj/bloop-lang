@@ -15,7 +15,11 @@ using TOpCode = bloop::bytecode::EOpCode;
 VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 	switch (op) {
-		case TOpCode::LOAD_CONST: {
+		case TOpCode::POP: {
+			assert(!m_oStack.empty());
+			[[maybe_unused]] const auto _ = Pop();
+			break;
+		} case TOpCode::LOAD_CONST: {
 			Push(m_pCurrentFrame->m_pChunk->m_oConstants[FetchOperand()]);
 			break;
 		} case TOpCode::LOAD_LOCAL: {
@@ -53,7 +57,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 		} case TOpCode::STORE_UPVALUE: {
 			const auto idx = FetchOperand();
 			assert(idx <= static_cast<bloop::BloopIndex>(m_pCurrentFrame->m_pClosure->numValues));
-			m_pCurrentFrame->m_pClosure->upvalues[idx]->closed = Pop();
+			*m_pCurrentFrame->m_pClosure->upvalues[idx]->location = Pop();
 			break;
 		} case TOpCode::MAKE_FUNCTION: {
 			const auto idx = FetchOperand();
@@ -161,6 +165,18 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 					obj->closure.upvalues[i] = m_pCurrentFrame->m_pClosure->upvalues[slot];
 			}
 			Push(obj);
+			break;
+		} case TOpCode::DUP: {
+			Push(m_oStack.back());
+			break;
+		}
+		case TOpCode::INCR: {
+			Value index = Pop();
+			Push(++index);
+			break;
+		} case TOpCode::DECR: {
+			Value index = Pop();
+			Push(--index);
 			break;
 		}
 	}

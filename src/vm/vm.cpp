@@ -140,7 +140,7 @@ void VM::RunGlobal() {
 void VM::RunFunction(Function* fn) {
 	PushFrame(fn);
 	const auto returnCode = RunFrame();
-	CloseUpValues(&m_oStack[m_pCurrentFrame->m_uBase]);
+	CloseUpValues(m_oStack.data());
 	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
 	Push(ret);
@@ -149,7 +149,7 @@ void VM::RunClosure(Closure* closure)
 {
 	PushFrame(closure);
 	const auto returnCode = RunFrame();
-	CloseUpValues(&m_oStack[m_pCurrentFrame->m_uBase]);
+	CloseUpValues(m_oStack.data());
 	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
 	Push(ret);

@@ -31,7 +31,7 @@ namespace bloop::parser {
 
 		UniqueStatement m_pInitializer;
 		UniqueExpression m_pCondition;
-		UniqueExpression m_pOnEnd;
+		std::unique_ptr<bloop::ast::ExpressionStatement> m_pOnEnd;
 		std::unique_ptr<bloop::ast::BlockStatement> m_pBody;
 	};
 }

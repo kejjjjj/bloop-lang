@@ -126,10 +126,6 @@ bool CParserExpression::EndOfExpression(const std::optional<PairMatcher>& eoe) c
 
 /* EXPRESSION GENERATION */
 std::unique_ptr<bloop::ast::AssignExpression> CParserExpression::MakeAssignment(bloop::CodePosition pos) {
-	if (IsStatement()) {
-		dynamic_cast<CParserExpressionStatement*>(this)->MakeNotStatement();
-		return std::make_unique<bloop::ast::AssignStatement>(pos);
-	}
 	return std::make_unique<bloop::ast::AssignExpression>(pos);
 }
 void CParserExpression::SetBranch(UniqueExpression& getter, const bloop::CPunctuationToken* t) {

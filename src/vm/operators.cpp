@@ -183,3 +183,39 @@ Value Value::operator<=(Value v) {
     }
     throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
 }
+Value Value::operator++() {
+    if(!IsArithmetic())
+        throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not arithmetic"), TypeToString()));
+
+    switch (type) {
+    case VT::t_uint:
+        return ++u;
+    case VT::t_int:
+        return ++i;
+    case VT::t_double:
+        return ++d;
+    default:
+        break;
+    }
+
+    throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" can't be incremented"), TypeToString()));
+}
+Value Value::operator--() {
+
+    if (!IsArithmetic())
+        throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not arithmetic"), TypeToString()));
+
+    switch (type) {
+    case VT::t_uint:
+        return --u;
+    case VT::t_int:
+        return --i;
+    case VT::t_double:
+        return --d;
+    default:
+        break;
+    }
+
+    throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" can't be decremented"), TypeToString()));
+
+}

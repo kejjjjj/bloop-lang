@@ -101,13 +101,13 @@ bloop::EStatus CParserForStatement::ParseEndExpression() {
 		return bloop::EStatus::success;
 	}
 
-	CParserExpression expr(m_oCtx);
+	CParserExpressionStatement expr(m_oCtx);
 
 	//find the )
 	if (expr.Parse(PairMatcher(bloop::EPunctuation::p_par_open)) != bloop::EStatus::success)
 		return bloop::EStatus::failure;
 
-	m_pOnEnd = expr.ToExpression();
+	m_pOnEnd = std::make_unique<bloop::ast::ExpressionStatement>(expr.ToExpression(), m_oDeclPos);
 	return bloop::EStatus::success;
 }
 UniqueStatement CParserForStatement::ToStatement() {

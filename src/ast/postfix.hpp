@@ -43,12 +43,15 @@ namespace bloop::ast {
 			left->Resolve(resolver);
 
 		}
-		virtual void EmitByteCode(TBCBuilder& builder) override {
+		virtual void EmitByteCode(TBCBuilder& builder, [[maybe_unused]] bool want_value) override {
 			for (auto& arg : m_oArguments)
-				arg->EmitByteCode(builder); // load args
+				arg->EmitByteCode(builder, true); // load args
 
-			left->EmitByteCode(builder); // load operand
+			left->EmitByteCode(builder, true); // load operand
 			Emit(builder, TOpCode::CALL, static_cast<bloop::BloopIndex>(m_oArguments.size()));
+
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
 		}
 
 		std::vector<std::unique_ptr<Expression>> m_oArguments;
@@ -66,22 +69,88 @@ namespace bloop::ast {
 			left->Resolve(resolver);
 
 		}
-		virtual void EmitByteCode(TBCBuilder& builder) override {
-			EmitGet(builder);
+		virtual void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+			EmitGet(builder, want_value);
 		}
-		void EmitGet(TBCBuilder& builder) {
-			left->EmitByteCode(builder);   // arr
-			m_pIndex->EmitByteCode(builder); // index
+		void EmitGet(TBCBuilder& builder, bool want_value) {
+			left->EmitByteCode(builder, true);   // arr
+			m_pIndex->EmitByteCode(builder, true); // index
 			Emit(builder, TOpCode::SUBSCRIPT_GET);
+
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
 		}
 
-		void EmitSet(TBCBuilder& builder) {
-			left->EmitByteCode(builder);   // arr
-			m_pIndex->EmitByteCode(builder); // index
+		void EmitSet(TBCBuilder& builder, bool want_value) {
+			left->EmitByteCode(builder, true);   // arr
+			m_pIndex->EmitByteCode(builder, true); // index
 			Emit(builder, TOpCode::SUBSCRIPT_SET);
+
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
 		}
 
 		std::unique_ptr<Expression> m_pIndex;
+	};
+
+
+	struct Increment : Postfix {
+
+		Increment(const bloop::CodePosition& cp) : Postfix(EPunctuation::p_increment, cp) {}
+
+		virtual void Resolve(TResolver& resolver) override {
+			left->Resolve(resolver);
+			if (const auto identifier = GetIdentifier()) {
+				return;
+			}
+
+			throw exception::ResolverError(BLOOPTEXT("increment operand is not an identifier"), m_oApproximatePosition);
+		}
+		virtual void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+			left->EmitByteCode(builder, true); // load operand
+
+			if(want_value)
+				Emit(builder, TOpCode::DUP); //duplicate
+
+			Emit(builder, TOpCode::INCR);
+
+			auto identifier = GetIdentifier();
+			assert(identifier);
+			identifier->Store(builder, !want_value); //invert it
+
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
+		}
+	};
+
+	struct Decrement : Postfix {
+
+		Decrement(const bloop::CodePosition& cp) : Postfix(EPunctuation::p_decrement, cp) {}
+
+		virtual void Resolve(TResolver& resolver) override {
+			left->Resolve(resolver);
+
+			if (const auto identifier = GetIdentifier()) {
+				return;
+			}
+
+			throw exception::ResolverError(BLOOPTEXT("decrement operand is not an identifier"), m_oApproximatePosition);
+		}
+		virtual void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+			left->EmitByteCode(builder, true); // load operand
+
+			if (want_value)
+				Emit(builder, TOpCode::DUP); //duplicate
+
+			Emit(builder, TOpCode::DECR);
+
+			auto identifier = GetIdentifier();
+			assert(identifier);
+			identifier->Store(builder, !want_value); //invert it
+
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
+		}
 	};
 
 }

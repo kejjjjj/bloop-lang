@@ -1,32 +1,22 @@
 R"(
 
-fn getManager()
-{
-	fn recursionManager(numCalls){
-		let calls = 0;
-		const limit = numCalls;
 
-		fn recurse() {
-			if((calls = calls + 1) <= limit){
-				return recurse();
-			}
-			return calls;
-		}
-
-		return recurse;
-	}
-
-	return recursionManager;
-}
 
 fn main() {
-	const arr = [1,1,1,1,1,1,1,1,1,1];
-	const mgr = getManager()(20);
 
-	for(let i = 0; i <= 9; i = i + 1)
-		arr[i] = mgr();
 
-	return arr;
+	fn shitf() {
+		let val = 0;
+
+		fn innerShit(){
+			return val++;
+		}
+
+		return innerShit;
+	}
+
+	const shit = shitf();
+	return [ shit(), shit(), shit() ];
 }
 
 
