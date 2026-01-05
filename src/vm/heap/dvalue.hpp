@@ -18,7 +18,7 @@ namespace bloop::vm
 	struct Object {
 		enum class Type { ot_string, ot_array, ot_object, ot_function, ot_closure, ot_upvalue } type;
 
-		Object(char* _data, bloop::BloopInt _len) : type(Type::ot_string), string({.data=_data, .len=_len}) {}
+		Object(bloop::BloopChar* _data, bloop::BloopInt _len) : type(Type::ot_string), string({.data=_data, .len=_len}) {}
 		Object(Function* chunk) : type(Type::ot_function), function(chunk){}
 		Object(Function* function, UpValue** upVals, bloop::BloopUInt numVals);
 		Object(UpValue* upval) : type(Type::ot_upvalue), upvalue(upval){}
@@ -27,7 +27,7 @@ namespace bloop::vm
 
 		union {
 			struct {
-				char* data;
+				bloop::BloopChar* data;
 				bloop::BloopInt len;
 			}string;
 			Function* function;
@@ -47,6 +47,8 @@ namespace bloop::vm
 		[[nodiscard]] std::size_t GetSize() const;
 
 		[[nodiscard]] bool IsIndexable() const;
+		[[nodiscard]] bloop::BloopChar IndexChar(bloop::BloopInt idx) const;
+
 		[[nodiscard]] Value& Index(bloop::BloopInt idx) const;
 
 		[[nodiscard]] bloop::BloopString ValueToString() const;

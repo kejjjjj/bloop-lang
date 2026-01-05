@@ -1,24 +1,7 @@
 R"(
 
-
-
 fn main() {
 
-
-	fn shitf() {
-		let val = 0;
-
-		fn innerShit(){
-			return val++;
-		}
-
-		return innerShit;
-	}
-
-	const shit = shitf();
-	return [ shit(), shit(), shit() ];
+	"wtf"[0];
 }
-
-
-
 )";

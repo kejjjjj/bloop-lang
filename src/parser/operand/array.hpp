@@ -6,6 +6,7 @@
 namespace bloop::parser {
 	struct CArrayOperand final : public IOperand {
 		BLOOP_NONCOPYABLE(CArrayOperand);
+		CArrayOperand() = default;
 		CArrayOperand(std::vector<UniqueExpression>&& initializers);
 		~CArrayOperand();
 

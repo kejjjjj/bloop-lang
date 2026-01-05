@@ -19,11 +19,11 @@ Object* Heap::Allocate(Object* newObj) {
 	return newObj;
 }
 Object* Heap::AllocString(std::size_t len) {
-	auto newBuf = new char[len];
+	auto newBuf = new bloop::BloopChar[len];
 	return Allocate(new Object(newBuf, len));
 }
-Object* Heap::AllocString(char* data, std::size_t len) {
-	auto newBuf = new char[len];
+Object* Heap::AllocString(bloop::BloopChar* data, std::size_t len) {
+	auto newBuf = new bloop::BloopChar[len];
 	std::memcpy(newBuf, data, len);
 	return Allocate(new Object(newBuf, len));
 }

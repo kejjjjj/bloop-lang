@@ -14,15 +14,17 @@ namespace bloop::ast {
 
 			while (_left) {
 
+
 				if (const auto identifier = _left->GetIdentifier())
 					return identifier;
 
-				auto expr = dynamic_cast<BinaryExpression*>(_left);
+				auto expr = dynamic_cast<Postfix*>(_left);
 
 				if (!expr)
 					break;
 
 				_left = expr->left.get();
+
 			}
 			//assert(false);
 			return nullptr;
@@ -94,19 +96,20 @@ namespace bloop::ast {
 	};
 
 
-	struct Increment : Postfix {
+	struct Increment final : Postfix {
 
 		Increment(const bloop::CodePosition& cp) : Postfix(EPunctuation::p_increment, cp) {}
 
-		virtual void Resolve(TResolver& resolver) override {
+		void Resolve(TResolver& resolver) override {
 			left->Resolve(resolver);
 			if (const auto identifier = GetIdentifier()) {
+				if (identifier->IsConst())
+					throw exception::ResolverError(BLOOPTEXT("can't increment a const value"), m_oApproximatePosition);
 				return;
 			}
-
 			throw exception::ResolverError(BLOOPTEXT("increment operand is not an identifier"), m_oApproximatePosition);
 		}
-		virtual void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
 			left->EmitByteCode(builder, true); // load operand
 
 			if(want_value)
@@ -123,20 +126,21 @@ namespace bloop::ast {
 		}
 	};
 
-	struct Decrement : Postfix {
+	struct Decrement final : Postfix {
 
 		Decrement(const bloop::CodePosition& cp) : Postfix(EPunctuation::p_decrement, cp) {}
 
-		virtual void Resolve(TResolver& resolver) override {
+		void Resolve(TResolver& resolver) override {
 			left->Resolve(resolver);
 
 			if (const auto identifier = GetIdentifier()) {
+				if (identifier->IsConst())
+					throw exception::ResolverError(BLOOPTEXT("can't decrement a const value"), m_oApproximatePosition);
 				return;
 			}
-
 			throw exception::ResolverError(BLOOPTEXT("decrement operand is not an identifier"), m_oApproximatePosition);
 		}
-		virtual void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
 			left->EmitByteCode(builder, true); // load operand
 
 			if (want_value)

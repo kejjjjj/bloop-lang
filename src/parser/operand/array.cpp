@@ -8,6 +8,11 @@ std::unique_ptr<IOperand> CParserOperand::ParseArray() {
 
 	Advance(1); // skip [
 
+	if (!IsEndOfBuffer() && GetIteratorSafe()->IsOperator(bloop::EPunctuation::p_bracket_close)) {
+		Advance(1); // skip ]
+		return std::make_unique<CArrayOperand>();
+	}
+
 	CParserExpression expr(m_oCtx);
 
 	if (expr.Parse(PairMatcher(EPunctuation::p_bracket_open)) != bloop::EStatus::success)

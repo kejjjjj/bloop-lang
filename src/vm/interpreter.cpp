@@ -131,7 +131,12 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			if (!operand.IsIndexable())
 				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not indexable"), operand.TypeToString()));
 
-			Push(operand.obj->Index(index.ToInt()));
+			if (operand.IsString()) {
+				auto c = operand.obj->IndexChar(index.ToInt());
+				Push(m_oHeap.AllocString(&c, sizeof(c)));
+			} else {
+				Push(operand.obj->Index(index.ToInt()));
+			}
 			break;
 		} case TOpCode::SUBSCRIPT_SET: {
 			Value index = Pop();

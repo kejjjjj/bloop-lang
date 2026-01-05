@@ -17,7 +17,7 @@ namespace bloop::vm
 		Heap(VM* vm) : m_pVM(vm){}
 		[[nodiscard]] constexpr auto GetAllocatedSize() const noexcept { return m_uBytesAllocated; }
 		[[nodiscard]] Object* Allocate(Object* newObj);
-		[[nodiscard]] Object* AllocString(char* data, std::size_t len);
+		[[nodiscard]] Object* AllocString(bloop::BloopChar* data, std::size_t len);
 		[[nodiscard]] Object* AllocString(std::size_t len);
 		[[nodiscard]] Object* AllocCallable(Function* callable);
 		[[nodiscard]] Object* AllocArray(std::size_t numValues);

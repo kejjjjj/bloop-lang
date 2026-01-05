@@ -57,7 +57,13 @@ std::size_t Object::GetSize() const
 }
 
 bool Object::IsIndexable() const {
-	return type == Type::ot_array;
+	return type == Type::ot_array || type == Type::ot_string;
+}
+bloop::BloopChar Object::IndexChar(bloop::BloopInt idx) const {
+	if (idx < 0 || idx >= string.len)
+		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("out of bounds index [{}]"), idx));
+
+	return string.data[idx];
 }
 Value& Object::Index(bloop::BloopInt idx) const {
 	switch (type) {
@@ -68,7 +74,7 @@ Value& Object::Index(bloop::BloopInt idx) const {
 
 		return array.values[idx];
 	default:
-		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("can't index a value of type \"{}\""), TypeToString()));
+		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("can't index a value of type \"{}\" for this operation"), TypeToString()));
 	}
 
 }

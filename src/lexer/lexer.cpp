@@ -43,7 +43,7 @@ CLexer::~CLexer() = default;
 
 void CLexer::Parse() {
 	while (auto&& token = ReadToken())
-		m_oTokens.emplace_back(std::forward<std::unique_ptr<bloop::CToken>&&>(token));
+		m_oTokens.emplace_back(std::forward<decltype(token)>(token));
 }
 
 bool CLexer::IsToken(bloop::BloopStringView t) noexcept
