@@ -96,6 +96,8 @@ namespace bloop {
 		t_object,
 	};
 
+	using ConstantData = std::tuple< bloop::BloopString, EValueType>;
+
 	using CodePosition = std::tuple<std::size_t, std::size_t>;
 	static constexpr BloopIndex INVALID_SLOT = std::numeric_limits<BloopIndex>::max();
 }

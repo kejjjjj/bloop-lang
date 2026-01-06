@@ -8,6 +8,7 @@ namespace bloop::vm
 	struct Function;
 	struct Value;
 	struct UpValue;
+	struct ObjectEntry;
 
 	struct Closure {
 		Function* function;
@@ -23,18 +24,25 @@ namespace bloop::vm
 		Object(Function* function, UpValue** upVals, bloop::BloopUInt numVals);
 		Object(UpValue* upval) : type(Type::ot_upvalue), upvalue(upval){}
 
-		Object(bloop::BloopInt ucount);
+		Object(Value* values, bloop::BloopInt ucount);
+		Object(ObjectEntry* entries, bloop::BloopInt ucount, bloop::BloopInt capacity);
 
 		union {
 			struct {
 				bloop::BloopChar* data;
 				bloop::BloopInt len;
+				bloop::BloopUInt32 hash;
 			}string;
 			Function* function;
 			struct {
 				Value* values;
 				bloop::BloopInt count;
 			}array;
+			struct {
+				ObjectEntry* entries;
+				bloop::BloopInt count;
+				bloop::BloopInt capacity;
+			}object;
 			Closure closure;
 			UpValue* upvalue;
 		};
@@ -49,10 +57,13 @@ namespace bloop::vm
 		[[nodiscard]] bool IsIndexable() const;
 		[[nodiscard]] bloop::BloopChar IndexChar(bloop::BloopInt idx) const;
 
-		[[nodiscard]] Value& Index(bloop::BloopInt idx) const;
+		[[nodiscard]] Value& Index(Value vidx) const;
 
 		[[nodiscard]] bloop::BloopString ValueToString() const;
 		[[nodiscard]] bloop::BloopString TypeToString() const;
+
+		Value& ObjectGet(Value key) const;
+		Value& ObjectSet(Value key, Value value);
 
 	private:
 		[[nodiscard]] bloop::BloopString ValueToStringInternal(std::unordered_set<const Object*>& seen) const;

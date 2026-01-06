@@ -44,6 +44,18 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 			Push(arr);
 			break;
+		} case TOpCode::CREATE_OBJECT: {
+			const auto numInitializers = FetchOperand();
+			auto obj = m_oHeap.AllocObject(numInitializers);
+
+			for ([[maybe_unused]] const auto i : std::views::iota(0u, numInitializers) | std::views::reverse) {
+				auto v = Pop();
+				auto k = Pop();
+				obj->ObjectSet(k, v);
+			}
+
+			Push(obj);
+			break;
 		} case TOpCode::STORE_LOCAL: {
 			const auto idx = m_pCurrentFrame->m_uBase + FetchOperand();
 			assert(idx <= static_cast<bloop::BloopIndex>(m_oStack.size()));
@@ -135,7 +147,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 				auto c = operand.obj->IndexChar(index.ToInt());
 				Push(m_oHeap.AllocString(&c, sizeof(c)));
 			} else {
-				Push(operand.obj->Index(index.ToInt()));
+				Push(operand.obj->Index(index));
 			}
 			break;
 		} case TOpCode::SUBSCRIPT_SET: {
@@ -158,7 +170,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			assert(funcIdx < static_cast<bloop::BloopIndex>(m_oFunctions.size()));
 			auto& func = m_oFunctions[funcIdx];
 
-			auto obj = m_oHeap.AllocClosure(&func, func.m_oCaptures.size());
+			auto obj = m_oHeap.AllocClosure(&func, static_cast<bloop::BloopIndex>(func.m_oCaptures.size()));
 
 			for (const auto i : std::views::iota(0u, obj->closure.numValues)) {
 				const auto opcode = static_cast<TOpCode>(m_pCurrentFrame->m_pChunk->m_oByteCode[m_pCurrentFrame->m_uIp++]);

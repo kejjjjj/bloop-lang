@@ -17,11 +17,12 @@ namespace bloop::vm
 		Heap(VM* vm) : m_pVM(vm){}
 		[[nodiscard]] constexpr auto GetAllocatedSize() const noexcept { return m_uBytesAllocated; }
 		[[nodiscard]] Object* Allocate(Object* newObj);
-		[[nodiscard]] Object* AllocString(bloop::BloopChar* data, std::size_t len);
-		[[nodiscard]] Object* AllocString(std::size_t len);
+		[[nodiscard]] Object* AllocString(bloop::BloopChar* data, bloop::BloopUInt len);
+		[[nodiscard]] Object* AllocString(bloop::BloopUInt len);
 		[[nodiscard]] Object* AllocCallable(Function* callable);
-		[[nodiscard]] Object* AllocArray(std::size_t numValues);
-		[[nodiscard]] Object* AllocClosure(Function* function, bloop::BloopUInt numVals);
+		[[nodiscard]] Object* AllocArray(bloop::BloopIndex numValues);
+		[[nodiscard]] Object* AllocObject(bloop::BloopIndex numValues);
+		[[nodiscard]] Object* AllocClosure(Function* function, bloop::BloopIndex numVals);
 		[[nodiscard]] Object* AllocUpValue(Value* slot, UpValue* location);
 
 		[[nodiscard]] Object* StringConcat(Object* a, Object* b);

@@ -9,13 +9,16 @@
 
 using namespace bloop::vm;
 
-std::vector<Value> VM::BuildConstants(const std::vector<bloop::bytecode::CConstant>& constants) {
+std::vector<Value> VM::BuildConstants(const std::vector<bloop::ConstantData>& constants) {
 	std::vector<Value> vals;
 	for (const auto& c : constants) {
-		if (c.m_eDataType == bloop::EValueType::t_string) {
-			vals.emplace_back(Value{ m_oHeap.AllocString(const_cast<char*>(c.m_pConstant.data()), c.m_pConstant.size()) });
+		const auto& data = std::get<0>(c);
+		const auto type = std::get<1>(c);
+
+		if (type == bloop::EValueType::t_string) {
+			vals.emplace_back(Value{ m_oHeap.AllocString(const_cast<char*>(data.data()), data.size()) });
 		} else {
-			vals.emplace_back(Value{ c.m_eDataType, c.m_pConstant });
+			vals.emplace_back(Value{ c });
 		}
 	}
 	return vals;

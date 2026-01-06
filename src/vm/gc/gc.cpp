@@ -15,7 +15,9 @@ void GC::Collect(VM* vm) {
 
 	MarkRoots(vm);
 	Sweep();
-	m_pHeap->m_uNextGCLimit = m_pHeap->m_uBytesAllocated * 2;
+
+	if(m_pHeap->m_uBytesAllocated >= m_pHeap->m_uNextGCLimit)
+		m_pHeap->m_uNextGCLimit = m_pHeap->m_uBytesAllocated * 2;
 }
 void GC::MarkRoots(VM* vm) {
 
@@ -64,6 +66,15 @@ void GC::Trace(Object* obj) {
 		for (const auto i : std::views::iota(0, obj->array.count)) {
 			if (obj->array.values[i].type == Value::Type::t_object)
 				Mark(obj->array.values[i].obj);
+		}
+		break;
+	case Object::Type::ot_object:
+		for (const auto i : std::views::iota(0, obj->object.capacity)) {
+			const auto& entry = obj->object.entries[i];
+			if (entry.key.type == Value::Type::t_object)
+				Mark(entry.key.obj);
+			if (entry.value.type == Value::Type::t_object)
+				Mark(entry.value.obj);
 		}
 		break;
 	case Object::Type::ot_closure:

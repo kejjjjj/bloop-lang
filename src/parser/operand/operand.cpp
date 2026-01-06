@@ -27,6 +27,8 @@ bloop::EStatus CParserOperand::Parse([[maybe_unused]]std::optional<PairMatcher>&
 		m_pOperand = ParseParentheses();
 	} else if (token->IsOperator(EPunctuation::p_bracket_open)) {
 		m_pOperand = ParseArray();
+	} else if (token->IsOperator(EPunctuation::p_curlybracket_open)) {
+		m_pOperand = ParseObject();
 	} else if (token->Type() == ETokenType::tt_name) {
 		m_pOperand = ParseIdentifier();
 	} else {

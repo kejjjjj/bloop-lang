@@ -74,7 +74,7 @@ namespace bloop::bytecode
 
 		virtual ~CByteCodeBuilder() = default;
 		[[nodiscard]] virtual constexpr bool GlobalContext() const noexcept { return false; }
-		[[nodiscard]] bloop::BloopIndex AddConstant(CConstant&& c);
+		[[nodiscard]] bloop::BloopIndex AddConstant(bloop::ConstantData c);
 		void Emit(EOpCode opcode, bloop::BloopIndex idx, CodePosition pos);
 		void Emit(EOpCode opcode, CodePosition pos);
 		[[nodiscard]] bloop::BloopIndex EmitJump(EOpCode opcode, CodePosition pos); //returns the index of m_oByteCode
@@ -91,7 +91,7 @@ namespace bloop::bytecode
 		[[nodiscard]] std::vector<bloop::BloopByte> Encode();
 		[[nodiscard]] std::vector<CInstructionPosition> GetCodePositions();
 
-		std::vector<CConstant> m_oConstants;
+		std::vector<bloop::ConstantData> m_oConstants;
 		std::vector<CSingularByteCode> m_oByteCode;
 		bloop::BloopIndex m_uOffset{};
 

@@ -136,15 +136,14 @@ namespace bloop::ast {
 			return; // do nothing
 		}
 		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
-			const auto idx = builder.AddConstant(bloop::bytecode::CConstant{ .m_pConstant = m_pConstant, .m_eDataType = m_eDataType });
+			const auto idx = builder.AddConstant(m_oConstant);
 			Emit(builder, TOpCode::LOAD_CONST, idx);
 
 			if (!want_value)
 				Emit(builder, TOpCode::POP);
 		};
 
-		bloop::BloopString m_pConstant;
-		bloop::EValueType m_eDataType{};
+		bloop::ConstantData m_oConstant;
 	};
 
 	struct IdentifierExpression : Expression {
@@ -256,6 +255,41 @@ namespace bloop::ast {
 		}
 
 		std::vector<std::unique_ptr<Expression>> m_pInitializers;
+	};
+
+	struct ObjectExpression : Expression {
+
+		struct KV {
+			bloop::ConstantData key;
+			std::unique_ptr<Expression> value;
+		};
+		
+		ObjectExpression(const bloop::CodePosition& cp)
+			: Expression(cp) {}
+
+		void Resolve(TResolver& resolver) override {
+
+			for (auto& kv : m_oKeyValues) {
+				assert(kv && kv->value);
+				kv->value->Resolve(resolver);
+			}
+
+		}
+
+		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+			for (const auto& kv : m_oKeyValues) {
+				const auto idx = builder.AddConstant(kv->key);
+				Emit(builder, TOpCode::LOAD_CONST, idx); // key
+				kv->value->EmitByteCode(builder, true); // value
+			}
+
+			Emit(builder, TOpCode::CREATE_OBJECT, static_cast<bloop::BloopIndex>(m_oKeyValues.size()));
+
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
+		}
+
+		std::vector<std::unique_ptr<KV>> m_oKeyValues;
 	};
 
 	struct VariableDeclaration : Statement {

@@ -1,6 +1,7 @@
 #include "vm/heap/heap.hpp"
 #include "vm/heap/dvalue.hpp"
 #include "vm/vm.hpp"
+#include "utils/hash.hpp"
 
 #include <cassert>
 #include <ranges>
@@ -18,28 +19,35 @@ Object* Heap::Allocate(Object* newObj) {
 	m_uBytesAllocated += newObj->GetSize();
 	return newObj;
 }
-Object* Heap::AllocString(std::size_t len) {
+Object* Heap::AllocString(bloop::BloopUInt len) {
 	auto newBuf = new bloop::BloopChar[len];
 	return Allocate(new Object(newBuf, len));
 }
-Object* Heap::AllocString(bloop::BloopChar* data, std::size_t len) {
+Object* Heap::AllocString(bloop::BloopChar* data, bloop::BloopUInt len) {
 	auto newBuf = new bloop::BloopChar[len];
 	std::memcpy(newBuf, data, len);
-	return Allocate(new Object(newBuf, len));
+	auto ptr = Allocate(new Object(newBuf, len));
+	ptr->string.hash = bloop::hash::FNV1a(newBuf, len);
+	return ptr;
 }
 Object* Heap::AllocCallable(Function* callable) {
 	return Allocate(new Object(callable));
 }
-Object* Heap::AllocArray(std::size_t numValues) {
+Object* Heap::AllocArray(bloop::BloopIndex numValues) {
 
-	auto arr = Allocate(new Object(numValues));
-
-	for(const auto i : std::views::iota(0, arr->array.count))
-		arr->array.values[i] = Value();
-
+	auto vals = new Value[numValues];
+	auto arr = Allocate(new Object(vals, numValues));
 	return arr;
 }
-Object* Heap::AllocClosure(Function* function, bloop::BloopUInt numVals) {
+Object* Heap::AllocObject(bloop::BloopIndex numValues) {
+
+	auto capacity = numValues * 2;
+	auto entries = new ObjectEntry[capacity];
+
+	auto obj = Allocate(new Object(entries, 0, capacity));
+	return obj;
+}
+Object* Heap::AllocClosure(Function* function, bloop::BloopIndex numVals) {
 	auto vals = new UpValue*[numVals];
 	return Allocate(new Object(function, vals, numVals));
 }
@@ -55,6 +63,7 @@ Object* Heap::StringConcat(Object* a, Object* b)
 	auto r = AllocString(len);
 	memcpy(r->string.data, a->string.data, a->string.len);
 	memcpy(r->string.data + a->string.len, b->string.data, b->string.len);
+	r->string.hash = bloop::hash::FNV1a(r->string.data, r->string.len);
 	return r;
 }
 void Heap::FreeObject(Object* obj)

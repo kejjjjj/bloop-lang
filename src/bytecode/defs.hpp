@@ -14,10 +14,6 @@ namespace bloop::bytecode
 		#undef BLOOP_OP
 	};
 
-	struct CConstant {
-		bloop::BloopString m_pConstant;
-		bloop::EValueType m_eDataType{};
-	};
 	struct CInstructionPosition {
 		bloop::BloopIndex m_uByteOffset;
 		CodePosition m_oPosition;
@@ -29,7 +25,7 @@ namespace bloop::bytecode
 			bloop::BloopIndex m_uSlot{};
 		};
 		struct Chunk {
-			std::vector<CConstant> m_oConstants;
+			std::vector<bloop::ConstantData> m_oConstants;
 			bloop::BloopIndex m_uNumGlobals{};
 			std::vector<bloop::BloopByte> m_oByteCode;
 			std::vector<CInstructionPosition> m_oPositions;

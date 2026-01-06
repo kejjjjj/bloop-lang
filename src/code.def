@@ -2,6 +2,8 @@ R"(
 
 fn main() {
 
-	"wtf"[0];
+	const ass = {key: "value", key2: "value2"};
+
+	return [ ass["key2"], ass["key"] ];
 }
 )";

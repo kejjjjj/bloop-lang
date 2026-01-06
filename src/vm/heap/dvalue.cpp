@@ -9,11 +9,12 @@
 
 using namespace bloop::vm;
 using namespace std::string_literals;
-
 Object::Object(Function* function, UpValue** upVals, bloop::BloopUInt numVals) 
 	: type(Type::ot_closure), closure({ .function = function, .upvalues = upVals, .numValues= numVals }) {}
 
-Object::Object(bloop::BloopInt ucount) : type(Type::ot_array), array({ .values = new Value[ucount], .count = ucount }) {}
+Object::Object(Value* values, bloop::BloopInt ucount) : type(Type::ot_array), array({ .values = values, .count = ucount }) {}
+Object::Object(ObjectEntry* entries, bloop::BloopInt ucount, bloop::BloopInt capacity) 
+	: type(Type::ot_object), object({ .entries = entries, .count = ucount, .capacity = capacity }) {}
 
 void Object::Free()
 {
@@ -23,6 +24,9 @@ void Object::Free()
 		return;
 	case Type::ot_array:
 		delete[] array.values;
+		return;
+	case Type::ot_object:
+		delete[] object.entries;
 		return;
 	case Type::ot_function:
 		//just a handle
@@ -42,11 +46,13 @@ std::size_t Object::GetSize() const
 {
 	switch (type) {
 	case Type::ot_string:
-		return sizeof(Object) + string.len;
+		return sizeof(Object) + string.len + sizeof(string.hash);
 	case Type::ot_array:
 		return sizeof(Object) + (sizeof(array.values) * array.count);
+	case Type::ot_object:
+		return sizeof(Object) + sizeof(*object.entries) + sizeof(object.count) + sizeof(object.capacity);
 	case Type::ot_function:
-		return sizeof(Object); //just a handle, has no allocated size
+		return sizeof(Object) + sizeof(function); //just a handle, has no allocated size
 	case Type::ot_closure:
 		return sizeof(Object) + (sizeof(closure.upvalues) * closure.numValues);
 	case Type::ot_upvalue:
@@ -57,7 +63,7 @@ std::size_t Object::GetSize() const
 }
 
 bool Object::IsIndexable() const {
-	return type == Type::ot_array || type == Type::ot_string;
+	return type == Type::ot_array || type == Type::ot_object || type == Type::ot_string;
 }
 bloop::BloopChar Object::IndexChar(bloop::BloopInt idx) const {
 	if (idx < 0 || idx >= string.len)
@@ -65,14 +71,19 @@ bloop::BloopChar Object::IndexChar(bloop::BloopInt idx) const {
 
 	return string.data[idx];
 }
-Value& Object::Index(bloop::BloopInt idx) const {
+Value& Object::Index(Value vidx) const {
 	switch (type) {
-	case Type::ot_array:
-		
+	case Type::ot_array: {
+		const auto idx = vidx.ToInt();
+
 		if (idx < 0 || idx >= array.count)
 			throw exception::VMError(bloop::fmt::format(BLOOPTEXT("out of bounds index [{}]"), idx));
 
 		return array.values[idx];
+	}case Type::ot_object: {
+
+		return ObjectGet(vidx);
+	}
 	default:
 		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("can't index a value of type \"{}\" for this operation"), TypeToString()));
 	}
@@ -133,5 +144,49 @@ bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object
 		return BLOOPTEXT("closure");
 	}
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to a string"), TypeToString()));
+
+}
+Value& Object::ObjectGet(Value key) const {
+	const auto mask = object.capacity - 1;
+	auto index = key.Hash() & mask;
+
+	for (;;) {
+		auto& entry = object.entries[index];
+
+		if (entry.key.type == Value::Type::t_undefined) {
+			throw exception::VMError(bloop::fmt::format(BLOOPTEXT("unknown property \"{}\""), key.ValueToString()));
+		}
+
+		if (key.IsEqual(entry.key)) {
+			return entry.value;
+		}
+
+		index = (index + 1) & mask;
+	}
+}
+
+Value& Object::ObjectSet(Value key, Value value)
+{
+	const auto mask = object.capacity - 1;
+	auto index = key.Hash() & mask;
+
+	for (;;) {
+
+		auto& entry = object.entries[index];
+
+		if (entry.key.type == Value::Type::t_undefined) {
+			entry.key = key;
+			entry.value = value;
+			object.count++;
+			return entry.value;
+		}
+
+		if (entry.key.IsEqual(key)) {
+			entry.value = value;
+			return entry.value;
+		}
+
+		index = (index + 1) & mask;
+	}
 
 }

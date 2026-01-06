@@ -80,7 +80,7 @@ namespace bloop::vm
 		void Push(const Value& v);
 		[[nodiscard]] Value Pop();
 
-		[[nodiscard]] std::vector<Value> BuildConstants(const std::vector<bloop::bytecode::CConstant>& constants);
+		[[nodiscard]] std::vector<Value> BuildConstants(const std::vector<bloop::ConstantData>& constants);
 		[[nodiscard]] ExecutionReturnCode InterpretOpCode(bloop::bytecode::EOpCode op);
 		[[nodiscard]] bloop::BloopIndex FetchOperand();
 

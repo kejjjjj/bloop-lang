@@ -9,9 +9,12 @@
 
 using namespace bloop::vm;
 
-Value::Value(bloop::EValueType t, const bloop::BloopString& data) {
+Value::Value(bloop::ConstantData c) {
 
 	using VT = bloop::EValueType;
+
+	const auto& data = std::get<0>(c);
+	const auto t = std::get<1>(c);
 
 	switch (t) {
 	case VT::t_undefined:
@@ -78,6 +81,29 @@ bool Value::IsCallable() const {
 bool Value::IsIndexable() const {
 	return type == VT::t_object && obj->IsIndexable();
 }
+bool Value::IsEqual(Value v)
+{
+	Coerce(v);
+
+	switch (type) {
+	case VT::t_undefined:
+		return true;
+	case VT::t_bool:
+		return b == v.b;
+	case VT::t_uint:
+		return u == v.u;
+	case VT::t_int:
+		return i == v.i;
+	case VT::t_double:
+		return d == v.d;
+	case VT::t_object:
+		return obj == v.obj;
+	default:
+		break;
+	}
+
+	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
+}
 bloop::BloopInt Value::ToInt() const {
 	switch (type) {
 	case VT::t_undefined:
@@ -93,6 +119,11 @@ bloop::BloopInt Value::ToInt() const {
 	}
 
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to an integer"), TypeToString()));
+}
+bloop::BloopUInt32 Value::Hash() const {
+	assert(type == Type::t_object);
+	assert(obj->type == Object::Type::ot_string);
+	return obj->string.hash;
 }
 bloop::BloopString Value::TypeToString() const {
 	switch (type) {

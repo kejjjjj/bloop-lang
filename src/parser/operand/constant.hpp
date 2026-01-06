@@ -14,6 +14,8 @@ namespace bloop::parser {
 
 		[[nodiscard]] std::unique_ptr<ASTExpression> ToExpression() override;
 
+		[[nodiscard]] static ConstantData FromToken(const bloop::CToken* t);
+
 	private:
 
 		[[nodiscard]] bloop::EValueType GetType() const noexcept;

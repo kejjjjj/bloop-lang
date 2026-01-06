@@ -11,23 +11,27 @@
 
 using namespace bloop::bytecode;
 
-bloop::BloopIndex CByteCodeBuilder::AddConstant(CConstant&& c) {
+bloop::BloopIndex CByteCodeBuilder::AddConstant(bloop::ConstantData c) {
 
 	if (const auto ptr = std::ranges::find_if(m_oConstants,
-		[&c](const CConstant& p) {
-			return p.m_eDataType == c.m_eDataType && p.m_pConstant == c.m_pConstant;
+		[&c](const bloop::ConstantData& p) {
+			return std::get<1>(p) == std::get<1>(c) && std::get<0>(p) == std::get<0>(c);
 		}); ptr != m_oConstants.end()) {
 
 		const auto dist = std::distance(m_oConstants.begin(), ptr);
 
 		if (static_cast<bloop::BloopIndex>(dist) > std::numeric_limits<bloop::BloopIndex>::max())
-			throw exception::ByteCodeError(BLOOPTEXT("too many constants in a function"));
+			throw exception::ByteCodeError(BLOOPTEXT("too many constants in a chunk"));
 
 		return static_cast<bloop::BloopIndex>(std::distance(m_oConstants.begin(), ptr));
 	}
 
 	auto idx = m_oConstants.size();
-	m_oConstants.emplace_back(std::forward<decltype(c)>(c));
+
+	if (idx > std::numeric_limits<bloop::BloopIndex>::max())
+		throw exception::ByteCodeError(BLOOPTEXT("too many constants in a chunk"));
+
+	m_oConstants.emplace_back(c);
 	return static_cast<bloop::BloopIndex>(idx);
 }
 void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex idx, CodePosition pos) {
@@ -36,7 +40,7 @@ void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex idx, CodePosition 
 	constexpr auto offset = 1 + sizeof(bloop::BloopIndex);
 
 	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset > bloop::INVALID_SLOT)
-		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode has more than {} bytes"), bloop::INVALID_SLOT), pos);
+		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode chunk has more than {} bytes"), bloop::INVALID_SLOT), pos);
 
 
 	m_uOffset += offset; // op = 1
@@ -48,7 +52,7 @@ void CByteCodeBuilder::Emit(EOpCode opcode, CodePosition pos) {
 	constexpr auto offset = 1;
 
 	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset > bloop::INVALID_SLOT)
-		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode has more than {} bytes"), bloop::INVALID_SLOT), pos);
+		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode chunk has more than {} bytes"), bloop::INVALID_SLOT), pos);
 
 	m_uOffset += offset; // op = 1
 }
