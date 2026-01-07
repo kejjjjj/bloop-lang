@@ -13,9 +13,15 @@ void AssignExpression::EmitByteCode(TBCBuilder& builder, bool want_value) {
 			throw exception::ResolverError(BLOOPTEXT("invalid lhs operand"), m_oApproximatePosition);
 
 		if (auto pf = dynamic_cast<Subscript*>(left.get())) {
-			pf->EmitSet(builder, want_value);
-			pf->EmitGet(builder, want_value); // (arr[0] = 2) < 10
-			pf->left->EmitByteCode(builder, want_value);
+			pf->EmitSet(builder, true);
+			if(want_value)
+				pf->EmitGet(builder, true); // (arr[0] = 2) < 10
+			//pf->left->EmitByteCode(builder, true);
+		} else if (auto pa = dynamic_cast<PropertyAccess*>(left.get())) {
+			pa->EmitSet(builder, true);
+			if (want_value)
+				pa->EmitGet(builder, true); // (obj.prop = 2) < 10
+			//pa->left->EmitByteCode(builder, true);
 		} else {
 			ptr->Store(builder, true);
 		}

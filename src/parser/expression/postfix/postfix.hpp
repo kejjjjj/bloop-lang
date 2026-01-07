@@ -24,6 +24,7 @@ namespace bloop::parser {
 		[[nodiscard]] std::unique_ptr<IPostfix> ParseFunctionCall();
 		[[nodiscard]] std::unique_ptr<IPostfix> ParseSubscript();
 		[[nodiscard]] std::unique_ptr<IPostfix> ParseIncrementDecrement();
+		[[nodiscard]] std::unique_ptr<IPostfix> ParsePropertyAccess();
 
 		const CParserContext& m_oCtx;
 		std::vector<std::unique_ptr<IPostfix>> m_oPostfixes;

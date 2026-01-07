@@ -32,20 +32,20 @@ namespace bloop::ast {
 
 	};
 
-	struct FunctionCall : Postfix {
+	struct FunctionCall final : Postfix {
 
 		FunctionCall(const bloop::CodePosition& cp) : Postfix(EPunctuation::p_par_open, cp){}
 		FunctionCall(std::vector<std::unique_ptr<Expression>>&& args, const bloop::CodePosition& cp) 
 			: Postfix(EPunctuation::p_par_open, cp), m_oArguments(std::forward<decltype(args)>(args)) {}
 
-		virtual void Resolve(TResolver& resolver) override {
+		void Resolve(TResolver& resolver) override {
 			for (auto& arg : m_oArguments)
 				arg->Resolve(resolver);
 			
 			left->Resolve(resolver);
 
 		}
-		virtual void EmitByteCode(TBCBuilder& builder, [[maybe_unused]] bool want_value) override {
+		void EmitByteCode(TBCBuilder& builder, [[maybe_unused]] bool want_value) override {
 			for (auto& arg : m_oArguments)
 				arg->EmitByteCode(builder, true); // load args
 
@@ -59,19 +59,19 @@ namespace bloop::ast {
 		std::vector<std::unique_ptr<Expression>> m_oArguments;
 	};
 
-	struct Subscript : Postfix {
+	struct Subscript final : Postfix {
 
 		Subscript(const bloop::CodePosition& cp) : Postfix(EPunctuation::p_bracket_open, cp) {}
 		Subscript(std::unique_ptr<Expression>&& index, const bloop::CodePosition& cp)
 			: Postfix(EPunctuation::p_bracket_open, cp), m_pIndex(std::forward<decltype(index)>(index)) {
 		}
 
-		virtual void Resolve(TResolver& resolver) override {
+		void Resolve(TResolver& resolver) override {
 			m_pIndex->Resolve(resolver);
 			left->Resolve(resolver);
 
 		}
-		virtual void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
 			EmitGet(builder, want_value);
 		}
 		void EmitGet(TBCBuilder& builder, bool want_value) {
@@ -95,6 +95,37 @@ namespace bloop::ast {
 		std::unique_ptr<Expression> m_pIndex;
 	};
 
+	struct PropertyAccess final : Postfix {
+		PropertyAccess(bloop::ConstantData _const, const bloop::CodePosition& cp) 
+			: Postfix(EPunctuation::p_period, cp), m_oConstant(_const) {}
+
+		void Resolve(TResolver& resolver) override {
+			assert(std::get<0>(m_oConstant).empty() == false);
+
+			left->Resolve(resolver);
+			return;
+		}
+		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+			EmitGet(builder, want_value);
+		}
+
+		void EmitGet(TBCBuilder& builder, bool want_value) {
+			left->EmitByteCode(builder, true);   // obj
+			Emit(builder, TOpCode::LOAD_CONST, builder.AddConstant(m_oConstant));
+			Emit(builder, TOpCode::PROPERTY_GET);
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
+		}
+		void EmitSet(TBCBuilder& builder, bool want_value) {
+			left->EmitByteCode(builder, true);   // obj
+			Emit(builder, TOpCode::LOAD_CONST, builder.AddConstant(m_oConstant));
+			Emit(builder, TOpCode::PROPERTY_SET);
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
+
+		}
+		bloop::ConstantData m_oConstant;
+	};
 
 	struct Increment final : Postfix {
 

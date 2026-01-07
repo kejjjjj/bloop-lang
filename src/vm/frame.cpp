@@ -11,7 +11,9 @@ CallFrame::CallFrame(Closure* closure, std::size_t stackBase)
 	: m_pClosure(closure), m_pChunk(&closure->function->chunk), m_uBase(stackBase) {}
 
 const CInstructionPosition& CallFrame::GetCurrentPosition() const {
-	auto it = std::upper_bound(m_pChunk->m_oPositions.begin(), m_pChunk->m_oPositions.end(), m_uIp,
+	auto chunk = m_pClosure ? &m_pClosure->function->chunk : m_pChunk;
+
+	auto it = std::upper_bound(chunk->m_oPositions.begin(), chunk->m_oPositions.end(), m_uIp,
 		[](std::size_t ip, const CInstructionPosition& p) {
 			return ip <= p.byteOffset;
 		});

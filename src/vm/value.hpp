@@ -27,6 +27,8 @@ namespace bloop::vm {
         [[nodiscard]] bool IsString() const;
         [[nodiscard]] bool IsCallable() const;
         [[nodiscard]] bool IsIndexable() const;
+        [[nodiscard]] bool IsAggregate() const;
+
         [[nodiscard]] bool IsEqual(Value b);
 
         [[nodiscard]] bloop::BloopInt ToInt() const;

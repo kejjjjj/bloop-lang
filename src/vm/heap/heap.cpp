@@ -41,7 +41,7 @@ Object* Heap::AllocArray(bloop::BloopIndex numValues) {
 }
 Object* Heap::AllocObject(bloop::BloopIndex numValues) {
 
-	auto capacity = numValues * 2;
+	auto capacity = numValues <= 1 ? 4 : numValues * numValues;
 	auto entries = new ObjectEntry[capacity];
 
 	auto obj = Allocate(new Object(entries, 0, capacity));

@@ -6,6 +6,7 @@
 #include "vm/heap/dvalue.hpp"
 
 #include <cassert>
+#include <ranges>
 
 using namespace bloop::vm;
 
@@ -103,6 +104,7 @@ void VM::Run(const bloop::BloopString& entryFuncName) {
 		Benchmark("glob+main", [&]() {
 			RunGlobal();
 			RunFunction(func);
+			assert(m_oStack.size() == 1u);
 			m_oGC.Collect(this);
 		});
 
@@ -115,6 +117,12 @@ void VM::Run(const bloop::BloopString& entryFuncName) {
 			msg = bloop::fmt::format("\n\nruntime error:\n\n{}", ex.what());
 		}
 		std::cout << msg << '\n';
+
+		auto size = m_oFrames.size();
+		for([[maybe_unused]]const auto i : std::views::iota(0u, size))
+			PopFrame();
+
+		Push({});
 		return;
 	}
 

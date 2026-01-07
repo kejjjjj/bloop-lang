@@ -158,9 +158,31 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			if (!operand.IsIndexable())
 				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not indexable"), operand.TypeToString()));
 
-			operand.obj->Index(index.ToInt()) = value;
+			operand.obj->Index(index) = value;
 			Push(value);
 			break;
+		} case TOpCode::PROPERTY_GET: {
+			Value key = Pop();
+			Value operand = Pop();
+
+			if (!operand.IsAggregate())
+				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not an aggregate type"), operand.TypeToString()));
+
+			Push(operand.obj->ObjectGet(key));
+			break;
+
+		} case TOpCode::PROPERTY_SET: {
+			Value key = Pop();
+			Value operand = Pop();
+			Value value = Pop();
+
+			if (!operand.IsAggregate())
+				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not an aggregate type"), operand.TypeToString()));
+
+			operand.obj->ObjectSet(key, value);
+			Push(value);
+			break;
+
 		} case TOpCode::RETURN: {
 			return ExecutionReturnCode::rc_return;
 		} case TOpCode::RETURN_VALUE: {
@@ -186,8 +208,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 		} case TOpCode::DUP: {
 			Push(m_oStack.back());
 			break;
-		}
-		case TOpCode::INCR: {
+		} case TOpCode::INCR: {
 			Value index = Pop();
 			Push(++index);
 			break;

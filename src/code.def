@@ -1,9 +1,9 @@
 R"(
 
 fn main() {
-
-	const ass = {key: "value", key2: "value2"};
-
-	return [ ass["key2"], ass["key"] ];
+	
+	return {
+		key: 2
+	}["\x6B\x65\x79"];
 }
 )";

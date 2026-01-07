@@ -55,6 +55,9 @@ namespace bloop::vm
 		[[nodiscard]] std::size_t GetSize() const;
 
 		[[nodiscard]] bool IsIndexable() const;
+		[[nodiscard]] bool IsAggregate() const;
+		[[nodiscard]] bool IsEqual(Object* obj);
+
 		[[nodiscard]] bloop::BloopChar IndexChar(bloop::BloopInt idx) const;
 
 		[[nodiscard]] Value& Index(Value vidx) const;

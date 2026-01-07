@@ -81,6 +81,9 @@ bool Value::IsCallable() const {
 bool Value::IsIndexable() const {
 	return type == VT::t_object && obj->IsIndexable();
 }
+bool Value::IsAggregate() const {
+	return type == VT::t_object && obj->IsAggregate();
+}
 bool Value::IsEqual(Value v)
 {
 	Coerce(v);
@@ -97,7 +100,7 @@ bool Value::IsEqual(Value v)
 	case VT::t_double:
 		return d == v.d;
 	case VT::t_object:
-		return obj == v.obj;
+		return obj->IsEqual(v.obj);
 	default:
 		break;
 	}

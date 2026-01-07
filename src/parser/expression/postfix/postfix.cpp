@@ -30,6 +30,9 @@ bloop::EStatus CParserPostfix::Parse() {
 		case EPunctuation::p_bracket_open:
 			m_oPostfixes.emplace_back(ParseSubscript());
 			break;
+		case EPunctuation::p_period:
+			m_oPostfixes.emplace_back(ParsePropertyAccess());
+			break;
 		case EPunctuation::p_increment:
 		case EPunctuation::p_decrement:
 			m_oPostfixes.emplace_back(ParseIncrementDecrement());

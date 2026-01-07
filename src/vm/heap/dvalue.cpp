@@ -65,6 +65,22 @@ std::size_t Object::GetSize() const
 bool Object::IsIndexable() const {
 	return type == Type::ot_array || type == Type::ot_object || type == Type::ot_string;
 }
+bool Object::IsAggregate() const {
+	return type == Type::ot_object;
+}
+bool Object::IsEqual(Object* obj)
+{
+	switch (type) {
+	case Type::ot_string:
+		if (string.hash != obj->string.hash)
+			return false;
+		if (string.len != obj->string.len)
+			return false;
+		return !memcmp(string.data, obj->string.data, string.len);
+	default:
+		return this == obj;
+	}
+}
 bloop::BloopChar Object::IndexChar(bloop::BloopInt idx) const {
 	if (idx < 0 || idx >= string.len)
 		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("out of bounds index [{}]"), idx));
@@ -80,12 +96,14 @@ Value& Object::Index(Value vidx) const {
 			throw exception::VMError(bloop::fmt::format(BLOOPTEXT("out of bounds index [{}]"), idx));
 
 		return array.values[idx];
-	}case Type::ot_object: {
+	} case Type::ot_object: {
+
+		if (!vidx.IsString())
+			throw exception::VMError(BLOOPTEXT("object index must be a string"));
 
 		return ObjectGet(vidx);
-	}
-	default:
-		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("can't index a value of type \"{}\" for this operation"), TypeToString()));
+	} default:
+		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("can't use an index of type \"{}\" for this operation"), TypeToString()));
 	}
 
 }
@@ -147,6 +165,8 @@ bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object
 
 }
 Value& Object::ObjectGet(Value key) const {
+	assert(object.count != object.capacity);
+
 	const auto mask = object.capacity - 1;
 	auto index = key.Hash() & mask;
 
@@ -167,6 +187,7 @@ Value& Object::ObjectGet(Value key) const {
 
 Value& Object::ObjectSet(Value key, Value value)
 {
+	assert(object.count != object.capacity);
 	const auto mask = object.capacity - 1;
 	auto index = key.Hash() & mask;
 

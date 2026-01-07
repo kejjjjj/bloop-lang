@@ -4,6 +4,7 @@
 #include "parser/exception.hpp"
 #include "parser/parser.hpp"
 #include "parser/operand/constant.hpp"
+#include "utils/fmt.hpp"
 
 using namespace bloop::parser;
 
@@ -74,8 +75,18 @@ std::unique_ptr<IOperand> CParserOperand::ParseObject() {
 	auto obj = std::make_unique<CObjectOperand>();
 	auto parser = KVParser(m_oCtx);
 
-	while (auto&& v = parser.Parse(PairMatcher(bloop::EPunctuation::p_curlybracket_open)))
+	auto pos = GetIteratorSafe()->GetCodePosition();
+
+	while (auto&& v = parser.Parse(PairMatcher(bloop::EPunctuation::p_curlybracket_open))) {
+		
+		if (const auto ptr = std::ranges::find(obj->m_oKeyValues, std::get<0>(v->key), [](std::unique_ptr<CObjectOperand::KV>& kv) {
+			return std::get<0>(kv->key); 
+		}); ptr != obj->m_oKeyValues.end())
+			throw exception::ParserError(bloop::fmt::format(BLOOPTEXT("property \"{}\" is already defined"), std::get<0>(v->key)), pos);
+
 		obj->m_oKeyValues.emplace_back(std::move(v));
+		pos = GetIteratorSafe()->GetCodePosition();
+	}
 
 	Advance(1); //skip }
 
