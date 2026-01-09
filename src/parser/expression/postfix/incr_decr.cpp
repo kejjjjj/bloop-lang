@@ -8,7 +8,7 @@ using namespace bloop::parser;
 std::unique_ptr<IPostfix> CParserPostfix::ParseIncrementDecrement() {
 
 	const auto p = GetIteratorSafe()->GetPunctuation();
-	assert(p && p->m_ePriority == bloop::EOperatorPriority::op_unary);
+	assert(p && p->m_ePriority == bloop::EOperatorPriority::op_prefix);
 
 	CPostfixIncrementDecrement::Type t{};
 

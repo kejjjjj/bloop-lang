@@ -331,4 +331,8 @@ namespace bloop::ast {
 		[[nodiscard]] constexpr bool IsConst() const noexcept override { return true; }
 	};
 
+	struct Prefix;
+	struct Postfix;
+	
+
 }

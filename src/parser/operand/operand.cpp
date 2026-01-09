@@ -3,6 +3,7 @@
 #include "lexer/token.hpp"
 #include "parser/exception.hpp"
 #include "parser/expression/postfix/postfix.hpp"
+#include "parser/expression/prefix/prefix.hpp"
 #include "ast/ast.hpp"
 
 #include <cassert>
@@ -19,7 +20,13 @@ bloop::EStatus CParserOperand::Parse([[maybe_unused]]std::optional<PairMatcher>&
 
 	//todo: unary
 
-	auto token = GetIteratorSafe();
+	CParserPrefix prefix(m_oCtx);
+
+	if (prefix.Parse() != bloop::EStatus::success)
+		return bloop::EStatus::failure;
+	m_oPrefixes = prefix.GetPrefixes();
+
+	const auto token = GetIteratorSafe();
 
 	if (bloop::token::IsConstant(token->Type())) {
 		m_pOperand = ParseConstant();
@@ -41,12 +48,12 @@ bloop::EStatus CParserOperand::Parse([[maybe_unused]]std::optional<PairMatcher>&
 	if (IsEndOfBuffer())
 		throw exception::ParserError(BLOOPTEXT("unexpected end of buffer"), GetIteratorSafe()->GetCodePosition());
 
-	CParserPostfix pf(m_oCtx);
+	CParserPostfix postfix(m_oCtx);
 
-	if (pf.Parse() != bloop::EStatus::success)
+	if (postfix.Parse() != bloop::EStatus::success)
 		return bloop::EStatus::failure;
 
-	m_oPostfixes = pf.GetPostfixes();
+	m_oPostfixes = postfix.GetPostfixes();
 
 	return bloop::EStatus::success;
 }
@@ -65,28 +72,32 @@ std::unique_ptr<ASTExpression> CParserOperand::ToExpression() {
 
 	std::unique_ptr<BinaryExpression> entry;
 
-	if (auto&& pfs = PostfixesToAST()) {
-		if (!entry)
-			entry = std::move(pfs);
-		else
-			SeekASTLeftBranch(entry.get())->left = std::move(pfs);
+	//std::vector<std::unique_ptr<IPrefix>>* 
+
+	for (auto& src : std::array<std::vector<std::unique_ptr<IPrefix>>*, 2>{&m_oPrefixes, &m_oPostfixes}) {
+		if (auto&& pfs = UnaryToAST(*src)) {
+			if (!entry)
+				entry = std::move(pfs);
+			else
+				SeekASTLeftBranch(entry.get())->left = std::move(pfs);
+		}
 	}
 
-	if (!entry) //no unaries nor postfixes
+	if (!entry) //no prefixes nor postfixes
 		return GetOperand()->ToExpression();
 
 	SeekASTLeftBranch(dynamic_cast<bloop::ast::BinaryExpression*>(entry.get()))->left = GetOperand()->ToExpression();
 	return entry;
 }
-std::unique_ptr<BinaryExpression> CParserOperand::PostfixesToAST() const noexcept {
+std::unique_ptr<BinaryExpression> CParserOperand::UnaryToAST(std::vector<std::unique_ptr<IPostfix>>& src) const noexcept {
 
-	if (m_oPostfixes.empty())
+	if (src.empty())
 		return nullptr;
 
 	std::unique_ptr<bloop::ast::BinaryExpression> root;;
 	bloop::ast::BinaryExpression* position{};
 
-	for (auto& pf : m_oPostfixes) {
+	for (auto& pf : src) {
 
 		if (!root) {
 			root = pf->ToExpression();

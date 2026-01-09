@@ -75,7 +75,7 @@ std::unique_ptr<IOperand> CParserOperand::ParseObject() {
 	auto obj = std::make_unique<CObjectOperand>();
 	auto parser = KVParser(m_oCtx);
 
-	auto pos = GetIteratorSafe()->GetCodePosition();
+	bloop::CodePosition pos = GetIteratorSafe()->GetCodePosition();
 
 	while (auto&& v = parser.Parse(PairMatcher(bloop::EPunctuation::p_curlybracket_open))) {
 		

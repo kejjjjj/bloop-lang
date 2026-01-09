@@ -22,7 +22,7 @@ namespace bloop {
 		op_shift,			//  <<>>
 		op_additive,		//	+ -
 		op_multiplicative,	//	* / %
-		op_unary,			//  + - ! ~ ++ - - (type)* & sizeof	
+		op_prefix,			//  + - ! ~ ++ - - (type)* & sizeof	
 		op_postfix,			//  () [] -> . ++ --	
 
 	};
@@ -111,7 +111,7 @@ namespace bloop {
 		CPunctuation{BLOOPTEXT(">>="), EPunctuation::p_assignment_right_shift, EOperatorPriority::op_assignment},
 		CPunctuation{BLOOPTEXT("<=>"), EPunctuation::p_swap, EOperatorPriority::op_assignment},
 
-		CPunctuation{BLOOPTEXT("..."), EPunctuation::p_spread, EOperatorPriority::op_unary},
+		CPunctuation{BLOOPTEXT("..."), EPunctuation::p_spread, EOperatorPriority::op_prefix},
 
 		CPunctuation{BLOOPTEXT("+="), EPunctuation::p_assignment_addition, EOperatorPriority::op_assignment},
 		CPunctuation{BLOOPTEXT("-="), EPunctuation::p_assignment_subtraction, EOperatorPriority::op_assignment},
@@ -134,9 +134,9 @@ namespace bloop {
 		CPunctuation{BLOOPTEXT("<<"), EPunctuation::p_left_shift, EOperatorPriority::op_shift},
 		CPunctuation{BLOOPTEXT(">>"), EPunctuation::p_right_shift, EOperatorPriority::op_shift},
 
-		CPunctuation{BLOOPTEXT("++"), EPunctuation::p_increment, EOperatorPriority::op_unary},
-		CPunctuation{BLOOPTEXT("--"), EPunctuation::p_decrement, EOperatorPriority::op_unary},
-		CPunctuation{BLOOPTEXT("~"), EPunctuation::p_tilde, EOperatorPriority::op_unary},
+		CPunctuation{BLOOPTEXT("++"), EPunctuation::p_increment, EOperatorPriority::op_prefix},
+		CPunctuation{BLOOPTEXT("--"), EPunctuation::p_decrement, EOperatorPriority::op_prefix},
+		CPunctuation{BLOOPTEXT("~"), EPunctuation::p_tilde, EOperatorPriority::op_prefix},
 
 		CPunctuation{BLOOPTEXT("+"), EPunctuation::p_add, EOperatorPriority::op_additive},
 		CPunctuation{BLOOPTEXT("-"), EPunctuation::p_sub, EOperatorPriority::op_additive},
@@ -168,7 +168,7 @@ namespace bloop {
 		CPunctuation{BLOOPTEXT(";"), EPunctuation::p_semicolon },
 		CPunctuation{BLOOPTEXT(":"), EPunctuation::p_colon, EOperatorPriority::op_conditional2},
 		CPunctuation{BLOOPTEXT("?"), EPunctuation::p_question_mark, EOperatorPriority::op_conditional},
-		CPunctuation{BLOOPTEXT("!"), EPunctuation::p_exclamation, EOperatorPriority::op_unary}
+		CPunctuation{BLOOPTEXT("!"), EPunctuation::p_exclamation, EOperatorPriority::op_prefix}
 	};
 
 }

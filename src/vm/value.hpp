@@ -35,7 +35,7 @@ namespace bloop::vm {
 
         [[nodiscard]] bloop::BloopUInt32 Hash() const;
 
-        [[nodiscard]] bloop::BloopString ValueToString() const;
+        [[nodiscard]] bloop::BloopString ValueToString(bloop::BloopUInt objectIndent=0u) const;
         [[nodiscard]] bloop::BloopString TypeToString() const;
         [[nodiscard]] void Coerce(Value& b); //weaker operand gets modified
 
@@ -47,6 +47,7 @@ namespace bloop::vm {
         [[nodiscard]] Value operator<=(Value b);
         [[nodiscard]] Value operator==(Value b);
 
+        [[nodiscard]] Value operator-();
         [[nodiscard]] Value operator++();
         [[nodiscard]] Value operator--();
 

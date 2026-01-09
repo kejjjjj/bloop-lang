@@ -1,35 +1,11 @@
 #pragma once
 
-#include "ast/ast.hpp"
+#include "ast/unary.hpp"
 
 namespace bloop::ast {
 
-	struct Postfix : BinaryExpression {
-
-		Postfix(EPunctuation punct, const bloop::CodePosition& cp) : BinaryExpression(punct, cp) {}
-
-		[[nodiscard]] IdentifierExpression* GetIdentifier() noexcept override {
-
-			auto _left = left.get();
-
-			while (_left) {
-
-
-				if (const auto identifier = _left->GetIdentifier())
-					return identifier;
-
-				auto expr = dynamic_cast<Postfix*>(_left);
-
-				if (!expr)
-					break;
-
-				_left = expr->left.get();
-
-			}
-			//assert(false);
-			return nullptr;
-		}
-
+	struct Postfix : Unary {
+		Postfix(EPunctuation punct, const bloop::CodePosition& cp) : Unary(punct, cp) {}
 	};
 
 	struct FunctionCall final : Postfix {
@@ -45,7 +21,7 @@ namespace bloop::ast {
 			left->Resolve(resolver);
 
 		}
-		void EmitByteCode(TBCBuilder& builder, [[maybe_unused]] bool want_value) override {
+		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
 			for (auto& arg : m_oArguments)
 				arg->EmitByteCode(builder, true); // load args
 

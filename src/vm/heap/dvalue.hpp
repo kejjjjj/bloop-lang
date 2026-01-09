@@ -62,14 +62,14 @@ namespace bloop::vm
 
 		[[nodiscard]] Value& Index(Value vidx) const;
 
-		[[nodiscard]] bloop::BloopString ValueToString() const;
+		[[nodiscard]] bloop::BloopString ValueToString(bloop::BloopUInt objectIndent=0u) const;
 		[[nodiscard]] bloop::BloopString TypeToString() const;
 
-		Value& ObjectGet(Value key) const;
-		Value& ObjectSet(Value key, Value value);
+		[[nodiscard]] Value& ObjectGet(Value key) const;
+		[[maybe_unused]] Value& ObjectSet(Value key, Value value);
 
 	private:
-		[[nodiscard]] bloop::BloopString ValueToStringInternal(std::unordered_set<const Object*>& seen) const;
+		[[nodiscard]] bloop::BloopString ValueToStringInternal(std::unordered_set<const Object*>& seen, bloop::BloopUInt depth=0u) const;
 
 	};
 

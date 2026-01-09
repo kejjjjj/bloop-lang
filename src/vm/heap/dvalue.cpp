@@ -126,11 +126,11 @@ bloop::BloopString Object::TypeToString() const {
 	throw exception::VMError(BLOOPTEXT("type is not convertible to a string"));
 }
 
-bloop::BloopString Object::ValueToString() const {
+bloop::BloopString Object::ValueToString(bloop::BloopUInt objectIndent) const {
 	std::unordered_set<const Object*> seen;
-	return ValueToStringInternal(seen);
+	return ValueToStringInternal(seen, objectIndent);
 }
-bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object*>& seen) const {
+bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object*>& seen, bloop::BloopUInt depth) const {
 	switch (type) {
 	case VT::ot_string:
 		return bloop::BloopString(string.data, string.len);
@@ -138,7 +138,6 @@ bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object
 
 		if (seen.contains(this))
 			return BLOOPTEXT("...");
-
 
 		bloop::BloopOStringStream ss;
 		for (const auto i : std::views::iota(0, array.count)) {
@@ -155,8 +154,40 @@ bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object
 		}
 
 		return BLOOPTEXT("[ ") + ss.str() + BLOOPTEXT(" ]");
-	}
-	case VT::ot_function:
+	} case VT::ot_object: {
+
+		if (seen.contains(this))
+			return BLOOPTEXT("...");
+
+		auto oldIndent = bloop::BloopString(depth, BLOOPTEXT(' '));
+		auto newIndent = bloop::BloopString(depth + 2u, BLOOPTEXT(' '));
+
+		bloop::BloopOStringStream ss;
+
+		for (bloop::BloopUInt count{}; const auto i : std::views::iota(0, object.capacity)) {
+
+			if (object.entries[i].key.type == Value::Type::t_undefined)
+				continue;
+
+			if (count)
+				ss << BLOOPTEXT(",\n");
+
+			seen.insert(this);
+
+			const auto key = object.entries[i].key.ValueToString(depth + 2u);
+
+			const auto value = object.entries[i].value.type != Value::Type::t_object ?
+				object.entries[i].value.ValueToString(depth + 1u) :
+				object.entries[i].value.obj->ValueToStringInternal(seen, depth + 2u);
+
+			ss << bloop::fmt::format(BLOOPTEXT("{}\"{}\": {}"), newIndent, key, value);
+
+			count++;
+			seen.erase(this);
+		}
+
+		return bloop::fmt::format(BLOOPTEXT("{\n{}\n{}}"), ss.str(), oldIndent);
+	} case VT::ot_function:
 		return BLOOPTEXT("function");
 	case VT::ot_closure:
 		return BLOOPTEXT("closure");

@@ -216,6 +216,12 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			Value index = Pop();
 			Push(--index);
 			break;
+		} case TOpCode::NEG: {
+			Value index = Pop();
+			Push(-index);
+			break;
+		} default: {
+			throw exception::VMError(bloop::fmt::format(BLOOPTEXT("unknown opcode?")));
 		}
 	}
 	return ExecutionReturnCode::rc_continue;

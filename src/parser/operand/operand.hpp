@@ -21,6 +21,7 @@ namespace bloop::parser {
 	struct IntfOperand {
 		friend class CParserOperand;
 		friend class CParserPostfix;
+		friend class CParserPrefix;
 
 		BLOOP_NONCOPYABLE(IntfOperand);
 
@@ -32,6 +33,7 @@ namespace bloop::parser {
 		bloop::CodePosition m_oDeclPos;
 	};
 	using IOperand = IntfOperand<ASTExpression>;
+	using IPrefix = IntfOperand<BinaryExpression>;
 	using IPostfix = IntfOperand<BinaryExpression>;
 
 	class CParserOperand final : public CParserSingle<bloop::CToken> {
@@ -53,11 +55,12 @@ namespace bloop::parser {
 		[[nodiscard]] std::unique_ptr<IOperand> ParseArray();
 		[[nodiscard]] std::unique_ptr<IOperand> ParseObject();
 
-		[[nodiscard]] std::unique_ptr<BinaryExpression> PostfixesToAST() const noexcept;
+		[[nodiscard]] std::unique_ptr<BinaryExpression> UnaryToAST(std::vector<std::unique_ptr<IPostfix>>& src) const noexcept;
 
 		const CParserContext& m_oCtx;
 		std::unique_ptr<IOperand> m_pOperand;
 		std::vector<std::unique_ptr<IPostfix>> m_oPostfixes;
+		std::vector<std::unique_ptr<IPrefix>> m_oPrefixes;
 
 	};
 

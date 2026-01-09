@@ -147,7 +147,7 @@ bloop::BloopString Value::TypeToString() const {
 	}
 }
 
-bloop::BloopString Value::ValueToString() const {
+bloop::BloopString Value::ValueToString(bloop::BloopUInt indent) const {
 
 	switch (type) {
 	case VT::t_undefined:
@@ -161,7 +161,7 @@ bloop::BloopString Value::ValueToString() const {
 	case VT::t_double:
 		return std::to_string(d);
 	case VT::t_object:
-		return obj->ValueToString();
+		return obj->ValueToString(indent);
 	}
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to a string"), TypeToString()));
 
