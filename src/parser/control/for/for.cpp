@@ -21,10 +21,7 @@ bloop::EStatus CParserForStatement::Parse() {
 		throw exception::ParserError(BLOOPTEXT("expected a \"(\""), GetIteratorSafe()->GetCodePosition());
 
 	Advance(1); // skip (
-
-	m_pBody = std::make_unique<bloop::ast::BlockStatement>(GetIteratorSafe()->GetCodePosition());
-	auto oldBlock = m_oCtx.m_pCurrentBlock;
-	m_oCtx.m_pCurrentBlock = m_pBody.get();
+	StartScope();
 
 	if (ParseInitializer() != bloop::EStatus::success)
 		return bloop::EStatus::failure;
@@ -35,12 +32,8 @@ bloop::EStatus CParserForStatement::Parse() {
 	if (ParseEndExpression() != bloop::EStatus::success)
 		return bloop::EStatus::failure;
 
-	CParserScope sc(m_oCtx);
-	sc.ParseNoScope(true);
-
-	m_oCtx.m_pCurrentBlock = oldBlock;
+	ParseScope();
 	return bloop::EStatus::success;
-
 }
 bloop::EStatus CParserForStatement::ParseInitializer() {
 

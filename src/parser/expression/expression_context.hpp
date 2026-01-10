@@ -20,9 +20,10 @@ namespace bloop::parser {
 			assert(map.contains(p));
 			m_eClosingPunctuation = map.at(p);
 		}
-		[[nodiscard]] bool IsClosing(EPunctuation p) const noexcept {
+		[[nodiscard]] inline bool IsClosing(EPunctuation p) const noexcept {
 			return p == m_eClosingPunctuation;
 		}
+		[[nodiscard]] inline auto GetClosing() const noexcept { return m_eClosingPunctuation; }
 	private:
 		EPunctuation m_eClosingPunctuation{ EPunctuation::p_error };
 	};

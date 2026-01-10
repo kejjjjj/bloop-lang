@@ -34,6 +34,16 @@ bloop::BloopIndex CByteCodeBuilder::AddConstant(bloop::ConstantData c) {
 	m_oConstants.emplace_back(c);
 	return static_cast<bloop::BloopIndex>(idx);
 }
+void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex arg, bloop::BloopIndex arg2, CodePosition pos) {
+	m_oByteCode.emplace_back(CSingularByteCode{ .ins = Instr2{.op = opcode, .arg = arg, .arg2 = arg2 }, .loc = { m_uOffset, pos } });
+	constexpr auto offset = 1 + sizeof(bloop::BloopIndex) * 2;
+
+	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset > bloop::INVALID_SLOT)
+		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode chunk has more than {} bytes"), bloop::INVALID_SLOT), pos);
+
+	m_uOffset += offset;
+
+}
 void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex idx, CodePosition pos) {
 	m_oByteCode.emplace_back(CSingularByteCode{ .ins = Instr1{.op = opcode, .arg = idx }, .loc = { m_uOffset, pos } });
 	
@@ -42,8 +52,7 @@ void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex idx, CodePosition 
 	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset > bloop::INVALID_SLOT)
 		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode chunk has more than {} bytes"), bloop::INVALID_SLOT), pos);
 
-
-	m_uOffset += offset; // op = 1
+	m_uOffset += offset;
 
 }
 void CByteCodeBuilder::Emit(EOpCode opcode, CodePosition pos) {
@@ -54,9 +63,17 @@ void CByteCodeBuilder::Emit(EOpCode opcode, CodePosition pos) {
 	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset > bloop::INVALID_SLOT)
 		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode chunk has more than {} bytes"), bloop::INVALID_SLOT), pos);
 
-	m_uOffset += offset; // op = 1
+	m_uOffset += offset;
 }
+void CByteCodeBuilder::Omit() {
 
+	if (m_oByteCode.empty())
+		return;
+
+	const auto size = m_oByteCode.back().GetBytes();
+	m_oByteCode.pop_back();
+	m_uOffset -= size;
+}
 bloop::BloopIndex CByteCodeBuilder::EmitJump(EOpCode opcode, CodePosition pos) {
 	auto idx = m_oByteCode.size();
 	Emit(opcode, 0, pos);
@@ -67,6 +84,14 @@ void CByteCodeBuilder::EmitJump(EOpCode opcode, bloop::BloopIndex offset, CodePo
 }
 void CByteCodeBuilder::PatchJump(bloop::BloopIndex src, bloop::BloopIndex dst) {
 	std::get<1>(m_oByteCode[src].ins).arg = dst;
+}
+bloop::BloopIndex CByteCodeBuilder::EmitTry(EOpCode opcode, bloop::BloopIndex base, CodePosition pos) {
+	auto idx = m_oByteCode.size();
+	Emit(opcode, 0u, base, pos);
+	return static_cast<bloop::BloopIndex>(idx);
+}
+void CByteCodeBuilder::PatchTry(bloop::BloopIndex src, bloop::BloopIndex dst) {
+	std::get<2>(m_oByteCode[src].ins).arg = dst;
 }
 void CByteCodeBuilder::EmitCapture(const vmdata::Capture& capture, CodePosition pos) {
 	if (capture.m_bIsLocal) {

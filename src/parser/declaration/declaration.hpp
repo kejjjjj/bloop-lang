@@ -1,9 +1,10 @@
 #pragma once
 #include "parser/defs.hpp"
 #include "utils/defs.hpp"
+#include "parser/expression/expression_context.hpp"
 
-#include <vector>
 #include <memory>
+#include <optional>
 
 namespace bloop{
 	class CToken;
@@ -24,13 +25,13 @@ namespace bloop::parser {
 		CParserDeclaration(const CParserContext& ctx);
 		~CParserDeclaration();
 
-		[[nodiscard]] bloop::EStatus Parse();
+		[[nodiscard]] bloop::EStatus Parse(std::optional<PairMatcher> eoe = std::nullopt);
 		[[nodiscard]] UniqueStatement ToStatement() override;
 		[[nodiscard]] UniqueExpression ToExpression();
 
 	private:
 		[[nodiscard]] bloop::EStatus ParseIdentifier();
-		[[nodiscard]] bloop::EStatus ParseInitializer();
+		[[nodiscard]] bloop::EStatus ParseInitializer(const std::optional<PairMatcher>& eoe);
 
 		const CParserContext& m_oCtx;
 		bool m_bIsConst{};

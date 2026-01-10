@@ -1,7 +1,4 @@
 #pragma once
-
-
-#pragma once
 #include "parser/defs.hpp"
 #include "utils/defs.hpp"
 #include "parser/control/control.hpp"
@@ -24,7 +21,6 @@ namespace bloop::parser {
 		[[nodiscard]] UniqueStatement ToStatement() override;
 
 	private:
-		UniqueExpression m_pCondition;
-		UniqueStatement m_pBody;
+		UniqueStatement m_pCondition;
 	};
 }

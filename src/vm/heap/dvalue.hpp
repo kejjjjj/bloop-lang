@@ -33,23 +33,23 @@ namespace bloop::vm
 				bloop::BloopInt len;
 				bloop::BloopUInt32 hash;
 			}string;
-			Function* function;
-			struct {
-				Value* values;
-				bloop::BloopInt count;
-			}array;
 			struct {
 				ObjectEntry* entries;
 				bloop::BloopInt count;
 				bloop::BloopInt capacity;
 			}object;
+			struct {
+				Value* values;
+				bloop::BloopInt count;
+			}array;
 			Closure closure;
 			UpValue* upvalue;
+			Function* function;
 		};
 
 		//managed by GC
-		bool marked{};
 		Object* next{};
+		bool marked{};
 
 		void Free();
 		[[nodiscard]] std::size_t GetSize() const;

@@ -24,15 +24,11 @@ namespace bloop::resolver {
 		};
 
 		struct Scope {
-
 			std::unordered_map<bloop::BloopString, std::shared_ptr<Symbol>> symbols;
 		};
 		struct FunctionContext {
 			bloop::BloopIndex m_uNextSlot = 0;
 			bloop::ast::FunctionDeclarationStatement* m_pCurrentFunction{};
-
-
-
 		};
 
 
@@ -55,8 +51,9 @@ namespace bloop::resolver {
 			[[nodiscard]] Symbol* ResolveSymbol(const bloop::BloopString& name);
 			[[nodiscard]] ResolvedIdentifier ResolveIdentifier(const bloop::BloopString& name);
 
-			[[nodiscard]] bloop::ast::FunctionDeclarationStatement* GetOuterMostFunction() const;
+			[[nodiscard]] bloop::BloopUInt CountLocals() const;
 
+			[[nodiscard]] bloop::ast::FunctionDeclarationStatement* GetOuterMostFunction() const;
 			std::vector<bloop::ast::FunctionDeclarationStatement*> m_oAllFunctions;
 
 		private:

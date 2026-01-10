@@ -129,6 +129,16 @@ Symbol* Resolver::ResolveOuter(const bloop::BloopString& name)
 	return itr->symbols.at(name).get();
 }
 
+bloop::BloopUInt Resolver::CountLocals() const
+{
+	if (m_oFunctions.empty()) {
+		return std::accumulate(m_oScopes.begin(), m_oScopes.end(), bloop::BloopUInt{}, [](auto sum, const Scope& s) {
+			return sum + s.symbols.size();
+		});
+	}
+
+	return m_oFunctions.back().m_uNextSlot;
+}
 bloop::ast::FunctionDeclarationStatement* Resolver::GetOuterMostFunction() const {
 	assert(!m_oFunctions.empty());
 	return m_oFunctions.front().m_pCurrentFunction;

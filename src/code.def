@@ -1,7 +1,19 @@
 R"(
+fn truthyFunction() {
+	return true;
+}
 
 fn main() {
-	let t = 1;
-	return [++++++++++++++++++++++++++t + 1, t];
+
+	let numCalls = 0;
+	fn funnyClosure(){
+		return ++numCalls;
+	}
+
+	let str = "";
+	while(const v = funnyClosure() <= 10)
+		str = str + "v";
+
+	return str;
 }
-)";
+)"

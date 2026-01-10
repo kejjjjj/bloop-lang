@@ -118,8 +118,7 @@ void VM::Run(const bloop::BloopString& entryFuncName) {
 		}
 		std::cout << msg << '\n';
 
-		auto size = m_oFrames.size();
-		for([[maybe_unused]]const auto i : std::views::iota(0u, size))
+		while(m_oFrames.size())
 			PopFrame();
 
 		Push({});

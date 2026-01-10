@@ -13,9 +13,9 @@ CParserIfStatement::~CParserIfStatement() = default;
 bloop::EStatus CParserIfStatement::Parse() {
 
 	ParseIdentifier(bloop::ETokenType::tt_if);
-	auto&& expr = ParseExpression();
-	auto&& scope = ParseScope();
-	m_oIf.emplace_back(std::make_unique<Structure>(Structure{ std::move(expr), std::move(scope) }));
+	auto&& expr = ParseStatement();
+	ParseScope();
+	m_oIf.emplace_back(std::make_unique<Structure>(Structure{ std::move(expr), std::move(m_pBody) }));
 
 	while(CanPeek(1) && (*Peek(1))->Type() == bloop::ETokenType::tt_else) { 
 		
@@ -29,14 +29,14 @@ bloop::EStatus CParserIfStatement::Parse() {
 			Advance(1); // skip else
 			ParseIdentifier(bloop::ETokenType::tt_if);
 
-			expr = ParseExpression();
-			scope = ParseScope();
-			m_oIf.emplace_back(std::make_unique<Structure>(Structure{ std::move(expr), std::move(scope) }));
+			expr = ParseStatement();
+			ParseScope();
+			m_oIf.emplace_back(std::make_unique<Structure>(Structure{ std::move(expr), std::move(m_pBody) }));
 			continue;
 		}
 
 		ParseIdentifier(bloop::ETokenType::tt_else);
-		m_pElse = ParseScope();		
+		m_pElse = ParseScopeNormal();		
 	}
 
 	return bloop::EStatus::success;

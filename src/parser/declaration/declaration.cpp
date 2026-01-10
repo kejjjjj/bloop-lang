@@ -15,12 +15,12 @@ CParserDeclaration::CParserDeclaration(const CParserContext& ctx)
 }
 CParserDeclaration::~CParserDeclaration() = default;
 
-bloop::EStatus CParserDeclaration::Parse() {
+bloop::EStatus CParserDeclaration::Parse(std::optional<PairMatcher> eoe) {
 
 	if (ParseIdentifier() != bloop::EStatus::success)
 		return bloop::EStatus::failure;
 
-	if (ParseInitializer() != bloop::EStatus::success)
+	if (ParseInitializer(eoe) != bloop::EStatus::success)
 		return bloop::EStatus::failure;
 
 	return bloop::EStatus::success;
@@ -40,23 +40,24 @@ bloop::EStatus CParserDeclaration::ParseIdentifier() {
 	Advance(1); //skip identifier
 	return bloop::EStatus::success;
 }
-bloop::EStatus CParserDeclaration::ParseInitializer() {
+bloop::EStatus CParserDeclaration::ParseInitializer(const std::optional<PairMatcher>& eoe) {
 
-	if(IsEndOfBuffer())
-		throw exception::ParserError(BLOOPTEXT("expected \";\""), GetIteratorSafe()->GetCodePosition());
+	const auto closing = eoe ? eoe->GetClosing() : EPunctuation::p_semicolon;
 
-	//let var;
-	if (GetIteratorSafe()->IsOperator(EPunctuation::p_semicolon))
+	if (IsEndOfBuffer())
+		throw exception::ParserError(BLOOPTEXT("unexpected end of statement"), GetIteratorSafe()->GetCodePosition());
+
+	if (GetIteratorSafe()->IsOperator(closing))
 		return bloop::EStatus::success;
 
-	if(!GetIteratorSafe()->IsOperator(EPunctuation::p_assign))
-		throw exception::ParserError(BLOOPTEXT("expected \";\" or \"=\""), GetIteratorSafe()->GetCodePosition());
-
+	if (!GetIteratorSafe()->IsOperator(EPunctuation::p_assign))
+		throw exception::ParserError(BLOOPTEXT("expected \"=\" or end of statement"), GetIteratorSafe()->GetCodePosition());
+	
 	Advance(-1); // go back to the identifier to get the full expression
 
 	CParserExpressionStatement expr(m_oCtx);
 
-	if (expr.Parse() != bloop::EStatus::success)
+	if (expr.Parse(eoe) != bloop::EStatus::success)
 		return bloop::EStatus::failure;
 
 	m_pExpression = std::make_unique<bloop::ast::ExpressionStatement>(expr.ToExpression(), GetIteratorSafe()->GetCodePosition());

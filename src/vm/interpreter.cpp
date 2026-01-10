@@ -48,7 +48,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			const auto numInitializers = FetchOperand();
 			auto obj = m_oHeap.AllocObject(numInitializers);
 
-			for ([[maybe_unused]] const auto i : std::views::iota(0u, numInitializers) | std::views::reverse) {
+			for ([[maybe_unused]] const auto i : std::views::iota(0u, numInitializers)) {
 				auto v = Pop();
 				auto k = Pop();
 				obj->ObjectSet(k, v);
@@ -128,8 +128,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->function->m_uParamCount));
 
 				RunFunction(callee.obj->function);
-			}
-			else if (callee.obj->type == Object::Type::ot_closure) {
+			} else if (callee.obj->type == Object::Type::ot_closure) {
 				if (callee.obj->closure.function->m_uParamCount != argc)
 					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->function->m_uParamCount));
 

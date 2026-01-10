@@ -28,7 +28,12 @@ namespace bloop::ast {
 		inline void Emit(TBCBuilder& builder, TOpCode insn, bloop::BloopIndex arg) const {
 			builder.Emit(insn, arg, { m_oApproximatePosition });
 		}
-
+		inline void Emit(TBCBuilder& builder, TOpCode insn, bloop::BloopIndex arg, bloop::BloopIndex arg2) const {
+			builder.Emit(insn, arg, arg2, { m_oApproximatePosition });
+		}
+		inline void Omit(TBCBuilder& builder) {
+			builder.Omit();
+		}
 		[[nodiscard]] inline bloop::BloopIndex EmitJump(TBCBuilder& builder, TOpCode opcode) {
 			return builder.EmitJump(opcode, {m_oApproximatePosition});
 		}
@@ -330,9 +335,5 @@ namespace bloop::ast {
 
 		[[nodiscard]] constexpr bool IsConst() const noexcept override { return true; }
 	};
-
-	struct Prefix;
-	struct Postfix;
-	
 
 }

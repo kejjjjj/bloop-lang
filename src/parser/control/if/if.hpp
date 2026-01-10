@@ -28,6 +28,5 @@ namespace bloop::parser {
 	private:
 		std::vector<std::unique_ptr<Structure>> m_oIf;
 		std::unique_ptr<bloop::ast::BlockStatement> m_pElse;
-
 	};
 }

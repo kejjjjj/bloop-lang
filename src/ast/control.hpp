@@ -8,17 +8,20 @@ namespace bloop::ast {
 		WhileStatement(const bloop::CodePosition& cp) : BlockStatement(cp) {}
 
 		void Resolve(TResolver& resolver) override {
+			resolver.BeginScope();
 			m_pCondition->Resolve(resolver);
 
 			resolver.m_iLoopDepth++;
-			BlockStatement::Resolve(resolver);
+			BlockStatement::ResolveNoScopeManagement(resolver);
 			resolver.m_iLoopDepth--;
+			resolver.EndScope();
 		}
 
 		void EmitByteCode(TBCBuilder& builder) override {
 
 			const auto loopStart = builder.m_uOffset;
-			m_pCondition->EmitByteCode(builder, true);
+			m_pCondition->EmitByteCode(builder);
+			Omit(builder); //remove the pop
 
 			const auto jumpExit = EmitJump(builder, TOpCode::JZ); //get the beginning of the loop
 			builder.m_oLoops.push_back({});
@@ -36,13 +39,13 @@ namespace bloop::ast {
 			builder.m_oLoops.pop_back();
 		}
 
-		std::unique_ptr<Expression> m_pCondition;
+		std::unique_ptr<Statement> m_pCondition;
 	};
 
 	struct IfStatement : Statement {
 
 		struct Structure {
-			std::unique_ptr<Expression> m_pCondition;
+			std::unique_ptr<Statement> m_pCondition;
 			std::unique_ptr<BlockStatement> m_pBody;
 		};
 
@@ -51,9 +54,11 @@ namespace bloop::ast {
 		void Resolve(TResolver& resolver) override {
 			std::ranges::for_each(m_oIf, [&resolver](std::unique_ptr<Structure>& v) -> void {
 				assert(v->m_pCondition && v->m_pBody);
+				resolver.BeginScope();
 				v->m_pCondition->Resolve(resolver);
-				v->m_pBody->Resolve(resolver);
-				});
+				v->m_pBody->ResolveNoScopeManagement(resolver);
+				resolver.EndScope();
+			});
 
 			if (m_pElse)
 				m_pElse->Resolve(resolver);
@@ -72,7 +77,9 @@ namespace bloop::ast {
 					PatchJump(builder, *nextJump, builder.m_uOffset);
 					nextJump = std::nullopt;
 				}
-				block->m_pCondition->EmitByteCode(builder, true);
+				block->m_pCondition->EmitByteCode(builder);
+				Omit(builder); //remove the pop
+
 				nextJump = EmitJump(builder, TOpCode::JZ);
 				block->m_pBody->EmitByteCode(builder);
 

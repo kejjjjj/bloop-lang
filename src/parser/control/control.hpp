@@ -23,11 +23,17 @@ namespace bloop::parser {
 		[[nodiscard]] virtual UniqueStatement ToStatement() override = 0;
 
 	protected:
+		void StartScope();
 		void ParseIdentifier(bloop::ETokenType tt);
 		[[nodiscard]] virtual UniqueExpression ParseExpression();
-		[[nodiscard]] virtual std::unique_ptr<bloop::ast::BlockStatement> ParseScope();
+		[[nodiscard]] virtual UniqueStatement ParseStatement();
+
+		[[nodiscard]] virtual void ParseScope();
+		[[nodiscard]] virtual std::unique_ptr<bloop::ast::BlockStatement> ParseScopeNormal();
 
 		const CParserContext& m_oCtx;
 		bloop::CodePosition m_oDeclPos;
+		std::unique_ptr<bloop::ast::BlockStatement> m_pBody;
+		bloop::ast::BlockStatement* m_pOldBlock{};
 	};
 }
