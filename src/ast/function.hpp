@@ -29,6 +29,7 @@ namespace bloop::ast {
 				throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + m_sName, m_oApproximatePosition);
 			}
 
+			resolver.m_oDeclaredIdentifiers.push_back({});
 			resolver.DeclareSymbol(m_sName, true);
 			m_oIdentifier = resolver.ResolveIdentifier(m_sName);
 
@@ -52,6 +53,7 @@ namespace bloop::ast {
 			m_uLocalCount = resolver.m_oFunctions.back().m_uNextSlot;
 			resolver.EndScope();
 			resolver.m_oFunctions.pop_back();
+			resolver.m_oDeclaredIdentifiers.pop_back();
 		}
 
 		void PrintInstructions(TBCBuilder& parent) {

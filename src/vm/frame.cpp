@@ -4,16 +4,17 @@
 #include "utils/fmt.hpp"
 
 using namespace bloop::vm;
-
-CallFrame::CallFrame(Chunk* fn, std::size_t stackBase) 
-	: m_pChunk(fn), m_uBase(stackBase) {}
-CallFrame::CallFrame(Closure* closure, std::size_t stackBase) 
-	: m_pClosure(closure), m_pChunk(&closure->function->chunk), m_uBase(stackBase) {}
+CallFrame::CallFrame(Chunk* chunk, bloop::BloopUInt stackBase) 
+	: m_pChunk(chunk), m_uBase(stackBase), m_eChunkType(ChunkType::ct_chunk){}
+CallFrame::CallFrame(Function* fn, bloop::BloopUInt stackBase)
+	: m_pFunction(fn), m_pChunk(&fn->chunk), m_uBase(stackBase), m_eChunkType(ChunkType::ct_function) {}
+CallFrame::CallFrame(Closure* closure, bloop::BloopUInt stackBase)
+	: m_pClosure(closure), m_pChunk(&closure->function->chunk), m_uBase(stackBase), m_eChunkType(ChunkType::ct_closure) {}
 
 const CInstructionPosition& CallFrame::GetCurrentPosition() const {
 
 	auto it = std::upper_bound(m_pChunk->m_oPositions.begin(), m_pChunk->m_oPositions.end(), m_uIp,
-		[](std::size_t ip, const CInstructionPosition& p) {
+		[](bloop::BloopUInt ip, const CInstructionPosition& p) {
 			return ip <= p.byteOffset;
 		});
 	return *(it - 1);
@@ -30,7 +31,7 @@ void VM::PushFrame(Function* fn) {
 		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} call frames"), BLOOP_MAX_FRAMES));
 
 	m_oStack.resize(frameBase + fn->m_uLocalCount);
-	m_pCurrentFrame = &m_oFrames.emplace_back(&fn->chunk, frameBase);
+	m_pCurrentFrame = &m_oFrames.emplace_back(fn, frameBase);
 }
 void VM::PushFrame(Closure* closure) {
 	const auto frameBase = m_oStack.size() - closure->function->m_uParamCount;

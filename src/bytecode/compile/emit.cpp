@@ -34,8 +34,39 @@ bloop::BloopIndex CByteCodeBuilder::AddConstant(bloop::ConstantData c) {
 	m_oConstants.emplace_back(c);
 	return static_cast<bloop::BloopIndex>(idx);
 }
+void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex arg, bloop::BloopIndex arg2, bloop::BloopIndex arg3, CodePosition pos) {
+	m_oByteCode.emplace_back(CSingularByteCode{ 
+		.ins = Instr3{
+			.op = opcode, 
+			.arg = arg, 
+			.arg2 = arg2,
+			.arg3 = arg3
+		}, 
+		.loc = { 
+			m_uOffset, 
+			pos 
+		}
+	});
+
+	constexpr auto offset = 1 + sizeof(bloop::BloopIndex) * 3;
+
+	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset > bloop::INVALID_SLOT)
+		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode chunk has more than {} bytes"), bloop::INVALID_SLOT), pos);
+
+	m_uOffset += offset;
+}
 void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex arg, bloop::BloopIndex arg2, CodePosition pos) {
-	m_oByteCode.emplace_back(CSingularByteCode{ .ins = Instr2{.op = opcode, .arg = arg, .arg2 = arg2 }, .loc = { m_uOffset, pos } });
+	m_oByteCode.emplace_back(CSingularByteCode{ 
+		.ins = Instr2{
+			.op = opcode, 
+			.arg = arg, 
+			.arg2 = arg2 
+		}, 
+		.loc = { 
+			m_uOffset, 
+			pos 
+		} 
+	});
 	constexpr auto offset = 1 + sizeof(bloop::BloopIndex) * 2;
 
 	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset > bloop::INVALID_SLOT)
@@ -45,7 +76,16 @@ void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex arg, bloop::BloopI
 
 }
 void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex idx, CodePosition pos) {
-	m_oByteCode.emplace_back(CSingularByteCode{ .ins = Instr1{.op = opcode, .arg = idx }, .loc = { m_uOffset, pos } });
+	m_oByteCode.emplace_back(CSingularByteCode{ 
+		.ins = Instr1{
+			.op = opcode, 
+			.arg = idx 
+		}, 
+		.loc = { 
+			m_uOffset, 
+			pos 
+		} 
+	});
 	
 	constexpr auto offset = 1 + sizeof(bloop::BloopIndex);
 
@@ -85,13 +125,13 @@ void CByteCodeBuilder::EmitJump(EOpCode opcode, bloop::BloopIndex offset, CodePo
 void CByteCodeBuilder::PatchJump(bloop::BloopIndex src, bloop::BloopIndex dst) {
 	std::get<1>(m_oByteCode[src].ins).arg = dst;
 }
-bloop::BloopIndex CByteCodeBuilder::EmitTry(EOpCode opcode, bloop::BloopIndex base, CodePosition pos) {
+bloop::BloopIndex CByteCodeBuilder::EmitTry(EOpCode opcode, bloop::BloopIndex base, bloop::BloopIndex catchVar, CodePosition pos) {
 	auto idx = m_oByteCode.size();
-	Emit(opcode, 0u, base, pos);
+	Emit(opcode, 0u, base, catchVar, pos);
 	return static_cast<bloop::BloopIndex>(idx);
 }
 void CByteCodeBuilder::PatchTry(bloop::BloopIndex src, bloop::BloopIndex dst) {
-	std::get<2>(m_oByteCode[src].ins).arg = dst;
+	std::get<3>(m_oByteCode[src].ins).arg = dst;
 }
 void CByteCodeBuilder::EmitCapture(const vmdata::Capture& capture, CodePosition pos) {
 	if (capture.m_bIsLocal) {
@@ -124,19 +164,31 @@ void CByteCodeBuilder::Print() {
 	});
 }
 
+namespace {
+	template <typename T>
+	inline void WriteLE(std::vector<bloop::BloopByte>& out, T v) {
+		static_assert(std::is_integral_v<T>, "T must be integral");
+		for(const auto i : std::views::iota(0u, sizeof(T)))
+			out.push_back(static_cast<bloop::BloopByte>((v >> (8 * i)) & 0xFF));
+	}
+
+	template <typename Instr>
+	inline void EncodeInstruction(std::vector<bloop::BloopByte>& out, const Instr& i) {
+		out.push_back(static_cast<bloop::BloopByte>(i.op));
+		if constexpr (requires { i.arg; })  WriteLE(out, i.arg);
+		if constexpr (requires { i.arg2; }) WriteLE(out, i.arg2);
+		if constexpr (requires { i.arg3; }) WriteLE(out, i.arg3);
+	}
+}
 
 std::vector<bloop::BloopByte> CByteCodeBuilder::Encode() {
 	std::vector<bloop::BloopByte> out;
 
-	for (auto& bc : m_oByteCode) {
-		std::visit([&](auto&& i) {
-			out.push_back(static_cast<bloop::BloopByte>(i.op));
+	out.reserve(m_oByteCode.size() * (1 + 3 * sizeof(bloop::BloopIndex)));
 
-			if constexpr (std::is_same_v<std::decay_t<decltype(i)>, Instr1>) {
-				for(const auto b : std::views::iota(0u, sizeof(bloop::BloopIndex)))
-					out.push_back(static_cast<bloop::BloopByte>((i.arg >> (8 * b)) & 0xFF));
-				
-			}
+	for (auto& bc : m_oByteCode) {
+		std::visit([&](const auto& i) {
+			EncodeInstruction(out, i);
 		}, bc.ins);
 	}
 

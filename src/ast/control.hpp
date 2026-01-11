@@ -225,4 +225,5 @@ namespace bloop::ast {
 			builder.m_oLoops.back().m_oBreakStatements.push_back(EmitJump(builder, TOpCode::JMP));
 		}
 	};
+
 }

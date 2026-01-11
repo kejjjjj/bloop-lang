@@ -42,5 +42,6 @@ BLOOP_OP(INCR)
 BLOOP_OP(DECR)
 BLOOP_OP(NEG)
 
-BLOOP_OP(TRY) //catch_ip, base
+BLOOP_OP(TRY) //catch_ip, base, catch_var
 BLOOP_OP(TRY_END)
+BLOOP_OP(THROW)

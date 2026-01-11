@@ -39,18 +39,35 @@ namespace bloop::vm
 		bloop::BloopIndex m_uLocalCount{};
 		std::vector<Capture> m_oCaptures{};
 	};
-
+	struct ExceptionHandler {
+		bloop::BloopUInt m_uIp{};
+		bloop::BloopUInt m_uBase{};
+		bloop::BloopIndex m_uCatchVar{};
+	};
 	struct CallFrame {
-		CallFrame(Chunk* fn, std::size_t stackBase);
-		CallFrame(Closure* closure, std::size_t stackBase);
+		CallFrame(Chunk* chunk, bloop::BloopUInt stackBase);
+		CallFrame(Function* fn, bloop::BloopUInt stackBase);
+		CallFrame(Closure* closure, bloop::BloopUInt stackBase);
 
 		[[nodiscard]] const CInstructionPosition& GetCurrentPosition() const;
 
-		Closure* m_pClosure{};
-		Chunk* m_pChunk{};
-		std::size_t m_uIp{};
-		std::size_t m_uBase{};
+		union {
+			Function* m_pFunction{};
+			Closure* m_pClosure;
+		};
 
+		Chunk* m_pChunk{};
+		bloop::BloopUInt m_uIp{};
+		bloop::BloopUInt m_uBase{};
+		std::vector<ExceptionHandler> m_oExceptionHandlers;
+
+		enum class ChunkType : bloop::BloopByte {
+			ct_chunk,
+			ct_function,
+			ct_closure
+		};
+
+		ChunkType m_eChunkType{ ChunkType::ct_chunk };
 	};
 
 	class VM {
@@ -66,7 +83,8 @@ namespace bloop::vm
 		enum class ExecutionReturnCode : bloop::BloopByte {
 			rc_continue,
 			rc_return,
-			rc_return_value
+			rc_return_value,
+			rc_throw
 		};
 
 		[[nodiscard]] ExecutionReturnCode RunFrame();
@@ -86,6 +104,8 @@ namespace bloop::vm
 
 		UpValue* CaptureUpValue(Value* slot);
 		void CloseUpValues(Value* lastSlot);
+
+		void Throw(Value value);
 
 		std::vector<Value> m_oStack;
 		std::vector<CallFrame> m_oFrames;

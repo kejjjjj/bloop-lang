@@ -22,7 +22,9 @@ void bloop::resolver::Resolve(bloop::ast::Program* code){
 	if(resolver.m_oAllFunctions.size() >= bloop::INVALID_SLOT)
 		throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the code has more than {} functions"), bloop::INVALID_SLOT));
 
+	resolver.m_oDeclaredIdentifiers.push_back({});
 	code->Resolve(resolver);
+	resolver.m_oDeclaredIdentifiers.pop_back();
 	code->m_uNumFunctions = static_cast<bloop::BloopIndex>(resolver.m_oAllFunctions.size());
 }
 
@@ -40,22 +42,27 @@ void Resolver::EndScope() {
 Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst) {
 	auto& scope = m_oScopes.back().symbols;
 
-	if (!m_oFunctions.empty() && m_oFunctions.back().m_uNextSlot >= std::numeric_limits<bloop::BloopIndex>::max())
-		throw exception::ResolverError(BLOOPTEXT("too many locals in a function (most recent): ") + name);
-
 	bloop::BloopIndex slot{};
-	if (m_oFunctions.empty()) {
+
+	if (m_oDeclaredIdentifiers.back().contains(name)) {
+		slot = m_oDeclaredIdentifiers.back().at(name); //give it the same slot
+	} else if (m_oFunctions.empty()) {
+
 		if (scope.size() >= bloop::INVALID_SLOT)
 			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the code has more than {} globals"), bloop::INVALID_SLOT));
 
 		slot = static_cast<bloop::BloopIndex>(scope.size());
+		m_oDeclaredIdentifiers.back()[name] = slot; //to avoid redeclarations
+
 	} else {
 		if (m_oFunctions.back().m_uNextSlot >= bloop::INVALID_SLOT) {
 			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the function \"{}\" has more than {} symbols"),
 				m_oFunctions.back().m_pCurrentFunction->m_sName, bloop::INVALID_SLOT));
 		}
 		slot = m_oFunctions.back().m_uNextSlot++;
+		m_oDeclaredIdentifiers.back()[name] = slot; //to avoid redeclarations
 	}
+
 	auto& result = (scope[name] = std::make_shared<Symbol>(name, m_iScopeDepth, slot, isConst));
 	return result.get();
 }
@@ -129,12 +136,15 @@ Symbol* Resolver::ResolveOuter(const bloop::BloopString& name)
 	return itr->symbols.at(name).get();
 }
 
-bloop::BloopUInt Resolver::CountLocals() const
+bloop::BloopIndex Resolver::CountLocals() const
 {
 	if (m_oFunctions.empty()) {
-		return std::accumulate(m_oScopes.begin(), m_oScopes.end(), bloop::BloopUInt{}, [](auto sum, const Scope& s) {
+		const auto result = std::accumulate(m_oScopes.begin(), m_oScopes.end(), bloop::BloopUInt{}, [](auto sum, const Scope& s) {
 			return sum + s.symbols.size();
 		});
+
+		assert(result < bloop::INVALID_SLOT);
+		return static_cast<bloop::BloopIndex>(result);
 	}
 
 	return m_oFunctions.back().m_uNextSlot;

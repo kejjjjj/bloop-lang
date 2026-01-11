@@ -58,7 +58,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			break;
 		} case TOpCode::STORE_LOCAL: {
 			const auto idx = m_pCurrentFrame->m_uBase + FetchOperand();
-			assert(idx <= static_cast<bloop::BloopIndex>(m_oStack.size()));
+			assert(idx < static_cast<bloop::BloopIndex>(m_oStack.size()));
 			m_oStack[idx] = Pop();
 			break;
 		} case TOpCode::STORE_GLOBAL: {
@@ -203,6 +203,20 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 					obj->closure.upvalues[i] = m_pCurrentFrame->m_pClosure->upvalues[slot];
 			}
 			Push(obj);
+			break;
+		} case TOpCode::TRY: {
+			//ip, stackbase, catchvar
+			m_pCurrentFrame->m_oExceptionHandlers.push_back({ FetchOperand(), FetchOperand(), FetchOperand() });
+			break;
+		}case TOpCode::TRY_END: {
+			assert(!m_pCurrentFrame->m_oExceptionHandlers.empty());
+			m_pCurrentFrame->m_oExceptionHandlers.pop_back();
+			break;
+		} case TOpCode::THROW: {
+			const auto wasEmpty = m_pCurrentFrame->m_oExceptionHandlers.empty();
+			Throw(Pop());
+			if(wasEmpty) // we are in a different frame, so exit it
+				return ExecutionReturnCode::rc_throw;
 			break;
 		} case TOpCode::DUP: {
 			Push(m_oStack.back());

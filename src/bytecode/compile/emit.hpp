@@ -24,8 +24,13 @@ namespace bloop::bytecode
 		bloop::BloopIndex arg;
 		bloop::BloopIndex arg2;
 	};
-
-	using Instruction = std::variant<Instr0, Instr1, Instr2>;
+	struct Instr3 {
+		EOpCode op;
+		bloop::BloopIndex arg;
+		bloop::BloopIndex arg2;
+		bloop::BloopIndex arg3;
+	};
+	using Instruction = std::variant<Instr0, Instr1, Instr2, Instr3>;
 
 	struct CSingularByteCode {		
 		Instruction ins;
@@ -40,6 +45,8 @@ namespace bloop::bytecode
 					result = 1u + sizeof(bloop::BloopIndex);
 				else if (std::is_same_v<Instr2, std::decay_t<decltype(i)>>)
 					result = 1u + sizeof(bloop::BloopIndex) * 2;
+				else if (std::is_same_v<Instr3, std::decay_t<decltype(i)>>)
+					result = 1u + sizeof(bloop::BloopIndex) * 3;
 				}, ins);
 			return result;
 		}
@@ -60,7 +67,12 @@ namespace bloop::bytecode
 				if constexpr (std::is_same_v<std::decay_t<decltype(i)>, Instr1>) {
 					res += BLOOPTEXT(", ") + std::to_string(i.arg);
 				} else if constexpr (std::is_same_v<std::decay_t<decltype(i)>, Instr2>) {
-					res += BLOOPTEXT(", ") + std::to_string(i.arg) + BLOOPTEXT(" ") + std::to_string(i.arg2);
+					res += BLOOPTEXT(", ") + std::to_string(i.arg) 
+						+ BLOOPTEXT(" ") + std::to_string(i.arg2);
+				} else if constexpr (std::is_same_v<std::decay_t<decltype(i)>, Instr3>) {
+					res += BLOOPTEXT(", ") + std::to_string(i.arg) 
+						+ BLOOPTEXT(" ") + std::to_string(i.arg2) 
+						+ BLOOPTEXT(" ") + std::to_string(i.arg3);
 				}
 
 			}, ins);
@@ -82,6 +94,7 @@ namespace bloop::bytecode
 		[[nodiscard]] virtual constexpr bool GlobalContext() const noexcept { return false; }
 		[[nodiscard]] bloop::BloopIndex AddConstant(bloop::ConstantData c);
 
+		void Emit(EOpCode opcode, bloop::BloopIndex arg, bloop::BloopIndex arg2, bloop::BloopIndex arg3, CodePosition pos);
 		void Emit(EOpCode opcode, bloop::BloopIndex arg, bloop::BloopIndex arg2, CodePosition pos);
 		void Emit(EOpCode opcode, bloop::BloopIndex idx, CodePosition pos);
 		void Emit(EOpCode opcode, CodePosition pos);
@@ -92,7 +105,7 @@ namespace bloop::bytecode
 		void EmitJump(EOpCode opcode, bloop::BloopIndex offset, CodePosition pos);
 		void PatchJump(bloop::BloopIndex src, bloop::BloopIndex dst);
 
-		[[nodiscard]] bloop::BloopIndex EmitTry(EOpCode opcode, bloop::BloopIndex base, CodePosition pos); //returns the index of m_oByteCode
+		[[nodiscard]] bloop::BloopIndex EmitTry(EOpCode opcode, bloop::BloopIndex base, bloop::BloopIndex catchVar, CodePosition pos); //returns the index of m_oByteCode
 		void PatchTry(bloop::BloopIndex src, bloop::BloopIndex dst);
 
 

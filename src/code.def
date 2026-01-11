@@ -1,19 +1,98 @@
 R"(
-fn truthyFunction() {
-	return true;
+
+fn runTests() {
+
+    // Storage for results
+    let r1 = "unset";
+    let r2 = "unset";
+    let r3 = "unset";
+    let r4 = "unset";
+    let r5 = "unset";
+
+    // 1. Normal function throw
+    try {
+        fn f1() {
+            r1 = "f1:before";
+            throw "f1:error";
+            r1 = "f1:after"; // unreachable
+        }
+        f1();
+    } catch (e) {
+        r1 = e;
+    }
+
+    // 2. Closure modifying outer state
+    let state = "init";
+    fn makeThrower() {
+        fn inner() {
+            state = "modified";
+            throw state;
+        }
+        return inner;
+    }
+
+    try {
+        let t = makeThrower();
+        t();
+    } catch (e) {
+        r2 = e;
+    }
+
+    // 3. Nested try/catch with rethrow
+    try {
+        try {
+            throw "inner";
+        } catch (e) {
+            r3 = e;
+            throw "outer";
+        }
+    } catch (e) {
+        r3 = r3 + ":" + e;
+    }
+
+    // 4. Throw inside catch, caught outside nested
+    try {
+        try {
+            throw "first";
+        } catch (e) {
+            r4 = e;
+            throw "second";
+        }
+    } catch (e) {
+        r4 = r4 + ":" + e;
+    }
+
+    // 5. Deep closure with multiple nested throws
+    let deepState = "start";
+    fn makeDeepThrower(level) {
+        fn inner(n) {
+            if (n <= 0) {
+                deepState = "deep";
+                throw deepState;
+            } else {
+                try {
+                    inner(n - 1);
+                } catch (e) {
+                    throw "wrapped:" + e;
+                }
+            }
+        }
+        return inner;
+    }
+
+    try {
+        let deep = makeDeepThrower(3);
+        deep(3);
+    } catch (e) {
+        r5 = e;
+    }
+
+    return r1 + "|" + r2 + "|" + r3 + "|" + r4 + "|" + r5;
 }
 
-fn main() {
-
-	let numCalls = 0;
-	fn funnyClosure(){
-		return ++numCalls;
-	}
-
-	let str = "";
-	while(const v = funnyClosure() <= 10)
-		str = str + "v";
-
-	return str;
+fn main()
+{
+    return runTests();
 }
+
 )"

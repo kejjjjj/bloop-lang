@@ -31,6 +31,9 @@ namespace bloop::ast {
 		inline void Emit(TBCBuilder& builder, TOpCode insn, bloop::BloopIndex arg, bloop::BloopIndex arg2) const {
 			builder.Emit(insn, arg, arg2, { m_oApproximatePosition });
 		}
+		inline void Emit(TBCBuilder& builder, TOpCode insn, bloop::BloopIndex arg, bloop::BloopIndex arg2, bloop::BloopIndex arg3) const {
+			builder.Emit(insn, arg, arg2, arg3, { m_oApproximatePosition });
+		}
 		inline void Omit(TBCBuilder& builder) {
 			builder.Omit();
 		}

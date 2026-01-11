@@ -13,6 +13,8 @@
 #include "parser/control/for/for.hpp"
 #include "parser/control/return/return.hpp"
 #include "parser/control/control_flow/control_flow.hpp"
+#include "parser/control/exception/try_catch.hpp"
+#include "parser/control/exception/throw.hpp"
 
 #include "utils/defs.hpp"
 
@@ -113,13 +115,15 @@ bloop::EStatus bloop::parser::ParseToken(const CParserContext& ctx) {
 		return CreateParser<CParserIfStatement>(ctx);
 	case ETokenType::tt_for:
 		return CreateParser<CParserForStatement>(ctx);
-	case ETokenType::tt_else:
-		throw exception::ParserError(BLOOPTEXT("unexpected else statement"), ctx.GetIterator()->GetCodePosition());
 	case ETokenType::tt_return:
 		return CreateParser<CParserReturnStatement>(ctx);
 	case ETokenType::tt_continue:
 	case ETokenType::tt_break:
 		return CreateParser<CParserControlStatement>(ctx);
+	case ETokenType::tt_try:
+		return CreateParser<CParserTryCatchStatement>(ctx);
+	case ETokenType::tt_throw:
+		return CreateParser<CParserThrowStatement>(ctx);
 	default:
 		throw exception::ParserError(BLOOPTEXT("unexpected token: ") + ctx.GetIterator()->Source(), ctx.GetIterator()->GetCodePosition());
 	}

@@ -30,17 +30,18 @@ namespace bloop::resolver {
 			bloop::BloopIndex m_uNextSlot = 0;
 			bloop::ast::FunctionDeclarationStatement* m_pCurrentFunction{};
 		};
-
-
 		struct ResolvedIdentifier {
 			enum class Kind { Error, Local, Upvalue, Global };
 			Kind m_eKind;
 			bloop::BloopIndex m_uSlot;
 			bool m_bConst{};
 		};
+
+		using DeclaredIdentifier = std::unordered_map<bloop::BloopString, bloop::BloopIndex>;
 		struct Resolver {
 			std::vector<Scope> m_oScopes;
 			std::vector<FunctionContext> m_oFunctions; // to keep track of local counts
+			std::vector<DeclaredIdentifier> m_oDeclaredIdentifiers; // to avoid duplicate declarations
 			bloop::BloopInt m_iLoopDepth{};
 			bloop::BloopInt m_iScopeDepth{-1};
 
@@ -51,7 +52,7 @@ namespace bloop::resolver {
 			[[nodiscard]] Symbol* ResolveSymbol(const bloop::BloopString& name);
 			[[nodiscard]] ResolvedIdentifier ResolveIdentifier(const bloop::BloopString& name);
 
-			[[nodiscard]] bloop::BloopUInt CountLocals() const;
+			[[nodiscard]] bloop::BloopIndex CountLocals() const;
 
 			[[nodiscard]] bloop::ast::FunctionDeclarationStatement* GetOuterMostFunction() const;
 			std::vector<bloop::ast::FunctionDeclarationStatement*> m_oAllFunctions;

@@ -128,10 +128,10 @@ void VM::Run(const bloop::BloopString& entryFuncName) {
 	std::cout << bloop::fmt::format("\nreturned: {} : {}\n", m_oStack.front().ValueToString(), m_oStack.front().TypeToString());
 }
 VM::ExecutionReturnCode VM::RunFrame() {
-	auto& bytecode = m_pCurrentFrame->m_pChunk->m_oByteCode;
 	ExecutionReturnCode returnCode{};
 
 	while (m_pCurrentFrame->m_uIp != m_pCurrentFrame->m_pChunk->m_oByteCode.size()) {
+		auto& bytecode = m_pCurrentFrame->m_pChunk->m_oByteCode;
 		returnCode = InterpretOpCode(static_cast<bloop::bytecode::EOpCode>(bytecode[m_pCurrentFrame->m_uIp++]));
 
 		if (returnCode != ExecutionReturnCode::rc_continue) {
@@ -150,6 +150,10 @@ void VM::RunGlobal() {
 void VM::RunFunction(Function* fn) {
 	PushFrame(fn);
 	const auto returnCode = RunFrame();
+
+	if (returnCode == ExecutionReturnCode::rc_throw)
+		return;
+
 	CloseUpValues(m_oStack.data());
 	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
@@ -159,6 +163,10 @@ void VM::RunClosure(Closure* closure)
 {
 	PushFrame(closure);
 	const auto returnCode = RunFrame();
+
+	if (returnCode == ExecutionReturnCode::rc_throw)
+		return;
+
 	CloseUpValues(m_oStack.data());
 	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
