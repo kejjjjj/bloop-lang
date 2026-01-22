@@ -2,6 +2,8 @@
 
 #include "utils/defs.hpp"
 
+#include <vector>
+
 namespace bloop::vm
 {
 	struct Object;
@@ -9,13 +11,20 @@ namespace bloop::vm
 	class VM;
 
 	class GC {
+		BLOOP_NONCOPYABLE(GC);
 		friend class VM;
 	public:
 
 		GC() = delete;
-		GC(Heap* heap) : m_pHeap(heap){}
+		GC(Heap* heap);
 
 		void Collect(VM* vm);
+
+		void Pause() { m_bIsPaused = true; }
+		void Continue() { m_bIsPaused = false; }
+
+		void PushTempRoot(Object* obj);
+		void PopTempRoot(bloop::BloopUInt count=1u);
 
 	private:
 		void MarkRoots(VM* vm);
@@ -24,5 +33,7 @@ namespace bloop::vm
 		void Trace(Object* obj);
 
 		Heap* m_pHeap{};
+		bool m_bIsPaused{};
+		std::vector<Object*> m_oTempRoots;
 	};
 }

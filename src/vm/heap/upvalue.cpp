@@ -17,7 +17,7 @@ UpValue* VM::CaptureUpValue(Value* slot) {
     if (curr && curr->location == slot)
         return curr;
 
-    auto up = m_oHeap.AllocUpValue(slot, curr);
+    auto up = m_oHeap.AllocUpValue(slot);
     if (prev) prev->next = up->upvalue;
     else m_pOpenUpValues = up->upvalue;
     return up->upvalue;

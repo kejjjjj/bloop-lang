@@ -81,7 +81,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			Value a = Pop();
 
 			if (a.IsString() && b.IsString()) {
-				Push(m_oHeap.StringConcat(a.obj, b.obj));
+				Push(m_oHeap.StringConcat(a.obj, b.obj)); 
 			} else {
 				Push(a + b);
 			}
@@ -193,16 +193,20 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 			auto obj = m_oHeap.AllocClosure(&func, static_cast<bloop::BloopIndex>(func.m_oCaptures.size()));
 
+			m_oGC.PushTempRoot(obj);
+
 			for (const auto i : std::views::iota(0u, obj->closure.numValues)) {
 				const auto opcode = static_cast<TOpCode>(m_pCurrentFrame->m_pChunk->m_oByteCode[m_pCurrentFrame->m_uIp++]);
 				const auto slot = FetchOperand();
 
-				if (opcode == TOpCode::CAPTURE_LOCAL)
+				if (opcode == TOpCode::CAPTURE_LOCAL) 
 					obj->closure.upvalues[i] = CaptureUpValue(&m_oStack[m_pCurrentFrame->m_uBase + slot]);
 				else
 					obj->closure.upvalues[i] = m_pCurrentFrame->m_pClosure->upvalues[slot];
 			}
 			Push(obj);
+			m_oGC.PopTempRoot();
+
 			break;
 		} case TOpCode::TRY: {
 			//ip, stackbase, catchvar

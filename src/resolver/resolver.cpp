@@ -43,6 +43,10 @@ Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst) {
 	auto& scope = m_oScopes.back().symbols;
 
 	bloop::BloopIndex slot{};
+	bloop::BloopInt funcDepth{};
+
+	if (!m_oFunctions.empty())
+		funcDepth = m_oFunctions.back().m_pCurrentFunction->m_iScopeDepth;
 
 	if (m_oDeclaredIdentifiers.back().contains(name)) {
 		slot = m_oDeclaredIdentifiers.back().at(name); //give it the same slot
@@ -62,8 +66,7 @@ Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst) {
 		slot = m_oFunctions.back().m_uNextSlot++;
 		m_oDeclaredIdentifiers.back()[name] = slot; //to avoid redeclarations
 	}
-
-	auto& result = (scope[name] = std::make_shared<Symbol>(name, m_iScopeDepth, slot, isConst));
+	auto& result = (scope[name] = std::make_shared<Symbol>(name, m_iScopeDepth, funcDepth, slot, isConst));
 	return result.get();
 }
 Symbol* Resolver::ResolveSymbol(const bloop::BloopString& name) {
@@ -88,7 +91,7 @@ ResolvedIdentifier Resolver::ResolveIdentifier(const bloop::BloopString& name) {
 
 	if (auto* sym = ResolveOuter(name)) {
 
-		auto funcs = m_oFunctions | std::views::drop(sym->m_iDepth);
+		auto funcs = m_oFunctions | std::views::drop(sym->m_iFunctionDepth);
 		auto t = std::list<FunctionContext>(funcs.begin(), funcs.end());
 
 		t.front().m_pCurrentFunction->PropagateCaptureInward(nullptr, t, sym);

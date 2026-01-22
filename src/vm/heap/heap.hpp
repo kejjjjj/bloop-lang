@@ -11,6 +11,7 @@ namespace bloop::vm
 	struct UpValue;
 
 	class Heap {
+		BLOOP_NONCOPYABLE(Heap);
 		friend class GC;
 		friend class VM;
 	public:
@@ -23,7 +24,7 @@ namespace bloop::vm
 		[[nodiscard]] Object* AllocArray(bloop::BloopIndex numValues);
 		[[nodiscard]] Object* AllocObject(bloop::BloopIndex numValues);
 		[[nodiscard]] Object* AllocClosure(Function* function, bloop::BloopIndex numVals);
-		[[nodiscard]] Object* AllocUpValue(Value* slot, UpValue* location);
+		[[nodiscard]] Object* AllocUpValue(Value* slot);
 
 		[[nodiscard]] Object* StringConcat(Object* a, Object* b);
 

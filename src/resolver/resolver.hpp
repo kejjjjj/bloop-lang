@@ -19,6 +19,7 @@ namespace bloop::resolver {
 		struct Symbol {
 			bloop::BloopString m_sName;
 			bloop::BloopInt m_iDepth{};
+			bloop::BloopInt m_iFunctionDepth{};
 			bloop::BloopIndex m_uSlot{};
 			bloop::BloopBool m_bIsConst{};
 		};

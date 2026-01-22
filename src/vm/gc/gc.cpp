@@ -7,10 +7,22 @@
 
 using namespace bloop::vm;
 
+GC::GC(Heap* heap) : m_pHeap(heap) {
+	m_oTempRoots.reserve(BLOOP_MAX_FRAMES);
+}
+
+void GC::PushTempRoot(Object* obj) {
+	m_oTempRoots.push_back(obj);
+}
+void GC::PopTempRoot(bloop::BloopUInt count) {
+	while (count-- && !m_oTempRoots.empty())
+		m_oTempRoots.pop_back();
+}
+
 void GC::Collect(VM* vm) {
 
 	//no allocations
-	if (!m_pHeap->m_pObjects)
+	if (m_bIsPaused || !m_pHeap->m_pObjects)
 		return;
 
 	MarkRoots(vm);
@@ -31,12 +43,15 @@ void GC::MarkRoots(VM* vm) {
 			Mark(v.obj);
 	}
 
-	for (const auto& frame : vm->m_oFrames) {
-		for (auto& c : frame.m_pChunk->m_oConstants) {
+	for (auto& fn : vm->m_oFunctions) {
+		for (auto& c : fn.chunk.m_oConstants) {
 			if (c.type == Value::Type::t_object)
 				Mark(c.obj);
 		}
 	}
+
+	for (auto* tempRoot : m_oTempRoots)
+		Mark(tempRoot);
 
 }
 void GC::Mark(Object* obj) {
@@ -79,9 +94,11 @@ void GC::Trace(Object* obj) {
 		break;
 	case Object::Type::ot_closure:
 		for (const auto i : std::views::iota(0u, obj->closure.numValues)) {
-			Mark(obj->closure.upvalues[i]->owner);
+			if (obj->closure.upvalues[i]->location->type == Value::Type::t_object)
+				Mark(obj->closure.upvalues[i]->location->obj);
 		}
 		break;
 	}
+
 
 }

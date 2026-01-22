@@ -57,7 +57,6 @@ namespace bloop::vm {
 
 
     struct UpValue {
-        Object* owner{};
         Value* location{}; //stack slot or &closed
         Value closed; //when stack slot goes out of scope
         UpValue* next{};

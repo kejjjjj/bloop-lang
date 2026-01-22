@@ -91,7 +91,7 @@ static auto ParseOperator(const CParserContext& ctx) {
 }
 
 bloop::EStatus bloop::parser::ParseToken(const CParserContext& ctx) {
-
+	assert(ctx.GetIterator());
 	switch (ctx.GetIterator()->Type()) {
 	case ETokenType::tt_undefined:
 	case ETokenType::tt_false:

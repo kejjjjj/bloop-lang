@@ -72,6 +72,7 @@ VM::~VM() {
 		//assert(m_oStack.size() == 1); //something leaked if not true
 		m_oStack.clear(); //free everything for the GC
 		m_oGlobals.clear(); // let the gc get rid of these
+		m_oFunctions.clear();
 		m_oGC.Collect(this); //clear everything
 
 	}
@@ -110,7 +111,7 @@ void VM::Run(const bloop::BloopString& entryFuncName) {
 
 	} catch (exception::VMError& ex) {
 		bloop::BloopString msg;
-		if (auto frame = m_pCurrentFrame) {
+		if (m_pCurrentFrame) {
 			const auto& src = m_pCurrentFrame->GetCurrentPosition();
 			msg = bloop::fmt::format("\n\nruntime error:\n\n{}\nat [{}, {}]", ex.what(), std::get<0>(src.pos), std::get<1>(src.pos));
 		} else {

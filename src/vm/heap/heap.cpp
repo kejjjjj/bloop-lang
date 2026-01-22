@@ -51,11 +51,9 @@ Object* Heap::AllocClosure(Function* function, bloop::BloopIndex numVals) {
 	auto vals = new UpValue*[numVals];
 	return Allocate(new Object(function, vals, numVals));
 }
-Object* Heap::AllocUpValue(Value* slot, UpValue* location) {
-	auto up = new UpValue{ nullptr, slot, {}, location };
-	auto r = Allocate(new Object(up));
-	up->owner = r;
-	return r;
+Object* Heap::AllocUpValue(Value* slot) {
+	auto up = new UpValue{ slot, {}, {} };
+	return Allocate(new Object(up));
 }
 Object* Heap::StringConcat(Object* a, Object* b)
 {
