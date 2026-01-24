@@ -102,8 +102,7 @@ namespace bloop::vm
 		[[nodiscard]] ExecutionReturnCode InterpretOpCode(bloop::bytecode::EOpCode op);
 		[[nodiscard]] bloop::BloopIndex FetchOperand();
 
-		UpValue* CaptureUpValue(Value* slot);
-		void CloseUpValues(Value* lastSlot);
+
 
 		void Throw(Value value);
 
@@ -118,7 +117,6 @@ namespace bloop::vm
 		GC m_oGC;
 		Chunk m_oGlobalChunk; //executed in the beginning
 
-		UpValue* m_pOpenUpValues{};
 	};
 
 }

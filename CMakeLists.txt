@@ -51,6 +51,7 @@ if (MSVC)
         $<$<CONFIG:Debug>:/Od /Zi /RTC1>
         $<$<CONFIG:Release>:/O2 /MD>
     )
+
 else()
     target_compile_options(bloop PRIVATE
         $<$<CONFIG:Debug>:-O0 -g>

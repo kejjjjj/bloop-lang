@@ -193,19 +193,21 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 			auto obj = m_oHeap.AllocClosure(&func, static_cast<bloop::BloopIndex>(func.m_oCaptures.size()));
 
-			m_oGC.PushTempRoot(obj);
+			//m_oGC.PushTempRoot(obj);
+			m_oGC.Pause();
 
 			for (const auto i : std::views::iota(0u, obj->closure.numValues)) {
 				const auto opcode = static_cast<TOpCode>(m_pCurrentFrame->m_pChunk->m_oByteCode[m_pCurrentFrame->m_uIp++]);
 				const auto slot = FetchOperand();
 
-				if (opcode == TOpCode::CAPTURE_LOCAL) 
-					obj->closure.upvalues[i] = CaptureUpValue(&m_oStack[m_pCurrentFrame->m_uBase + slot]);
+				if (opcode == TOpCode::CAPTURE_LOCAL)
+					obj->closure.upvalues[i] = m_oGC.CaptureUpValue(&m_oStack[m_pCurrentFrame->m_uBase + slot]);
 				else
 					obj->closure.upvalues[i] = m_pCurrentFrame->m_pClosure->upvalues[slot];
 			}
 			Push(obj);
-			m_oGC.PopTempRoot();
+			m_oGC.Continue();
+			//m_oGC.PopTempRoot();
 
 			break;
 		} case TOpCode::TRY: {

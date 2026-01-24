@@ -7,7 +7,7 @@
 
 using namespace bloop::vm;
 
-GC::GC(Heap* heap) : m_pHeap(heap) {
+GC::GC(VM* vm) : m_pVM(vm) {
 	m_oTempRoots.reserve(BLOOP_MAX_FRAMES);
 }
 
@@ -19,17 +19,17 @@ void GC::PopTempRoot(bloop::BloopUInt count) {
 		m_oTempRoots.pop_back();
 }
 
-void GC::Collect(VM* vm) {
+void GC::Collect() {
 
 	//no allocations
-	if (m_bIsPaused || !m_pHeap->m_pObjects)
+	if (m_bIsPaused || !m_pObjects)
 		return;
 
-	MarkRoots(vm);
+	MarkRoots(m_pVM);
 	Sweep();
 
-	if(m_pHeap->m_uBytesAllocated >= m_pHeap->m_uNextGCLimit)
-		m_pHeap->m_uNextGCLimit = m_pHeap->m_uBytesAllocated * 2;
+	if(m_uBytesAllocated >= m_uNextGCLimit)
+		m_uNextGCLimit = m_uBytesAllocated * 2;
 }
 void GC::MarkRoots(VM* vm) {
 
@@ -54,20 +54,34 @@ void GC::MarkRoots(VM* vm) {
 		Mark(tempRoot);
 
 }
-void GC::Mark(Object* obj) {
+void GC::Mark(Object* _obj) {
+
+	auto obj = GCHeader::GetHeader(_obj);
+
 	if (!obj || obj->marked)
 		return;
 	obj->marked = true;
-	Trace(obj);
+	Trace(_obj);
+}
+void GC::MarkUpValue(UpValue* uv) {
+	assert(uv && uv->location);
+	if (uv && uv->location == &uv->closed && uv->location->type == Value::Type::t_object)
+		Mark(uv->closed.obj);
 }
 void GC::Sweep() {
-	Object** obj = &m_pHeap->m_pObjects;
+	auto** obj = &m_pObjects;
 
 	while (*obj) {
 		if (!(*obj)->marked) {
-			Object* unreached = *obj;
+			auto* unreached = *obj;
 			*obj = unreached->next;
-			m_pHeap->FreeObject(unreached);
+			if (unreached->is_object)
+				FreeObject(unreached->GetValue<Object>());
+			else
+				FreeOther(unreached);
+
+			delete unreached;
+
 		} else {
 			(*obj)->marked = false; // reset flags to avoid false positives
 			obj = &(*obj)->next;
@@ -94,11 +108,20 @@ void GC::Trace(Object* obj) {
 		break;
 	case Object::Type::ot_closure:
 		for (const auto i : std::views::iota(0u, obj->closure.numValues)) {
-			if (obj->closure.upvalues[i]->location->type == Value::Type::t_object)
-				Mark(obj->closure.upvalues[i]->location->obj);
+			MarkUpValue(obj->closure.upvalues[i]);
 		}
 		break;
 	}
 
 
+}
+
+void GC::FreeObject(Object* obj) {
+	assert(m_uBytesAllocated >= obj->GetSize());
+	m_uBytesAllocated -= obj->GetSize();
+	obj->Free();
+}
+void GC::FreeOther(GCHeader* header) {
+	assert(m_uBytesAllocated >= header->size);
+	m_uBytesAllocated -= header->size;
 }

@@ -95,7 +95,7 @@ fn runTests() {
 fn main(){
 
     let result;
-    for(let i = 0; i <= 10000; i++)
+    for(let i = 0; i <= 500_000; i++)
         result = runTests();
     return result;
 }

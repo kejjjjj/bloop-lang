@@ -12,6 +12,8 @@ using namespace bloop::vm;
 
 std::vector<Value> VM::BuildConstants(const std::vector<bloop::ConstantData>& constants) {
 	std::vector<Value> vals;
+	vals.reserve(constants.size());
+
 	for (const auto& c : constants) {
 		const auto& data = std::get<0>(c);
 		const auto type = std::get<1>(c);
@@ -40,11 +42,12 @@ std::vector<Value> VM::BuildConstants(const std::vector<bloop::ConstantData>& co
 	return ret;
 }
 VM::VM(const bloop::bytecode::VMByteCode& data)
-	: m_oHeap(this), m_oGC(&m_oHeap) {
+	: m_oHeap(&m_oGC), m_oGC(this) {
 
 	m_oGlobalChunk.m_oConstants = BuildConstants(data.chunk.m_oConstants);
 	m_oGlobalChunk.m_oByteCode = data.chunk.m_oByteCode;
 	m_oGlobals.resize(data.numGlobals);
+	m_oFunctions.reserve(data.functions.size());
 
 	for (const auto& f : data.functions) {
 		m_oFunctions.emplace_back(Function{
@@ -73,11 +76,11 @@ VM::~VM() {
 		m_oStack.clear(); //free everything for the GC
 		m_oGlobals.clear(); // let the gc get rid of these
 		m_oFunctions.clear();
-		m_oGC.Collect(this); //clear everything
+		m_oGC.Collect(); //clear everything
 
 	}
 
-	assert(m_oHeap.GetAllocatedSize() == 0u);
+	assert(m_oGC.GetAllocatedSize() == 0u);
 }
 
 #include <chrono>
@@ -106,7 +109,7 @@ void VM::Run(const bloop::BloopString& entryFuncName) {
 			RunGlobal();
 			RunFunction(func);
 			assert(m_oStack.size() == 1u);
-			m_oGC.Collect(this);
+			m_oGC.Collect();
 		});
 
 	} catch (exception::VMError& ex) {
@@ -155,7 +158,7 @@ void VM::RunFunction(Function* fn) {
 	if (returnCode == ExecutionReturnCode::rc_throw)
 		return;
 
-	CloseUpValues(m_oStack.data());
+	m_oGC.CloseUpValues(m_oStack.data());
 	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
 	Push(ret);
@@ -168,7 +171,7 @@ void VM::RunClosure(Closure* closure)
 	if (returnCode == ExecutionReturnCode::rc_throw)
 		return;
 
-	CloseUpValues(m_oStack.data());
+	m_oGC.CloseUpValues(m_oStack.data());
 	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
 	Push(ret);

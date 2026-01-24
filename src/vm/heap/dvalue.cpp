@@ -34,9 +34,6 @@ void Object::Free()
 	case Type::ot_closure:
 		delete[] closure.upvalues;
 		break;
-	case Type::ot_upvalue:
-		delete upvalue;
-		break;
 	default:
 		break;
 	}
@@ -55,8 +52,6 @@ std::size_t Object::GetSize() const
 		return sizeof(Object) + sizeof(function); //just a handle, has no allocated size
 	case Type::ot_closure:
 		return sizeof(Object) + (sizeof(closure.upvalues) * closure.numValues);
-	case Type::ot_upvalue:
-		return sizeof(Object) + sizeof(upvalue);
 	default:
 		return sizeof(Object);
 	}

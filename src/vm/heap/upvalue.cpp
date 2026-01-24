@@ -4,7 +4,7 @@
 
 using namespace bloop::vm;
 
-UpValue* VM::CaptureUpValue(Value* slot) {
+UpValue* GC::CaptureUpValue(Value* slot) {
 
 	UpValue* prev = nullptr;
 	UpValue* curr = m_pOpenUpValues;
@@ -17,12 +17,13 @@ UpValue* VM::CaptureUpValue(Value* slot) {
     if (curr && curr->location == slot)
         return curr;
 
-    auto up = m_oHeap.AllocUpValue(slot);
-    if (prev) prev->next = up->upvalue;
-    else m_pOpenUpValues = up->upvalue;
-    return up->upvalue;
+    auto up = Allocate<UpValue>(slot, Value{}, curr);
+
+    if (prev) prev->next = up;
+    else m_pOpenUpValues = up;
+    return up;
 }
-void VM::CloseUpValues(Value* lastSlot)
+void GC::CloseUpValues(Value* lastSlot)
 {
     while (m_pOpenUpValues && m_pOpenUpValues->location >= lastSlot) {
         m_pOpenUpValues->closed = *m_pOpenUpValues->location;
