@@ -52,6 +52,10 @@ namespace bloop::bytecode
 		{ EPunctuation::p_multiplication, EOpCode::MUL },
 		{ EPunctuation::p_division, EOpCode::DIV },
 		{ EPunctuation::p_less_equal, EOpCode::LESS_EQUAL },
+		{ EPunctuation::p_equality, EOpCode::EQ },
+		{ EPunctuation::p_strict_equality, EOpCode::S_EQ },
+		{ EPunctuation::p_unequality, EOpCode::NE },
+		{ EPunctuation::p_strict_unequality, EOpCode::S_NE },
 	};
 
 	static std::unordered_map<EOpCode, bloop::BloopString> stringConversionTable = {

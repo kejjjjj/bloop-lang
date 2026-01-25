@@ -27,7 +27,9 @@ int main() {
 			bloop::resolver::Resolve(code.get());
 			bloop::vm::VM vm(bloop::bytecode::BuildByteCode(code.get()));
 
-			vm.Run("main");
+			auto ret = vm.Run("main");
+
+			std::cout << "\nreturned: " << ret.TypeToString() << " : " << ret.ValueToString() << '\n';
 
 			//std::this_thread::sleep_for(5s); // just to see the memory usage drop
 

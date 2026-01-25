@@ -106,6 +106,36 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			Value a = Pop();
 			Push(a <= b);
 			break;
+		} case TOpCode::EQ: {
+			Value b = Pop();
+			Value a = Pop();
+			Push(a == b);
+			break;
+		} case TOpCode::S_EQ: {
+			Value b = Pop();
+			Value a = Pop();
+
+			if(b.type == a.type)
+				Push(a == b);
+			else
+				Push(false);
+			
+			break;
+		}case TOpCode::NE: {
+			Value b = Pop();
+			Value a = Pop();
+			Push(a != b);
+			break;
+		} case TOpCode::S_NE: {
+			Value b = Pop();
+			Value a = Pop();
+
+			if(b.type != a.type)
+				Push(true);
+			else
+				Push(a != b);
+				
+			break;
 		} case TOpCode::JZ: {
 			const auto target = FetchOperand();
 			const Value v = Pop();

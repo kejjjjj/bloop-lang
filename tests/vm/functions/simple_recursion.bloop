@@ -1,0 +1,13 @@
+
+fn recurseUntil6(v)
+{
+	if(v <= 5)
+		return recurseUntil6(v + 1);
+
+	return v;
+}
+
+fn main()
+{
+	return recurseUntil6(0);
+}

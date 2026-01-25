@@ -1,0 +1,16 @@
+fn main() {
+
+    let a;
+    {
+        let x;
+        let y;
+    }
+    let z;
+
+    //in a bug scenario this returns [undefined, undefined]
+    fn func(x, y) {
+        return [x, y];
+    }
+
+    return func(1, 1);
+}

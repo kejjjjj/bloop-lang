@@ -77,7 +77,7 @@ namespace bloop::vm
 		VM(const bloop::bytecode::VMByteCode& bc);
 		~VM();
 
-		void Run(const bloop::BloopString& entryFuncName);
+		[[maybe_unused]] Value Run(const bloop::BloopString& entryFuncName);
 
 	private:
 		enum class ExecutionReturnCode : bloop::BloopByte {

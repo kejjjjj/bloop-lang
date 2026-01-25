@@ -1,5 +1,5 @@
-#include "ast/function.hpp"
 #include "bytecode/defs.hpp"
+#include "ast/function.hpp"
 
 using namespace bloop::ast;
 #include <iostream>
@@ -21,8 +21,11 @@ void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 
 	m_pBody->EmitByteCode(fnBuilder);
 	fnBuilder.EnsureReturn(this);
-	PrintInstructions(fnBuilder);
 
+	#ifndef BLOOP_TEST
+	PrintInstructions(fnBuilder);
+	#endif
+	
 	fnBuilder.m_oAllFunctions[m_uFunctionId] = {
 		.m_sName = m_sName,
 		.m_uParamCount = static_cast<bloop::BloopIndex>(m_oParams.size()),

@@ -1,0 +1,9 @@
+fn testPass(value)
+{
+	value = 2;
+}
+
+fn main()
+{
+	return testPass(5);
+}

@@ -30,9 +30,10 @@ vmdata::Chunk CByteCodeGlobals::Generate() {
 
 	}
 
+	#ifndef BLOOP_TEST
 	std::cout << "\nglobal:\n";
 	builder.Print();
-
+	#endif
 	return { 
 		.m_oConstants = builder.m_oConstants, 
 		.m_uNumGlobals = builder.m_uNumGlobals, 

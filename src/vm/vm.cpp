@@ -97,7 +97,7 @@ void Benchmark(const char* name, Callable&& fn) {
 	std::cout << name << ": " << std::setprecision(6) << seconds << "s\n";
 }
 
-void VM::Run(const bloop::BloopString& entryFuncName) {
+Value VM::Run(const bloop::BloopString& entryFuncName) {
 
 	if (!m_oFunctionTable.contains(entryFuncName))
 		throw exception::VMError(BLOOPTEXT("couldn't find the entry function: " + entryFuncName));
@@ -105,12 +105,19 @@ void VM::Run(const bloop::BloopString& entryFuncName) {
 	const auto func = m_oFunctionTable.at(entryFuncName);
 
 	try {
+		#ifdef BLOOP_TEST
+			RunGlobal();
+			RunFunction(func);
+			assert(m_oStack.size() == 1u);
+			m_oGC.Collect();
+		#else
 		Benchmark("glob+main", [&]() {
 			RunGlobal();
 			RunFunction(func);
 			assert(m_oStack.size() == 1u);
 			m_oGC.Collect();
 		});
+		#endif
 
 	} catch (exception::VMError& ex) {
 		bloop::BloopString msg;
@@ -126,10 +133,10 @@ void VM::Run(const bloop::BloopString& entryFuncName) {
 			PopFrame();
 
 		Push({});
-		return;
 	}
 
-	std::cout << bloop::fmt::format("\nreturned: {} : {}\n", m_oStack.front().ValueToString(), m_oStack.front().TypeToString());
+	//std::cout << bloop::fmt::format("\nreturned: {} : {}\n", m_oStack.front().ValueToString(), m_oStack.front().TypeToString());
+	return m_oStack.front();
 }
 VM::ExecutionReturnCode VM::RunFrame() {
 	ExecutionReturnCode returnCode{};

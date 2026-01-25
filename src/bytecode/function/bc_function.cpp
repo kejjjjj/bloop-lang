@@ -17,8 +17,10 @@ void CByteCodeFunction::Generate(std::vector<vmdata::Function>& funcs) {
 	m_pFunc->m_pBody->EmitByteCode(b);
 	b.EnsureReturn(m_pFunc);
 
-	m_pFunc->PrintInstructions(b);
-
+	#ifndef BLOOP_TEST
+		m_pFunc->PrintInstructions(b);
+	#endif
+	
 	b.m_oAllFunctions[m_pFunc->m_uFunctionId] = {
 		.m_sName = m_pFunc->m_sName,
 		.m_uParamCount = static_cast<bloop::BloopIndex>(m_pFunc->m_oParams.size()),
