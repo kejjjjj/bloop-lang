@@ -1,0 +1,13 @@
+fn main() {
+
+	fn make() {
+		let secret = "alive";
+		fn reveal() {
+			return secret;
+		}
+		return reveal;
+	}
+
+	let r = make();
+	return r();
+}

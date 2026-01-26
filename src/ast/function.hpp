@@ -25,12 +25,12 @@ namespace bloop::ast {
 
 		void Resolve(TResolver& resolver) override {
 
-			if (resolver.ResolveSymbol(m_sName)) {
+			if (auto sym = resolver.ResolveSymbol(m_sName); !sym->m_bIsFunction) {
 				throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + m_sName, m_oApproximatePosition);
 			}
 
 			resolver.m_oDeclaredIdentifiers.push_back({});
-			resolver.DeclareSymbol(m_sName, true);
+			//resolver.DeclareSymbol(m_sName, true); //already did this during hoisting
 			m_oIdentifier = resolver.ResolveIdentifier(m_sName);
 
 			if(resolver.m_oAllFunctions.size() >= bloop::INVALID_SLOT)

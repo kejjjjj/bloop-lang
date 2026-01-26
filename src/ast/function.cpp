@@ -38,11 +38,10 @@ void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 
 	if (m_oCaptures.empty()) {
 		Emit(parent, TOpCode::MAKE_FUNCTION, m_uFunctionId);
-	}
-	else {
+	} else {
 		Emit(parent, TOpCode::MAKE_CLOSURE, m_uFunctionId);
 
-		for (auto& cap : m_oCaptures) {
+		for (const auto& cap : m_oCaptures) {
 			parent.EmitCapture({ cap.kind == Capture::Kind::Local, cap.m_uSlot }, m_oApproximatePosition);
 		}
 	}

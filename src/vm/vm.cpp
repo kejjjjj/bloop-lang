@@ -165,7 +165,7 @@ void VM::RunFunction(Function* fn) {
 	if (returnCode == ExecutionReturnCode::rc_throw)
 		return;
 
-	m_oGC.CloseUpValues(m_oStack.data());
+	m_oGC.CloseUpValues(m_oStack.data() + m_oFrames.back().m_uBase);
 	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
 	Push(ret);
@@ -178,7 +178,7 @@ void VM::RunClosure(Closure* closure)
 	if (returnCode == ExecutionReturnCode::rc_throw)
 		return;
 
-	m_oGC.CloseUpValues(m_oStack.data());
+	m_oGC.CloseUpValues(m_oStack.data() + m_oFrames.back().m_uBase);
 	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
 	Push(ret);

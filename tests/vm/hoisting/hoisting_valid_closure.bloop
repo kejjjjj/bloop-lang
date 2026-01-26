@@ -1,0 +1,15 @@
+fn main() {
+
+
+	fn make() {
+		fn g() {
+			return f();
+		}
+		return g;
+	}
+
+	fn f() { return "f"; }
+
+	let h = make();
+	return h();
+}

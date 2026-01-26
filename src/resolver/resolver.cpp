@@ -39,7 +39,7 @@ void Resolver::EndScope() {
 	m_oScopes.pop_back();
 	m_iScopeDepth--;
 }
-Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst) {
+Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst, bool isFunction) {
 	auto& scope = m_oScopes.back().symbols;
 
 	bloop::BloopIndex slot{};
@@ -66,7 +66,7 @@ Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst) {
 		slot = m_oFunctions.back().m_uNextSlot++;
 		m_oDeclaredIdentifiers.back()[name] = slot; //to avoid redeclarations
 	}
-	auto& result = (scope[name] = std::make_shared<Symbol>(name, m_iScopeDepth, funcDepth, slot, isConst));
+	auto& result = (scope[name] = std::make_shared<Symbol>(name, m_iScopeDepth, funcDepth, slot, isConst, isFunction));
 	return result.get();
 }
 Symbol* Resolver::ResolveSymbol(const bloop::BloopString& name) {

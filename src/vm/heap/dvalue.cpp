@@ -191,7 +191,8 @@ bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object
 
 }
 Value& Object::ObjectGet(Value key) const {
-	assert(object.count != object.capacity);
+
+	assert((object.capacity & (object.capacity - 1)) == 0); // power of 2
 
 	const auto mask = object.capacity - 1;
 	auto index = key.Hash() & mask;
@@ -213,7 +214,7 @@ Value& Object::ObjectGet(Value key) const {
 
 Value& Object::ObjectSet(Value key, Value value)
 {
-	assert(object.count != object.capacity);
+	assert((object.capacity & (object.capacity - 1)) == 0); // power of 2
 	const auto mask = object.capacity - 1;
 	auto index = key.Hash() & mask;
 

@@ -1,0 +1,17 @@
+fn main() {
+
+	fn outer(x) {
+		let y = "Y";
+		fn middle() {
+			let z = "Z";
+			fn inner() {
+				return x + y + z;
+			}
+			return inner;
+		}
+		return middle();
+	}
+
+	let f = outer("X");
+	return f();
+}

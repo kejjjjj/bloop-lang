@@ -1,0 +1,19 @@
+fn main() {
+
+	let x = 0;
+
+	fn a() {
+		fn b() {
+			fn c() {
+				x = x + 1;
+			}
+			c();
+		}
+		b();
+	}
+
+	a();
+	a();
+
+	return x;
+}

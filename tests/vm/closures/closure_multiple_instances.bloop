@@ -1,0 +1,14 @@
+fn main() {
+
+	fn makeBox(v) {
+		let x = v;
+		fn get() { return x; }
+		fn set(n) { x = n; }
+		return get;
+	}
+
+	const a = makeBox("A");
+	const b = makeBox("B");
+
+	return [ a(), b() ];
+}

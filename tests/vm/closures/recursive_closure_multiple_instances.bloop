@@ -1,0 +1,17 @@
+fn main() {
+
+	fn make() {
+		let x = 0;
+		fn rec(n) {
+			if (n == 0) return x;
+			x = x + 1;
+			return rec(n - 1);
+		}
+		return rec;
+	}
+
+	let a = make();
+	let b = make();
+
+	return [ a(2),  b(3) ];
+}

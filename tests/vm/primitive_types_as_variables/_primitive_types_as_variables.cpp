@@ -17,3 +17,6 @@ TEST_CASE("unsigned integer variable returns 64u") {
 TEST_CASE("double variable returns 64.0") {
     bloop::test::CheckConstant(MAKE_RELATIVE_PATH(PREFIX, "double"), Value::Type::t_double, 64.0);
 }
+TEST_CASE("string variable returns Hello, world!") {
+    bloop::test::CheckConstant(MAKE_RELATIVE_PATH(PREFIX, "string"), Value::Type::t_object, BLOOPTEXT("Hello, World!"));
+}

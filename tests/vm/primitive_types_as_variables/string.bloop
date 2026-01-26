@@ -1,0 +1,5 @@
+fn main()
+{
+	let v = "Hello, World!";
+	return v;
+}

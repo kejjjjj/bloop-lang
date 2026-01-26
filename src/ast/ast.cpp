@@ -1,7 +1,37 @@
 #include "ast/ast.hpp"
 #include "ast/postfix.hpp"
+#include "ast/function.hpp"
 
 using namespace bloop::ast;
+
+void BlockStatement::ResolveStatements(TResolver& resolver) {
+
+	std::ranges::for_each(m_oStatements, [&](const std::unique_ptr<Statement>& s) {
+
+
+		if (s->IsFunction()) {
+			const auto asFunc = dynamic_cast<FunctionDeclarationStatement*>(s.get());
+
+			if (auto sym = resolver.ResolveSymbol(asFunc->m_sName)) {
+				throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + asFunc->m_sName, asFunc->m_oApproximatePosition);
+			}
+
+			resolver.DeclareSymbol(asFunc->m_sName, true, true);
+		}
+	});
+
+	std::ranges::for_each(m_oStatements, [&](const auto& s) {
+
+		//if (returnFound)
+		//	throw exception::ResolverError(BLOOPTEXT("unreachable code"), s->m_oApproximatePosition);
+
+		//if (s->IsReturn())
+		//	returnFound = true;
+
+		s->Resolve(resolver);
+	});
+	
+}
 
 void AssignExpression::EmitByteCode(TBCBuilder& builder, bool want_value) {
 	right->EmitByteCode(builder, true);

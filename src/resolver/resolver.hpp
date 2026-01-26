@@ -22,6 +22,7 @@ namespace bloop::resolver {
 			bloop::BloopInt m_iFunctionDepth{};
 			bloop::BloopIndex m_uSlot{};
 			bloop::BloopBool m_bIsConst{};
+			bloop::BloopBool m_bIsFunction{};
 		};
 
 		struct Scope {
@@ -35,7 +36,7 @@ namespace bloop::resolver {
 			enum class Kind { Error, Local, Upvalue, Global };
 			Kind m_eKind;
 			bloop::BloopIndex m_uSlot;
-			bool m_bConst{};
+			bloop::BloopBool m_bConst{};
 		};
 
 		using DeclaredIdentifier = std::unordered_map<bloop::BloopString, bloop::BloopIndex>;
@@ -49,7 +50,7 @@ namespace bloop::resolver {
 			void BeginScope();
 			void EndScope();
 
-			[[maybe_unused]] Symbol* DeclareSymbol(const bloop::BloopString& name, bool isConst = false);
+			[[maybe_unused]] Symbol* DeclareSymbol(const bloop::BloopString& name, bool isConst = false, bool isFunction=false);
 			[[nodiscard]] Symbol* ResolveSymbol(const bloop::BloopString& name);
 			[[nodiscard]] ResolvedIdentifier ResolveIdentifier(const bloop::BloopString& name);
 

@@ -85,20 +85,7 @@ namespace bloop::ast {
 		std::vector<std::unique_ptr<Statement>> m_oStatements;
 
 	private:
-		void ResolveStatements(TResolver& resolver) {
-			//auto returnFound = false;
-
-			std::ranges::for_each(m_oStatements, [&](const auto& s) {
-
-				//if (returnFound)
-				//	throw exception::ResolverError(BLOOPTEXT("unreachable code"), s->m_oApproximatePosition);
-
-				//if (s->IsReturn())
-				//	returnFound = true;
-
-				s->Resolve(resolver);
-			});
-		}
+		void ResolveStatements(TResolver& resolver);
 	};
 	struct UnnamedScopeStatement : BlockStatement {
 		UnnamedScopeStatement(const bloop::CodePosition& cp) : BlockStatement(cp) {}

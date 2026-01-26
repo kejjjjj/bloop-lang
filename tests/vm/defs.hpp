@@ -90,10 +90,10 @@ namespace bloop::test {
 			REQUIRE(ret->obj->object.count == size);
 
 			for(const auto i : std::views::iota(0, ret->obj->object.count)){
-				auto object = Object(const_cast<bloop::BloopChar*>(vals[i].first.data()), vals[i].first.length());
-				object.string.hash = bloop::hash::FNV1a(vals[i].first.data(), vals[i].first.length());
+				auto string = Object(const_cast<bloop::BloopChar*>(vals[i].first.data()), vals[i].first.length());
+				string.string.hash = bloop::hash::FNV1a(vals[i].first.data(), vals[i].first.length());
 
-				REQUIRE(ret->obj->object.entries[i].key.IsEqual(&object));
+				REQUIRE(ret->obj->object.entries[i].key.IsEqual(&string));
 				
 				AssertValue(ret->obj->object.entries[i].value, ExpectedValue{ expectedType, vals[i].second });
 			}

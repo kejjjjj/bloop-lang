@@ -1,0 +1,13 @@
+fn main() {
+	let x = 1;
+
+	fn inc() {
+		x = x + 1;
+		return x;
+	}
+
+	const a = inc();
+	const b = inc();
+
+	return [a, b, x];
+}
