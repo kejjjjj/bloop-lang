@@ -62,7 +62,6 @@ bool Value::IsTruthy() const
 bool Value::IsArithmetic() const
 {
 	switch (type) {
-	case VT::t_undefined:
 	case VT::t_bool:
 	case VT::t_int:
 	case VT::t_uint:
@@ -72,11 +71,9 @@ bool Value::IsArithmetic() const
 		return false;
 	}
 }
-bool Value::IsString() const {
-	return type == VT::t_object && obj->type == Object::Type::ot_string;
-}
 bool Value::IsCallable() const {
-	return type == VT::t_object && (obj->type == Object::Type::ot_function || obj->type == Object::Type::ot_closure);
+	return type == VT::t_object && 
+		(obj->type == Object::Type::ot_function || obj->type == Object::Type::ot_closure || obj->type == Object::Type::ot_nativefunction);
 }
 bool Value::IsIndexable() const {
 	return type == VT::t_object && obj->IsIndexable();

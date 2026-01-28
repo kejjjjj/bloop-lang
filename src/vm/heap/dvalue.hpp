@@ -9,6 +9,9 @@ namespace bloop::vm
 	struct Value;
 	struct UpValue;
 	struct ObjectEntry;
+	namespace native {
+		struct NativeDef;
+	}
 
 	struct Closure {
 		Function* function;
@@ -17,7 +20,7 @@ namespace bloop::vm
 	};
 
 	struct Object {
-		enum class Type { ot_string, ot_array, ot_object, ot_function, ot_closure } type;
+		enum class Type { ot_string, ot_array, ot_object, ot_function, ot_closure, ot_nativefunction } type;
 
 		Object(bloop::BloopChar* _data, bloop::BloopInt _len) : type(Type::ot_string), string({.data=_data, .len=_len}) {}
 		Object(Function* chunk) : type(Type::ot_function), function(chunk){}
@@ -25,6 +28,7 @@ namespace bloop::vm
 
 		Object(Value* values, bloop::BloopInt ucount);
 		Object(ObjectEntry* entries, bloop::BloopInt ucount, bloop::BloopInt capacity);
+		Object(native::NativeDef* def) : type(Type::ot_nativefunction), nativeFunction(def){}
 
 		union {
 			struct {
@@ -43,7 +47,14 @@ namespace bloop::vm
 			}array;
 			Closure closure;
 			Function* function;
+			native::NativeDef* nativeFunction;
 		};
+
+		[[nodiscard]] constexpr bool IsString() const noexcept { return type == Type::ot_string; }
+		[[nodiscard]] constexpr bool IsArray() const noexcept { return type == Type::ot_array; }
+		[[nodiscard]] constexpr bool IsObject() const noexcept { return type == Type::ot_object; }
+		[[nodiscard]] constexpr bool IsFunction() const noexcept { return type == Type::ot_function; }
+		[[nodiscard]] constexpr bool IsClosure() const noexcept { return type == Type::ot_closure; }
 
 		void Free();
 		[[nodiscard]] std::size_t GetSize() const;

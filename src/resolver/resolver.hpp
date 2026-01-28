@@ -47,6 +47,8 @@ namespace bloop::resolver {
 			bloop::BloopInt m_iLoopDepth{};
 			bloop::BloopInt m_iScopeDepth{-1};
 
+			void InjectNatives();
+
 			void BeginScope();
 			void EndScope();
 

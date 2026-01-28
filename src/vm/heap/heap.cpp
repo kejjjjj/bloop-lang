@@ -1,6 +1,7 @@
 #include "vm/heap/heap.hpp"
 #include "vm/heap/dvalue.hpp"
 #include "vm/vm.hpp"
+#include "vm/native/native.hpp"
 #include "utils/hash.hpp"
 
 #include <cassert>
@@ -51,6 +52,9 @@ Object* Heap::AllocObject(bloop::BloopIndex numValues) {
 Object* Heap::AllocClosure(Function* function, bloop::BloopIndex numVals) {
 	auto vals = new UpValue * [numVals] {};
 	return Allocate<Object>(function, vals, numVals);
+}
+Object* Heap::AllocNativeFunction(native::NativeDef* function) {
+	return Allocate<Object>(function);
 }
 Object* Heap::StringConcat(Object* a, Object* b)
 {

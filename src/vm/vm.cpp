@@ -4,6 +4,7 @@
 #include "vm/exception.hpp"
 #include "utils/fmt.hpp"
 #include "vm/heap/dvalue.hpp"
+#include "vm/native/native.hpp"
 
 #include <cassert>
 #include <ranges>
@@ -129,6 +130,7 @@ Value VM::Run(const bloop::BloopString& entryFuncName) {
 		}
 		std::cout << msg << '\n';
 
+		m_oGC.CloseUpValues(m_oStack.data());
 		while(m_oFrames.size())
 			PopFrame();
 
@@ -142,7 +144,7 @@ VM::ExecutionReturnCode VM::RunFrame() {
 	ExecutionReturnCode returnCode{};
 
 	while (m_pCurrentFrame->m_uIp != m_pCurrentFrame->m_pChunk->m_oByteCode.size()) {
-		auto& bytecode = m_pCurrentFrame->m_pChunk->m_oByteCode;
+		const auto& bytecode = m_pCurrentFrame->m_pChunk->m_oByteCode;
 		returnCode = InterpretOpCode(static_cast<bloop::bytecode::EOpCode>(bytecode[m_pCurrentFrame->m_uIp++]));
 
 		if (returnCode != ExecutionReturnCode::rc_continue) {
@@ -154,6 +156,10 @@ VM::ExecutionReturnCode VM::RunFrame() {
 }
 void VM::RunGlobal() {
 	m_pCurrentFrame = &m_oFrames.emplace_back(&m_oGlobalChunk, 0u);
+
+	for (const auto i : std::views::iota(0u, native::g_Natives.size()))
+		m_oGlobals[i] = m_oHeap.AllocNativeFunction(&native::g_Natives[i]);
+
 	[[maybe_unused]] const auto returnCode = RunFrame();
 	m_oFrames.clear();
 	m_pCurrentFrame = nullptr;

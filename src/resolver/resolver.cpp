@@ -1,5 +1,6 @@
 #include "resolver/resolver.hpp"
 #include "ast/function.hpp"
+#include "vm/native/native.hpp"
 
 #include <cassert>
 #include <ranges>
@@ -23,12 +24,26 @@ void bloop::resolver::Resolve(bloop::ast::Program* code){
 		throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the code has more than {} functions"), bloop::INVALID_SLOT));
 
 	resolver.m_oDeclaredIdentifiers.push_back({});
-	code->Resolve(resolver);
+
+	resolver.BeginScope();
+	resolver.InjectNatives();
+	code->ResolveNoScopeManagement(resolver);
+	resolver.EndScope();
+
 	resolver.m_oDeclaredIdentifiers.pop_back();
 	code->m_uNumFunctions = static_cast<bloop::BloopIndex>(resolver.m_oAllFunctions.size());
 }
 
 using namespace bloop::resolver::internal;
+
+void Resolver::InjectNatives() {
+	for (const auto& nativeFn : bloop::vm::native::g_Natives) {
+		if(ResolveSymbol(nativeFn.m_sName))
+			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the native function \"{}\" is already defined"), nativeFn.m_sName));
+
+		DeclareSymbol(nativeFn.m_sName, true, true);
+	}
+}
 
 void Resolver::BeginScope() {
 	m_oScopes.emplace_back();

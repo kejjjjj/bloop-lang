@@ -2,6 +2,7 @@
 #include "bytecode/defs.hpp"
 #include "bytecode/compile/emit.hpp"
 #include "ast/function.hpp"
+#include "vm/native/native.hpp"
 
 #include <iostream>
 
@@ -13,6 +14,9 @@ vmdata::Chunk CByteCodeGlobals::Generate() {
 
 	std::vector<vmdata::Function> unused;
 	CByteCodeBuilderForGlobals builder(unused);
+
+	builder.m_uNumGlobals += static_cast<bloop::BloopIndex>(bloop::vm::native::g_Natives.size());
+
 	for (auto& stmt : m_pCode->m_oStatements) {
 
 		if (stmt->IsFunction()) {

@@ -1,5 +1,6 @@
 #pragma once
 #include "utils/defs.hpp"
+#include "heap/dvalue.hpp"
 
 #include <unordered_map>
 
@@ -21,10 +22,15 @@ namespace bloop::vm {
         Value(bloop::BloopDouble v) : type(Type::t_double), d(v) {}
         Value(Object* v) : type(Type::t_object), obj(v){}
 
+        [[nodiscard]] constexpr bool IsString() const noexcept { return type == Type::t_object && obj->IsString(); }
+        [[nodiscard]] constexpr bool IsArray() const noexcept { return type == Type::t_object && obj->IsArray(); }
+        [[nodiscard]] constexpr bool IsObject() const noexcept { return type == Type::t_object && obj->IsObject(); }
+        [[nodiscard]] constexpr bool IsFunction() const noexcept { return type == Type::t_object && obj->IsFunction(); }
+        [[nodiscard]] constexpr bool IsClosure() const noexcept { return type == Type::t_object && obj->IsClosure(); }
+
         [[nodiscard]] bool IsTruthy() const;
         [[nodiscard]] bool IsArithmetic() const;
 
-        [[nodiscard]] bool IsString() const;
         [[nodiscard]] bool IsCallable() const;
         [[nodiscard]] bool IsIndexable() const;
         [[nodiscard]] bool IsAggregate() const;

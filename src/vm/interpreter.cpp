@@ -4,6 +4,7 @@
 #include "vm/heap/heap.hpp"
 #include "bytecode/defs.hpp"
 #include "vm/exception.hpp"
+#include "vm/native/native.hpp"
 #include "utils/fmt.hpp"
 
 #include <ranges>
@@ -153,16 +154,32 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			if (!callee.IsCallable())
 				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not callable"), callee.TypeToString()));
 
-			if (callee.obj->type == Object::Type::ot_function) {
+			switch (callee.obj->type) {
+			case Object::Type::ot_function:
 				if (callee.obj->function->m_uParamCount != argc)
 					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->function->m_uParamCount));
 
 				RunFunction(callee.obj->function);
-			} else if (callee.obj->type == Object::Type::ot_closure) {
+				break;
+				
+			case Object::Type::ot_closure:
 				if (callee.obj->closure.function->m_uParamCount != argc)
-					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->function->m_uParamCount));
+					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->closure.function->m_uParamCount));
 
 				RunClosure(&callee.obj->closure);
+				break;
+			case Object::Type::ot_nativefunction: {
+					if (callee.obj->nativeFunction->m_uParamCount != argc)
+						throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->nativeFunction->m_uParamCount));
+
+					std::vector<Value> args;
+					args.reserve(argc);
+					for ([[maybe_unused]]const auto i : std::views::iota(0u, argc))
+						args.push_back(Pop());
+
+					Push(callee.obj->nativeFunction->m_pFunction(*this, args));
+					break;
+				}
 			}
 			break;
 		} case TOpCode::SUBSCRIPT_GET: {

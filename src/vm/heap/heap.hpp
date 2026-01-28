@@ -11,6 +11,10 @@ namespace bloop::vm
 	struct Object;
 	struct UpValue;
 
+	namespace native {
+		struct NativeDef;
+	}
+
 	class Heap {
 		BLOOP_NONCOPYABLE(Heap);
 		friend class GC;
@@ -30,6 +34,7 @@ namespace bloop::vm
 		[[nodiscard]] Object* AllocArray(bloop::BloopIndex numValues);
 		[[nodiscard]] Object* AllocObject(bloop::BloopIndex numValues);
 		[[nodiscard]] Object* AllocClosure(Function* function, bloop::BloopIndex numVals);
+		[[nodiscard]] Object* AllocNativeFunction(native::NativeDef* function);
 
 		[[nodiscard]] Object* StringConcat(Object* a, Object* b);
 

@@ -1,8 +1,8 @@
 R"(
-
-
-fn main()
-{
-	return { a: 1, b: 2, c: 3 };
+fn main() {
+	
+	return length([1,2,3]);
 }
+
+
 )"

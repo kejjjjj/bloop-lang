@@ -28,6 +28,7 @@ void Object::Free()
 	case Type::ot_object:
 		delete[] object.entries;
 		return;
+	case Type::ot_nativefunction:
 	case Type::ot_function:
 		//just a handle
 		break;
@@ -50,6 +51,8 @@ std::size_t Object::GetSize() const
 		return sizeof(Object) + sizeof(*object.entries) + sizeof(object.count) + sizeof(object.capacity);
 	case Type::ot_function:
 		return sizeof(Object) + sizeof(function); //just a handle, has no allocated size
+	case Type::ot_nativefunction:
+		return sizeof(Object) + sizeof(nativeFunction); //just a handle, has no allocated size
 	case Type::ot_closure:
 		return sizeof(Object) + (sizeof(closure.upvalues) * closure.numValues);
 	default:

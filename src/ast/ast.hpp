@@ -7,6 +7,8 @@
 #include "bytecode/compile/emit.hpp"
 #include "bytecode/exception.hpp"
 
+#include "utils/fmt.hpp"
+
 #include <memory>
 #include <vector>
 #include <utility>
@@ -293,7 +295,7 @@ namespace bloop::ast {
 
 		void Resolve(TResolver& resolver) override {
 			if (resolver.ResolveSymbol(m_sName)) {
-				throw bloop::exception::ResolverError(BLOOPTEXT("variable already declared: ") + m_sName, m_oApproximatePosition);
+				throw bloop::exception::ResolverError(bloop::fmt::format(BLOOPTEXT("identifier \"{}\" already declared"), m_sName), m_oApproximatePosition);
 			}
 			
 			//prevent a = a by doing this after -> or not lol
