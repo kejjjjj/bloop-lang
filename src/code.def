@@ -1,7 +1,14 @@
 R"(
+fn arrayShit(a, b, c)
+{
+	return length([a, b, c]);
+}
+
 fn main() {
-	
-	return length([1,2,3]);
+	let arr = [ 0, 1 ];
+	arr[1] = arr;
+	arr[1][1][0] = "changed";
+	return arr[1];
 }
 
 

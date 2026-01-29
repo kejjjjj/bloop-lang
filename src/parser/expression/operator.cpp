@@ -53,7 +53,7 @@ bloop::EStatus COperatorParser::ParseSequence(std::optional<PairMatcher>& m_oEnd
 	expression->m_pNext = std::make_unique<CExpressionChain>();
 
 	auto nextExpr = CParserExpression(m_oCtx);
-	if (nextExpr.Parse(m_oEndOfExpression, expression->m_pNext.get()) != bloop::EStatus::success)
+	if (nextExpr.ParseInternal(m_oEndOfExpression, expression->m_pNext.get()) != bloop::EStatus::success)
 		return bloop::EStatus::failure;
 
 	if (m_oEndOfExpression && EndOfExpression(m_oEndOfExpression)) {

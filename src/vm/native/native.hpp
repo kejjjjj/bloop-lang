@@ -10,7 +10,7 @@ namespace bloop::vm {
 	class VM;
 
 	namespace native {
-		using NativeFn = Value(*)(VM& vm, const std::vector<Value>& args);
+		using NativeFn = Value(*)(VM&, const std::vector<Value>&);
 
 		struct NativeDef {
 			bloop::BloopString m_sName;

@@ -116,6 +116,7 @@ bloop::BloopString Object::TypeToString() const {
 	case VT::ot_object:
 		return BLOOPTEXT("object");
 	case VT::ot_function:
+	case VT::ot_nativefunction:
 		return BLOOPTEXT("function");
 	case VT::ot_closure:
 		return BLOOPTEXT("closure");
@@ -185,7 +186,9 @@ bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object
 		}
 
 		return bloop::fmt::format(BLOOPTEXT("{\n{}\n{}}"), ss.str(), oldIndent);
-	} case VT::ot_function:
+	} 
+	case VT::ot_function:
+	case VT::ot_nativefunction:
 		return BLOOPTEXT("function");
 	case VT::ot_closure:
 		return BLOOPTEXT("closure");
