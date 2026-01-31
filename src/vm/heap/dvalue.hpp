@@ -3,15 +3,17 @@
 #include "utils/defs.hpp"
 #include <unordered_set>
 
+namespace bloop::standard {
+	struct NativeFunction;
+}
+
 namespace bloop::vm
 {
 	struct Function;
 	struct Value;
 	struct UpValue;
 	struct ObjectEntry;
-	namespace native {
-		struct NativeDef;
-	}
+
 
 	struct Closure {
 		Function* function;
@@ -28,7 +30,7 @@ namespace bloop::vm
 
 		Object(Value* values, bloop::BloopInt ucount);
 		Object(ObjectEntry* entries, bloop::BloopInt ucount, bloop::BloopInt capacity);
-		Object(native::NativeDef* def) : type(Type::ot_nativefunction), nativeFunction(def){}
+		Object(const standard::NativeFunction* def) : type(Type::ot_nativefunction), nativeFunction(def){}
 
 		union {
 			struct {
@@ -47,7 +49,7 @@ namespace bloop::vm
 			}array;
 			Closure closure;
 			Function* function;
-			native::NativeDef* nativeFunction;
+			const standard::NativeFunction* nativeFunction;
 		};
 
 		[[nodiscard]] constexpr bool IsString() const noexcept { return type == Type::ot_string; }

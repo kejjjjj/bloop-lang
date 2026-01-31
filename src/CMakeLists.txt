@@ -20,6 +20,8 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/resolver/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/bytecode/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/vm/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/std/*.cpp"
+
 )
 
 add_executable(bloop ${PROJECT_SOURCES})

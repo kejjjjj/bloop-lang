@@ -4,7 +4,7 @@
 #include "vm/heap/heap.hpp"
 #include "bytecode/defs.hpp"
 #include "vm/exception.hpp"
-#include "vm/native/native.hpp"
+#include "std/native.hpp"
 #include "utils/fmt.hpp"
 
 #include <ranges>
@@ -156,26 +156,25 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 			switch (callee.obj->type) {
 			case Object::Type::ot_function:
-				if (callee.obj->function->m_uParamCount != argc)
+				if (callee.obj->nativeFunction->m_uParamCount != bloop::VARIADIC_PARAMETER_COUNT && callee.obj->function->m_uParamCount != argc)
 					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->function->m_uParamCount));
 
 				RunFunction(callee.obj->function);
 				break;
 				
 			case Object::Type::ot_closure:
-				if (callee.obj->closure.function->m_uParamCount != argc)
+				if (callee.obj->nativeFunction->m_uParamCount != bloop::VARIADIC_PARAMETER_COUNT && callee.obj->closure.function->m_uParamCount != argc)
 					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->closure.function->m_uParamCount));
 
 				RunClosure(&callee.obj->closure);
 				break;
 			case Object::Type::ot_nativefunction: {
-					if (callee.obj->nativeFunction->m_uParamCount != argc)
+					if (callee.obj->nativeFunction->m_uParamCount != bloop::VARIADIC_PARAMETER_COUNT && callee.obj->nativeFunction->m_uParamCount != argc)
 						throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->nativeFunction->m_uParamCount));
 
-					std::vector<Value> args;
-					args.reserve(argc);
-					for ([[maybe_unused]]const auto i : std::views::iota(0u, argc))
-						args.push_back(Pop());
+					std::vector<Value> args(argc);
+					for (size_t i = argc; i-- > 0; )
+						args[i] = Pop();
 
 					Push(callee.obj->nativeFunction->m_pFunction(*this, args));
 					break;

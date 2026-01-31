@@ -1,6 +1,6 @@
 #include "resolver/resolver.hpp"
 #include "ast/function.hpp"
-#include "vm/native/native.hpp"
+#include "std/native.hpp"
 
 #include <cassert>
 #include <ranges>
@@ -37,11 +37,11 @@ void bloop::resolver::Resolve(bloop::ast::Program* code){
 using namespace bloop::resolver::internal;
 
 void Resolver::InjectNatives() {
-	for (const auto& nativeFn : bloop::vm::native::g_Natives) {
-		if(ResolveSymbol(nativeFn.m_sName))
-			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the native function \"{}\" is already defined"), nativeFn.m_sName));
+	for (const auto& stdObj : bloop::standard::g_Natives) {
+		if(ResolveSymbol(stdObj.m_sName))
+			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the native \"{}\" is already defined"), stdObj.m_sName));
 
-		DeclareSymbol(nativeFn.m_sName, true, true);
+		DeclareSymbol(stdObj.m_sName, true, true);
 	}
 }
 

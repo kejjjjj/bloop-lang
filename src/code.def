@@ -1,14 +1,24 @@
 R"(
-fn arrayShit(a, b, c)
+
+const originalLog = std.console.log;
+let logCalls = 0;
+
+fn customLogger(t) 
 {
-	return length([a, b, c]);
+	originalLog(std.length(t));
+	logCalls++;
 }
 
 fn main() {
-	let arr = [ 0, 1 ];
-	arr[1] = arr;
-	arr[1][1][0] = "changed";
-	return arr[1];
+
+	
+	std.console.log = customLogger;
+
+	for(let i = 0; i <= 10; i++)
+		customLogger("hello!");
+	
+	return [ logCalls, std.console.prop];
+
 }
 
 

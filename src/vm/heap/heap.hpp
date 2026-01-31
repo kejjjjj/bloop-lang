@@ -3,6 +3,13 @@
 #include "utils/defs.hpp"
 #include "vm/gc/gc.hpp"
 
+
+namespace bloop::standard {
+	struct NativeFunction;
+	struct NativeObject;
+
+}
+
 namespace bloop::vm
 {
 	class VM;
@@ -11,9 +18,6 @@ namespace bloop::vm
 	struct Object;
 	struct UpValue;
 
-	namespace native {
-		struct NativeDef;
-	}
 
 	class Heap {
 		BLOOP_NONCOPYABLE(Heap);
@@ -23,7 +27,7 @@ namespace bloop::vm
 		Heap(GC* gc) : m_pGC(gc){}
 
 		template<typename T, typename ... Args>
-		[[nodiscard]] T* Allocate(Args&&... args) {
+		[[nodiscard]] inline T* Allocate(Args&&... args) {
 			return m_pGC->Allocate<T>(std::forward<Args>(args)...);
 		}
 
@@ -34,7 +38,7 @@ namespace bloop::vm
 		[[nodiscard]] Object* AllocArray(bloop::BloopIndex numValues);
 		[[nodiscard]] Object* AllocObject(bloop::BloopIndex numValues);
 		[[nodiscard]] Object* AllocClosure(Function* function, bloop::BloopIndex numVals);
-		[[nodiscard]] Object* AllocNativeFunction(native::NativeDef* function);
+		[[nodiscard]] Object* AllocNativeFunction(const bloop::standard::NativeFunction* function);
 
 		[[nodiscard]] Object* StringConcat(Object* a, Object* b);
 

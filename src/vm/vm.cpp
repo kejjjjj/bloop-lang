@@ -4,7 +4,7 @@
 #include "vm/exception.hpp"
 #include "utils/fmt.hpp"
 #include "vm/heap/dvalue.hpp"
-#include "vm/native/native.hpp"
+#include "std/vm/to_vm.hpp"
 
 #include <cassert>
 #include <ranges>
@@ -157,8 +157,9 @@ VM::ExecutionReturnCode VM::RunFrame() {
 void VM::RunGlobal() {
 	m_pCurrentFrame = &m_oFrames.emplace_back(&m_oGlobalChunk, 0u);
 
-	for (const auto i : std::views::iota(0u, native::g_Natives.size()))
-		m_oGlobals[i] = m_oHeap.AllocNativeFunction(&native::g_Natives[i]);
+	for (bloop::BloopUInt i{}; const auto& native : bloop::standard::g_Natives) {
+		m_oGlobals[i++] = bloop::standard::FromDefinitionToObject(m_oHeap, native);
+	}
 
 	[[maybe_unused]] const auto returnCode = RunFrame();
 	m_oFrames.clear();
