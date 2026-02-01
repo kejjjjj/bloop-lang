@@ -31,6 +31,8 @@ namespace bloop::parser {
 		const CParserContext& m_oCtx;
 
 		bloop::CodePosition m_oDeclPos;
+		bloop::CodePosition m_oEndPos;
+
 		bloop::BloopString m_sName;
 		std::vector<bloop::BloopString> m_oParameters;
 		std::unique_ptr<bloop::ast::BlockStatement> m_pBody;

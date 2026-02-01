@@ -10,8 +10,8 @@
 
 using namespace bloop::resolver;
 
-void bloop::resolver::Resolve(bloop::ast::Program* code){
-	internal::Resolver resolver;
+void bloop::resolver::Resolve(bloop::ast::Program* code, bloop::metadata::Metadata& metadata){
+	internal::Resolver resolver(metadata);
 
 	//clear out any silly business
 	for (auto& globalStatement : code->m_oStatements) {
@@ -29,6 +29,11 @@ void bloop::resolver::Resolve(bloop::ast::Program* code){
 	resolver.InjectNatives();
 	code->ResolveNoScopeManagement(resolver);
 	resolver.EndScope();
+
+	for (auto& func : metadata.m_oFunctionDebugInfo) {
+		assert(!metadata.m_oFunctionTable.contains(func.m_sName));
+		metadata.m_oFunctionTable[func.m_sName] = &func;
+	}
 
 	resolver.m_oDeclaredIdentifiers.pop_back();
 	code->m_uNumFunctions = static_cast<bloop::BloopIndex>(resolver.m_oAllFunctions.size());

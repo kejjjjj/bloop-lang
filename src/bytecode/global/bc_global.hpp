@@ -2,6 +2,7 @@
 
 #include "bytecode/defs.hpp"
 #include "utils/defs.hpp"
+#include "metadata/metadata.hpp"
 
 #include <vector>
 
@@ -16,7 +17,7 @@ namespace bloop::bytecode {
 		CByteCodeGlobals() = delete;
 		CByteCodeGlobals(bloop::ast::Program* code);
 
-		[[nodiscard]] vmdata::Chunk Generate();
+		[[nodiscard]] bc::Chunk Generate(bloop::metadata::Metadata& metadata);
 
 	private:
 		bloop::ast::Program* m_pCode;

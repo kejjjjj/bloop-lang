@@ -5,20 +5,17 @@
 
 using namespace bloop::bytecode;
 
-VMByteCode bloop::bytecode::BuildByteCode(bloop::ast::Program* code) {
+void bloop::bytecode::BuildByteCode(bloop::ast::Program* code, bloop::metadata::Metadata& metadata) {
 
 	CByteCodeGlobals globals(code);
-	auto globalChunk = globals.Generate();
-
-	std::vector<vmdata::Function> functions(code->m_uNumFunctions);
+	metadata.m_oVMData.AddChunk(globals.Generate(metadata));
 
 	for (const auto& stmt : code->m_oStatements) {
 		if (stmt->IsFunction()) {
 			CByteCodeFunction f(dynamic_cast<bloop::ast::FunctionDeclarationStatement*>(stmt.get()));
-			f.Generate(functions);
+			f.Generate(metadata);
 		}
 	}
 
-	return { globalChunk, globalChunk.m_uNumGlobals, functions };
-
+	metadata.m_oVMData.m_pGlobalChunk = &metadata.m_oVMData.m_oChunks.front();
 }

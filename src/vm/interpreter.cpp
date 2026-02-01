@@ -6,6 +6,7 @@
 #include "vm/exception.hpp"
 #include "std/native.hpp"
 #include "utils/fmt.hpp"
+#include "vm/frame.hpp"
 
 #include <ranges>
 
@@ -173,7 +174,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 						throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->nativeFunction->m_uParamCount));
 
 					std::vector<Value> args(argc);
-					for (size_t i = argc; i-- > 0; )
+					for (auto i = argc; i-- > 0; )
 						args[i] = Pop();
 
 					Push(callee.obj->nativeFunction->m_pFunction(*this, args));
@@ -243,7 +244,8 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			m_oGC.Pause();
 
 			for (const auto i : std::views::iota(0u, obj->closure.numValues)) {
-				const auto opcode = static_cast<TOpCode>(m_pCurrentFrame->m_pChunk->m_oByteCode[m_pCurrentFrame->m_uIp++]);
+				const auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
+				const auto opcode = static_cast<TOpCode>(chunk.m_oByteCode[m_pCurrentFrame->m_uIp++]);
 				const auto slot = FetchOperand();
 
 				if (opcode == TOpCode::CAPTURE_LOCAL)
@@ -293,7 +295,8 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 }
 #define NOMINMAX
 bloop::BloopIndex VM::FetchOperand() {
-	auto* p = &m_pCurrentFrame->m_pChunk->m_oByteCode[m_pCurrentFrame->m_uIp];
+	const auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
+	auto* p = &chunk.m_oByteCode[m_pCurrentFrame->m_uIp];
 
 	bloop::BloopIndex value;
 	std::memcpy(&value, p, sizeof(value));

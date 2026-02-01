@@ -6,20 +6,21 @@
 
 namespace bloop::ast {
 
-	struct Capture {
-		enum class Kind { Local, Upvalue } kind{};
-		bloop::BloopIndex m_uSlot{};
+	//struct Capture {
+	//	enum class Kind { Local, Upvalue } kind{};
+	//	bloop::BloopIndex m_uSlot{};
 
-		constexpr bloop::bytecode::vmdata::Capture ToBC() const noexcept {
-			return { kind == Kind::Local, m_uSlot };
-		}
-	};
+	//	constexpr bloop::bytecode::vmdata::Capture ToBC() const noexcept {
+	//		return { kind == Kind::Local, m_uSlot };
+	//	}
+	//};
 	using Symbol = bloop::resolver::internal::Symbol;
 
 	struct FunctionDeclarationStatement : Statement {
 		FunctionDeclarationStatement(const BloopString& name, std::vector<BloopString>&& params,
-			std::unique_ptr<BlockStatement>&& body, const bloop::CodePosition& cp)
-			: Statement(cp), m_sName(name), m_oParams(std::forward<decltype(params)>(params)), m_pBody(std::forward<decltype(body)>(body)) {
+			std::unique_ptr<BlockStatement>&& body, const bloop::CodePosition& cp, const bloop::CodePosition& end_cp)
+			: Statement(cp), m_sName(name), m_oParams(std::forward<decltype(params)>(params)), 
+			m_pBody(std::forward<decltype(body)>(body)), m_oEndPosition(end_cp) {
 		}
 		[[nodiscard]] constexpr bool IsFunction() const noexcept override { return true; }
 
@@ -54,6 +55,13 @@ namespace bloop::ast {
 			resolver.EndScope();
 			resolver.m_oFunctions.pop_back();
 			resolver.m_oDeclaredIdentifiers.pop_back();
+
+			resolver.m_refMetadata.m_oFunctionDebugInfo.emplace_back(bloop::metadata::Metadata::FunctionDebugInfo{
+				.m_uId = m_uFunctionId,
+				.m_sName = m_sName,
+				.m_uStartLine = std::get<1>(m_oApproximatePosition),
+				.m_uEndLine = std::get<1>(m_oEndPosition)
+			});
 		}
 
 		void PrintInstructions(TBCBuilder& parent) {
@@ -70,12 +78,12 @@ namespace bloop::ast {
 
 			const auto AddLocal = [&] { 
 				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopIndex>(m_uNextUpValues->size());
-				m_oCaptures.push_back({ Capture::Kind::Local, symbol->m_uSlot });
+				m_oCaptures.push_back({symbol->m_uSlot, true });
 			};
 
 			const auto AddUpvalue = [&](bloop::BloopIndex slot) {
 				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopIndex>(m_uNextUpValues->size());
-				m_oCaptures.push_back({ Capture::Kind::Upvalue, slot });
+				m_oCaptures.push_back({ slot, false });
 			};
 
 			if (prevFunc) {
@@ -100,6 +108,7 @@ namespace bloop::ast {
 		bloop::BloopString m_sName;
 		std::vector<BloopString> m_oParams;
 		std::unique_ptr<BlockStatement> m_pBody;
+		bloop::CodePosition m_oEndPosition; //where the function block ends
 
 		bloop::BloopIndex m_uFunctionId{ 0 };
 		bloop::BloopIndex m_uLocalCount{ 0 };
@@ -107,8 +116,9 @@ namespace bloop::ast {
 
 		bloop::resolver::internal::ResolvedIdentifier m_oIdentifier{};
 
-		std::vector<Capture> m_oCaptures;
+		std::vector<bc::Capture> m_oCaptures;
 		std::unique_ptr<CaptureT> m_uNextUpValues;
+
 	};
 
 }

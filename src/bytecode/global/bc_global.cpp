@@ -10,12 +10,11 @@ using namespace bloop::bytecode;
 
 CByteCodeGlobals::CByteCodeGlobals(bloop::ast::Program* code)
 	: m_pCode(code) {}
-vmdata::Chunk CByteCodeGlobals::Generate() {
+bloop::bc::Chunk CByteCodeGlobals::Generate(bloop::metadata::Metadata& metadata) {
 
-	std::vector<vmdata::Function> unused;
-	CByteCodeBuilderForGlobals builder(unused);
+	CByteCodeBuilder builder(metadata);
 
-	builder.m_uNumGlobals += static_cast<bloop::BloopIndex>(bloop::standard::g_Natives.size());
+	metadata.m_uNumGlobals += static_cast<bloop::BloopIndex>(bloop::standard::g_Natives.size());
 
 	for (auto& stmt : m_pCode->m_oStatements) {
 
@@ -23,12 +22,12 @@ vmdata::Chunk CByteCodeGlobals::Generate() {
 			auto func = dynamic_cast<bloop::ast::FunctionDeclarationStatement*>(stmt.get());
 			stmt->Emit(builder, EOpCode::MAKE_FUNCTION, func->m_uFunctionId);
 			stmt->Emit(builder, EOpCode::STORE_GLOBAL, func->m_oIdentifier.m_uSlot);
-			builder.m_uNumGlobals++;
+			metadata.m_uNumGlobals++;
 			continue;
 		}
 
 		if (stmt->IsDeclaration())
-			builder.m_uNumGlobals++;
+			metadata.m_uNumGlobals++;
 		
 		stmt->EmitByteCode(builder);
 
@@ -40,8 +39,7 @@ vmdata::Chunk CByteCodeGlobals::Generate() {
 	#endif
 	return { 
 		.m_oConstants = builder.m_oConstants, 
-		.m_uNumGlobals = builder.m_uNumGlobals, 
 		.m_oByteCode = builder.Encode(),
-		.m_oPositions = builder.GetCodePositions()
+		.m_oInstructions = builder.GetCodePositions()
 	};
 }

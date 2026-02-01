@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/defs.hpp"
+#include "metadata/metadata.hpp"
 
 #include <unordered_map>
 #include <vector>
@@ -12,7 +13,7 @@ namespace bloop::ast {
 
 namespace bloop::resolver {
 
-	void Resolve(bloop::ast::Program* code);
+	void Resolve(bloop::ast::Program* code, bloop::metadata::Metadata& metadata);
 
 	namespace internal {
 
@@ -41,11 +42,15 @@ namespace bloop::resolver {
 
 		using DeclaredIdentifier = std::unordered_map<bloop::BloopString, bloop::BloopIndex>;
 		struct Resolver {
+
+			Resolver(bloop::metadata::Metadata& metadata) : m_refMetadata(metadata){}
+
 			std::vector<Scope> m_oScopes;
 			std::vector<FunctionContext> m_oFunctions; // to keep track of local counts
 			std::vector<DeclaredIdentifier> m_oDeclaredIdentifiers; // to avoid duplicate declarations
 			bloop::BloopInt m_iLoopDepth{};
 			bloop::BloopInt m_iScopeDepth{-1};
+			bloop::metadata::Metadata& m_refMetadata;
 
 			void InjectNatives();
 

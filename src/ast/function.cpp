@@ -5,19 +5,9 @@ using namespace bloop::ast;
 #include <iostream>
 using ResolvedIdentifier = bloop::resolver::internal::ResolvedIdentifier;
 
-inline static auto ConvertCaptures(const auto& captures) {
-	std::vector<bloop::bytecode::vmdata::Capture> c;
-	c.reserve(captures.size());
-
-	for (auto& cap : captures)
-		c.emplace_back(cap.ToBC());
-
-	return c;
-}
-
 void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 
-	TBCBuilder fnBuilder(parent.m_oAllFunctions);
+	TBCBuilder fnBuilder(parent.m_refMetadata);
 
 	m_pBody->EmitByteCode(fnBuilder);
 	fnBuilder.EnsureReturn(this);
@@ -25,16 +15,13 @@ void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 	#ifndef BLOOP_TEST
 	PrintInstructions(fnBuilder);
 	#endif
-	
-	fnBuilder.m_oAllFunctions[m_uFunctionId] = {
-		.m_sName = m_sName,
-		.m_uParamCount = static_cast<bloop::BloopIndex>(m_oParams.size()),
-		.m_uLocalCount = m_uLocalCount,
-		.chunk = fnBuilder.Finalize(),
-		.m_oCaptures = ConvertCaptures(m_oCaptures)
-	};
 
-	parent.AddFunction(&fnBuilder.m_oAllFunctions[m_uFunctionId]);
+	bloop::bc::Function f;
+	f.m_oCaptures = m_oCaptures;
+	f.m_uChunkIndex = parent.m_refMetadata.m_oVMData.AddChunk(fnBuilder.Finalize());
+	f.m_uLocalCount = m_uLocalCount;
+	f.m_uParamCount = static_cast<bloop::BloopIndex>(m_oParams.size());
+	parent.AddFunction(parent.m_refMetadata.m_oVMData.AddFunction(f));
 
 	if (m_oCaptures.empty()) {
 		Emit(parent, TOpCode::MAKE_FUNCTION, m_uFunctionId);
@@ -42,7 +29,7 @@ void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 		Emit(parent, TOpCode::MAKE_CLOSURE, m_uFunctionId);
 
 		for (const auto& cap : m_oCaptures) {
-			parent.EmitCapture({ cap.kind == Capture::Kind::Local, cap.m_uSlot }, m_oApproximatePosition);
+			parent.EmitCapture(cap, m_oApproximatePosition);
 		}
 	}
 	

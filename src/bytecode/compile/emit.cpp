@@ -18,15 +18,10 @@ bloop::BloopIndex CByteCodeBuilder::AddConstant(bloop::ConstantData c) {
 			return std::get<1>(p) == std::get<1>(c) && std::get<0>(p) == std::get<0>(c);
 		}); ptr != m_oConstants.end()) {
 
-		const auto dist = std::distance(m_oConstants.begin(), ptr);
-
-		if (static_cast<bloop::BloopIndex>(dist) > std::numeric_limits<bloop::BloopIndex>::max())
-			throw exception::ByteCodeError(BLOOPTEXT("too many constants in a chunk"));
-
 		return static_cast<bloop::BloopIndex>(std::distance(m_oConstants.begin(), ptr));
 	}
 
-	auto idx = m_oConstants.size();
+	const auto idx = m_oConstants.size();
 
 	if (idx > std::numeric_limits<bloop::BloopIndex>::max())
 		throw exception::ByteCodeError(BLOOPTEXT("too many constants in a chunk"));
@@ -133,7 +128,7 @@ bloop::BloopIndex CByteCodeBuilder::EmitTry(EOpCode opcode, bloop::BloopIndex ba
 void CByteCodeBuilder::PatchTry(bloop::BloopIndex src, bloop::BloopIndex dst) {
 	std::get<3>(m_oByteCode[src].ins).arg = dst;
 }
-void CByteCodeBuilder::EmitCapture(const vmdata::Capture& capture, CodePosition pos) {
+void CByteCodeBuilder::EmitCapture(const bc::Capture& capture, CodePosition pos) {
 	if (capture.m_bIsLocal) {
 		return Emit(EOpCode::CAPTURE_LOCAL, capture.m_uSlot, pos);
 	}
@@ -143,16 +138,16 @@ void CByteCodeBuilder::EnsureReturn(bloop::ast::AbstractSyntaxTree* node){
 	if (m_oByteCode.empty() || m_oByteCode.back().GetOpCode() != EOpCode::RETURN && m_oByteCode.back().GetOpCode() != EOpCode::RETURN_VALUE)
 		Emit(EOpCode::RETURN, node->m_oApproximatePosition); //implicitly add a return statement to the end
 }
-void CByteCodeBuilder::AddFunction(const vmdata::Function* func) {
-	m_oFunctions.push_back(func);
+void CByteCodeBuilder::AddFunction(bloop::BloopIndex idx) {
+	m_oFunctions.push_back(idx);
 }
-vmdata::Chunk CByteCodeBuilder::Finalize() {
-	return { 
-		.m_oConstants = m_oConstants, 
-		.m_oByteCode = Encode(), 
-		.m_oPositions = GetCodePositions(), 
-		.m_oFunctions = m_oFunctions 
-	};
+bloop::bc::Chunk CByteCodeBuilder::Finalize() {
+
+	bc::Chunk c;
+	c.m_oByteCode = Encode();
+	c.m_oConstants = m_oConstants;
+	c.m_oInstructions = GetCodePositions();
+	return c;
 }
 
 void CByteCodeBuilder::Print() {
@@ -198,9 +193,9 @@ std::vector<bloop::BloopByte> CByteCodeBuilder::Encode() {
 	return out;
 }
 
-std::vector<CInstructionPosition> CByteCodeBuilder::GetCodePositions()
+std::vector<bloop::bc::InstrDebugRef> CByteCodeBuilder::GetCodePositions()
 {
-	std::vector<CInstructionPosition> locs;
+	std::vector<bc::InstrDebugRef> locs;
 	locs.reserve(m_oByteCode.size());
 	for (auto& bc : m_oByteCode)
 		locs.push_back(bc.loc);

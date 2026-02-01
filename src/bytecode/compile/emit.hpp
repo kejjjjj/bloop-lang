@@ -1,6 +1,7 @@
 #pragma once
 #include "utils/defs.hpp"
 #include "bytecode/defs.hpp"
+#include "metadata/metadata.hpp"
 
 #include <vector>
 #include <variant>
@@ -34,7 +35,7 @@ namespace bloop::bytecode
 
 	struct CSingularByteCode {		
 		Instruction ins;
-		CInstructionPosition loc; // for runtime error messages
+		bc::InstrDebugRef loc; // for runtime error messages
 
 		[[nodiscard]] bloop::BloopIndex GetBytes() const {
 			bloop::BloopIndex result{};
@@ -88,7 +89,7 @@ namespace bloop::bytecode
 	};
 
 	struct CByteCodeBuilder {
-		CByteCodeBuilder(std::vector<vmdata::Function>& allFuncs) : m_oAllFunctions(allFuncs){}
+		CByteCodeBuilder(bloop::metadata::Metadata& metadata) : m_refMetadata(metadata){}
 
 		virtual ~CByteCodeBuilder() = default;
 		[[nodiscard]] virtual constexpr bool GlobalContext() const noexcept { return false; }
@@ -109,32 +110,33 @@ namespace bloop::bytecode
 		void PatchTry(bloop::BloopIndex src, bloop::BloopIndex dst);
 
 
-		void EmitCapture(const vmdata::Capture& capture, CodePosition pos);
+		void EmitCapture(const bc::Capture& capture, CodePosition pos);
 		void EnsureReturn(bloop::ast::AbstractSyntaxTree* node);
-		void AddFunction(const vmdata::Function* func);
+		void AddFunction(bloop::BloopIndex idx);
 		[[nodiscard]] inline auto FunctionCount() const noexcept { return m_oFunctions.size(); }
-		[[nodiscard]] vmdata::Chunk Finalize();
+		[[nodiscard]] bc::Chunk Finalize();
 
 		void Print();
 
 		[[nodiscard]] std::vector<bloop::BloopByte> Encode();
-		[[nodiscard]] std::vector<CInstructionPosition> GetCodePositions();
+		[[nodiscard]] std::vector<bc::InstrDebugRef> GetCodePositions();
 
 		std::vector<bloop::ConstantData> m_oConstants;
 		std::vector<CSingularByteCode> m_oByteCode;
 		bloop::BloopIndex m_uOffset{};
 
-		std::vector<vmdata::Function>& m_oAllFunctions;
 		std::vector<LoopContext> m_oLoops;
 
+		bloop::metadata::Metadata& m_refMetadata;
+
 	private:
-		std::vector<const vmdata::Function*> m_oFunctions; // references m_oAllFunctions
+		std::vector<bloop::BloopIndex> m_oFunctions; // references metadata
 	};
 
-	struct CByteCodeBuilderForGlobals : CByteCodeBuilder {
-		CByteCodeBuilderForGlobals(std::vector<vmdata::Function>& f) : CByteCodeBuilder(f){}
-		[[nodiscard]] constexpr bool GlobalContext() const noexcept override { return true; }
-		bloop::BloopIndex m_uNumGlobals{};
-	};
+	//struct CByteCodeBuilderForGlobals : CByteCodeBuilder {
+	//	CByteCodeBuilderForGlobals(bloop::metadata::Metadata& metadata) : CByteCodeBuilder(metadata){}
+	//	[[nodiscard]] constexpr bool GlobalContext() const noexcept override { return true; }
+	//	bloop::BloopIndex m_uNumGlobals{};
+	//};
 
 }

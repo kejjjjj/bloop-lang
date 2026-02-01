@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lexer/token.hpp"
+#include "metadata/metadata.hpp"
 
 #include <memory>
 #include <vector>
@@ -9,7 +10,7 @@ namespace bloop::lexer {
 
 	class CLexer final {
 	public:
-		CLexer(bloop::BloopStringView buffer);
+		CLexer(bloop::BloopStringView buffer, bloop::metadata::Metadata& metadata);
 		~CLexer();
 
 		[[nodiscard]] void Parse();
@@ -40,10 +41,13 @@ namespace bloop::lexer {
 		bloop::BloopStringView::iterator m_oScriptPos;
 		bloop::BloopStringView::iterator m_oLastScriptPos;
 		bloop::BloopStringView::iterator m_oScriptEnd;
+		bloop::BloopStringView::iterator m_oLineStart;
 
 		bloop::CodePosition m_oParserPosition;
 		bloop::BloopStringView m_sSource;
 
 		std::vector<std::unique_ptr<bloop::CToken>> m_oTokens;
+
+		bloop::metadata::Metadata& m_refMetadata;
 	};
 }

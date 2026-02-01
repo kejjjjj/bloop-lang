@@ -1,6 +1,7 @@
 #include "vm/vm.hpp"
 #include "vm/heap/dvalue.hpp"
 #include "vm/exception.hpp"
+#include "vm/frame.hpp"
 #include "utils/fmt.hpp"
 
 using namespace bloop::vm;
@@ -11,11 +12,12 @@ CallFrame::CallFrame(Function* fn, bloop::BloopUInt stackBase)
 CallFrame::CallFrame(Closure* closure, bloop::BloopUInt stackBase)
 	: m_pClosure(closure), m_pChunk(&closure->function->chunk), m_uBase(stackBase), m_eChunkType(ChunkType::ct_closure) {}
 
-const CInstructionPosition& CallFrame::GetCurrentPosition() const {
+const bloop::bc::InstrDebugRef& CallFrame::GetCurrentPosition(VM& vm) const {
+	const auto& data = vm.m_refMetaData.m_oVMData.m_oChunks[m_pChunk->m_uMetadata];
 
-	auto it = std::upper_bound(m_pChunk->m_oPositions.begin(), m_pChunk->m_oPositions.end(), m_uIp,
-		[](bloop::BloopUInt ip, const CInstructionPosition& p) {
-			return ip <= p.byteOffset;
+	auto it = std::upper_bound(data.m_oInstructions.begin(), data.m_oInstructions.end(), m_uIp,
+		[](bloop::BloopUInt ip, const bc::InstrDebugRef& p) {
+			return ip <= p.m_uByteOffset;
 		});
 	return *(it - 1);
 }
@@ -60,4 +62,38 @@ Value VM::Pop() {
 	Value v = m_oStack.back();
 	m_oStack.pop_back();
 	return v;
+}
+
+std::vector<bloop::bc::InstrDebugRef> VM::StackTrace()
+{
+	std::vector<bc::InstrDebugRef> positions;
+	positions.reserve(m_oFrames.size());
+	while (m_oFrames.size()) {
+		positions.push_back(m_oFrames.back().GetCurrentPosition(*this));
+		PopFrame();
+	}
+
+	return positions;
+}
+bloop::BloopString VM::FormatStackTraceMessage(const bc::InstrDebugRef& ref)
+{
+	auto& lineData = m_refMetaData.m_oLineMap[std::get<0>(ref.m_oPosition) - 1];
+	auto offset = std::get<1>(ref.m_oPosition);
+
+	bloop::BloopString msg = bloop::fmt::format(BLOOPTEXT("at [{}, {}]\n"), std::get<0>(ref.m_oPosition), offset);
+	msg += bloop::BloopString(lineData) + '\n';
+
+	bloop::BloopUInt visualCol{};
+	for (bloop::BloopUInt i{}; i < offset; ++i) {
+		char c = lineData[i];
+		if (c == '\t')
+			visualCol += 8u - (visualCol % 8u);
+		else
+			visualCol += 1u;
+	}
+
+	msg += bloop::BloopString(visualCol, ' ');
+	msg += '^';
+
+	return msg;
 }

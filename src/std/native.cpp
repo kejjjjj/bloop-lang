@@ -31,6 +31,6 @@ DEFINE_NATIVE(Length, vm, args) {
 		return Value(val.obj->array.count);
 	if (val.IsString())
 		return Value(val.obj->string.len);
-
+	
 	throw bloop::exception::VMError(bloop::fmt::format("length() expects \"array\" or \"string\", but got \"{}\"", val.TypeToString()));
 }

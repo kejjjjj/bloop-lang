@@ -5,6 +5,7 @@
 #include "bytecode/build.hpp"
 #include "bytecode/function/bc_function.hpp"
 #include "vm/vm.hpp"
+#include "metadata/metadata.hpp"
 
 #include <iostream>
 #include <thread>
@@ -18,21 +19,20 @@ int main() {
 	;
 
 	try {
-		auto lex = bloop::lexer::CLexer(_code);
+		bloop::metadata::Metadata metadata;
+		auto lex = bloop::lexer::CLexer(_code, metadata);
 		lex.Parse();
 			
 		bloop::parser::CLexParser parser(lex);
 
 		if (const auto code = parser.Parse()) {
-			bloop::resolver::Resolve(code.get());
-			bloop::vm::VM vm(bloop::bytecode::BuildByteCode(code.get()));
+			bloop::resolver::Resolve(code.get(), metadata);
+			bloop::bytecode::BuildByteCode(code.get(), metadata);
+			bloop::vm::VM vm(metadata);
 
 			auto ret = vm.Run("main");
 
 			std::cout << "\nreturned: " << ret.TypeToString() << " : " << ret.ValueToString() << '\n';
-
-			//std::this_thread::sleep_for(5s); // just to see the memory usage drop
-
 			std::cout << "\n\nfinished!\n";
 		}
 		

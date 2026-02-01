@@ -1,10 +1,11 @@
-#include "vm.hpp"
-#include "bytecode/function/bc_function.hpp"
 #include "bytecode/defs.hpp"
-#include "vm/exception.hpp"
-#include "utils/fmt.hpp"
-#include "vm/heap/dvalue.hpp"
+#include "bytecode/function/bc_function.hpp"
 #include "std/vm/to_vm.hpp"
+#include "utils/fmt.hpp"
+#include "vm.hpp"
+#include "vm/exception.hpp"
+#include "vm/frame.hpp"
+#include "vm/heap/dvalue.hpp"
 
 #include <cassert>
 #include <ranges>
@@ -27,44 +28,29 @@ std::vector<Value> VM::BuildConstants(const std::vector<bloop::ConstantData>& co
 	}
 	return vals;
 }
+VM::VM(bloop::metadata::Metadata& metadata)
+	: m_oHeap(&m_oGC), m_oGC(this), m_refMetaData(metadata) {
+	
+	assert(metadata.m_oVMData.m_pGlobalChunk);
+	m_oGlobalChunk.m_oConstants = BuildConstants(metadata.m_oVMData.m_pGlobalChunk->m_oConstants);
+	m_oGlobalChunk.m_uMetadata = metadata.m_oVMData.m_pGlobalChunk->m_uId;
 
-[[nodiscard]] static auto ConvertPositions(const std::vector<bloop::bytecode::CInstructionPosition>& v) {
-	std::vector<CInstructionPosition> ret;
-	ret.reserve(v.size());
-	for (auto& var : v)
-		ret.push_back(CInstructionPosition{ var.m_uByteOffset, var.m_oPosition });
-	return ret;
-}
-[[nodiscard]] static auto ConvertCaptures(const std::vector<bloop::bytecode::vmdata::Capture>& v) {
-	std::vector<Capture> ret;
-	ret.reserve(v.size());
-	for (auto& var : v)
-		ret.push_back(Capture{ .m_uSlot = var.m_uSlot, .m_bIsLocal = var.m_bIsLocal });
-	return ret;
-}
-VM::VM(const bloop::bytecode::VMByteCode& data)
-	: m_oHeap(&m_oGC), m_oGC(this) {
+	m_oGlobals.resize(metadata.m_uNumGlobals);
+	m_oFunctions.reserve(metadata.m_oVMData.m_oFunctions.size());
 
-	m_oGlobalChunk.m_oConstants = BuildConstants(data.chunk.m_oConstants);
-	m_oGlobalChunk.m_oByteCode = data.chunk.m_oByteCode;
-	m_oGlobals.resize(data.numGlobals);
-	m_oFunctions.reserve(data.functions.size());
+	for (const auto& metadataFunction : metadata.m_oVMData.m_oFunctions) {
+		const auto& chunk = metadata.m_oVMData.m_oChunks[metadataFunction.m_uChunkIndex];
 
-	for (const auto& f : data.functions) {
-		m_oFunctions.emplace_back(Function{
-			.chunk = {
-				.m_oConstants = BuildConstants(f.chunk.m_oConstants),
-				.m_oByteCode = f.chunk.m_oByteCode,
-				.m_oPositions = ConvertPositions(f.chunk.m_oPositions)
-			},
-			.m_uParamCount = f.m_uParamCount,
-			.m_uLocalCount = f.m_uLocalCount,
-			.m_oCaptures = ConvertCaptures(f.m_oCaptures)
-		});
+		Function f;
+		f.chunk = { chunk.m_uId, BuildConstants(chunk.m_oConstants) };
+		f.m_uLocalCount = metadataFunction.m_uLocalCount;
+		f.m_uParamCount = metadataFunction.m_uParamCount;
+		f.m_uId = metadataFunction.m_uId;
+		f.m_oCaptures = metadataFunction.m_oCaptures;
+		f.m_uChunkIndex = chunk.m_uId;
+
+		m_oFunctions.emplace_back(f);
 	}
-
-	for (auto idx = std::size_t{ 0 }; auto& f : m_oFunctions)
-		m_oFunctionTable[data.functions[idx++].m_sName ] = &f;
 
 	m_oStack.reserve(BLOOP_MAX_STACK);
 	m_oFrames.reserve(BLOOP_MAX_FRAMES);
@@ -100,10 +86,11 @@ void Benchmark(const char* name, Callable&& fn) {
 
 Value VM::Run(const bloop::BloopString& entryFuncName) {
 
-	if (!m_oFunctionTable.contains(entryFuncName))
+	if (!m_refMetaData.m_oFunctionTable.contains(entryFuncName))
 		throw exception::VMError(BLOOPTEXT("couldn't find the entry function: " + entryFuncName));
 
-	const auto func = m_oFunctionTable.at(entryFuncName);
+	const auto idx = m_refMetaData.m_oFunctionTable.at(entryFuncName)->m_uId;
+	const auto func = &m_oFunctions[idx];
 
 	try {
 		#ifdef BLOOP_TEST
@@ -121,19 +108,14 @@ Value VM::Run(const bloop::BloopString& entryFuncName) {
 		#endif
 
 	} catch (exception::VMError& ex) {
-		bloop::BloopString msg;
-		if (m_pCurrentFrame) {
-			const auto& src = m_pCurrentFrame->GetCurrentPosition();
-			msg = bloop::fmt::format("\n\nruntime error:\n\n{}\nat [{}, {}]", ex.what(), std::get<0>(src.pos), std::get<1>(src.pos));
-		} else {
-			msg = bloop::fmt::format("\n\nruntime error:\n\n{}", ex.what());
-		}
+		const auto positions = StackTrace();
+		auto msg = bloop::fmt::format("\n\nruntime error:\n\n{}\n", ex.what());
+		for (const auto& src : positions)
+			msg += FormatStackTraceMessage(src) + '\n';
+
 		std::cout << msg << '\n';
 
 		m_oGC.CloseUpValues(m_oStack.data());
-		while(m_oFrames.size())
-			PopFrame();
-
 		Push({});
 	}
 
@@ -143,9 +125,10 @@ Value VM::Run(const bloop::BloopString& entryFuncName) {
 VM::ExecutionReturnCode VM::RunFrame() {
 	ExecutionReturnCode returnCode{};
 
-	while (m_pCurrentFrame->m_uIp != m_pCurrentFrame->m_pChunk->m_oByteCode.size()) {
-		const auto& bytecode = m_pCurrentFrame->m_pChunk->m_oByteCode;
-		returnCode = InterpretOpCode(static_cast<bloop::bytecode::EOpCode>(bytecode[m_pCurrentFrame->m_uIp++]));
+	const auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
+
+	while (m_pCurrentFrame->m_uIp != chunk.m_oByteCode.size()) {
+		returnCode = InterpretOpCode(static_cast<bloop::bytecode::EOpCode>(chunk.m_oByteCode[m_pCurrentFrame->m_uIp++]));
 
 		if (returnCode != ExecutionReturnCode::rc_continue) {
 			break;

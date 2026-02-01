@@ -4,77 +4,24 @@
 #include <unordered_map>
 #include <cassert>
 
-#include "vm/value.hpp"
+#include "vm/vm_defs.hpp"
+
+#include "metadata/metadata.hpp"
 #include "vm/gc/gc.hpp"
 #include "vm/heap/heap.hpp"
 
 namespace bloop::bytecode {
 	enum class EOpCode : unsigned char;
-	struct CConstant;
-	struct VMByteCode;
-	namespace vmdata {
-		struct Function;
-	}
 }
 
-namespace bloop::vm
-{
-	struct Closure;
-	struct Capture {
-		bloop::BloopIndex m_uSlot{};
-		bool m_bIsLocal;
-	};
-	struct CInstructionPosition {
-		bloop::BloopIndex byteOffset;
-		CodePosition pos;
-	};
-	struct Chunk {
-		std::vector<Value> m_oConstants;
-		std::vector<BloopByte> m_oByteCode;
-		std::vector<CInstructionPosition> m_oPositions; //uses the same ip as m_oByteCode
-	};
-	struct Function {
-		Chunk chunk;
-		bloop::BloopIndex m_uParamCount{};
-		bloop::BloopIndex m_uLocalCount{};
-		std::vector<Capture> m_oCaptures{};
-	};
-	struct ExceptionHandler {
-		bloop::BloopUInt m_uIp{};
-		bloop::BloopUInt m_uBase{};
-		bloop::BloopIndex m_uCatchVar{};
-	};
-	struct CallFrame {
-		CallFrame(Chunk* chunk, bloop::BloopUInt stackBase);
-		CallFrame(Function* fn, bloop::BloopUInt stackBase);
-		CallFrame(Closure* closure, bloop::BloopUInt stackBase);
-
-		[[nodiscard]] const CInstructionPosition& GetCurrentPosition() const;
-
-		union {
-			Function* m_pFunction{};
-			Closure* m_pClosure;
-		};
-
-		Chunk* m_pChunk{};
-		bloop::BloopUInt m_uIp{};
-		bloop::BloopUInt m_uBase{};
-		std::vector<ExceptionHandler> m_oExceptionHandlers;
-
-		enum class ChunkType : bloop::BloopByte {
-			ct_chunk,
-			ct_function,
-			ct_closure
-		};
-
-		ChunkType m_eChunkType{ ChunkType::ct_chunk };
-	};
-
+namespace bloop::vm {
+	struct CallFrame;
 	class VM {
 		friend class GC;
 		friend class Heap;
+		friend struct CallFrame;
 	public:
-		VM(const bloop::bytecode::VMByteCode& bc);
+		VM(bloop::metadata::Metadata& metadata);
 		~VM();
 
 		[[maybe_unused]] Value Run(const bloop::BloopString& entryFuncName);
@@ -102,14 +49,15 @@ namespace bloop::vm
 		[[nodiscard]] ExecutionReturnCode InterpretOpCode(bloop::bytecode::EOpCode op);
 		[[nodiscard]] bloop::BloopIndex FetchOperand();
 
+		[[nodiscard]] std::vector<bc::InstrDebugRef> StackTrace();
 
+		[[nodiscard]] bloop::BloopString FormatStackTraceMessage(const bc::InstrDebugRef& ref);
 
 		void Throw(Value value);
 
 		std::vector<Value> m_oStack;
 		std::vector<CallFrame> m_oFrames;
 		std::vector<Function> m_oFunctions;
-		std::unordered_map<bloop::BloopString, Function*> m_oFunctionTable;
 		std::vector<Value> m_oGlobals;
 		CallFrame* m_pCurrentFrame{};
 
@@ -117,6 +65,8 @@ namespace bloop::vm
 		GC m_oGC;
 		Chunk m_oGlobalChunk; //executed in the beginning
 
+		//debugging
+		bloop::metadata::Metadata& m_refMetaData;
 	};
 
 }

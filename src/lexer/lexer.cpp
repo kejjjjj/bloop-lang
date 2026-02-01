@@ -25,14 +25,15 @@ constexpr auto IsHex(bloop::BloopChar c) -> bool
 
 using namespace bloop::lexer;
 
-CLexer::CLexer(bloop::BloopStringView buffer)
-	: m_sSource(buffer) {
+CLexer::CLexer(bloop::BloopStringView buffer, bloop::metadata::Metadata& metadata)
+	: m_sSource(buffer), m_refMetadata(metadata) {
 
 	assert(buffer.data() && buffer.size());
 
 	m_oScriptPos = m_sSource.begin();
 	m_oLastScriptPos = m_sSource.end();
 	m_oScriptEnd = m_sSource.end();
+	m_oLineStart = m_oScriptPos;
 
 	m_oParserPosition = std::make_tuple(size_t(1), size_t(1));
 
@@ -121,8 +122,10 @@ bloop::EStatus CLexer::ReadWhiteSpace() noexcept
 			return bloop::EStatus::failure;
 
 		if (*m_oScriptPos == '\n') {
+			m_refMetadata.m_oLineMap.push_back(bloop::BloopStringView(m_oLineStart, m_oScriptPos));
 			line++;
 			column = size_t(1);
+			m_oLineStart = std::next(m_oScriptPos);
 		}
 		else {
 			if (*m_oScriptPos == '\t')
@@ -171,10 +174,11 @@ bloop::EStatus CLexer::ReadMultiLineComment()
 	while (!IsToken(BLOOPTEXT("*/"))) {
 
 		if (*m_oScriptPos == '\n') {
+			m_refMetadata.m_oLineMap.push_back(bloop::BloopStringView(m_oLineStart, m_oScriptPos));
 			line++;
 			column = size_t(1);
-		}
-		else {
+			m_oLineStart = std::next(m_oScriptPos);
+		} else {
 			if (*m_oScriptPos == '\t')
 				column += size_t(4);
 			else

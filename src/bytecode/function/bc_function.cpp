@@ -10,9 +10,9 @@ CByteCodeFunction::CByteCodeFunction(bloop::ast::FunctionDeclarationStatement* f
 	: m_pFunc(funcDecl){}
 
 // represents a global level function (depth = 0)
-void CByteCodeFunction::Generate(std::vector<vmdata::Function>& funcs) {
+void CByteCodeFunction::Generate(bloop::metadata::Metadata& metadata) {
 
-	CByteCodeBuilder b(funcs);
+	CByteCodeBuilder b(metadata);
 
 	m_pFunc->m_pBody->EmitByteCode(b);
 	b.EnsureReturn(m_pFunc);
@@ -21,11 +21,10 @@ void CByteCodeFunction::Generate(std::vector<vmdata::Function>& funcs) {
 		m_pFunc->PrintInstructions(b);
 	#endif
 	
-	b.m_oAllFunctions[m_pFunc->m_uFunctionId] = {
-		.m_sName = m_pFunc->m_sName,
-		.m_uParamCount = static_cast<bloop::BloopIndex>(m_pFunc->m_oParams.size()),
-		.m_uLocalCount = m_pFunc->m_uLocalCount,
-		.chunk = b.Finalize(),
-		.m_oCaptures = {}
-	};
+	bloop::bc::Function f;
+	f.m_oCaptures = {};
+	f.m_uChunkIndex = metadata.m_oVMData.AddChunk(b.Finalize());
+	f.m_uLocalCount = m_pFunc->m_uLocalCount;
+	f.m_uParamCount = static_cast<bloop::BloopIndex>(m_pFunc->m_oParams.size());
+	b.AddFunction(metadata.m_oVMData.AddFunction(f));
 }

@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "bytecode/defs.hpp"
+#include "metadata/metadata.hpp"
 
 namespace bloop::ast {
 	struct Program;
@@ -13,8 +14,6 @@ namespace bloop::bytecode{
 		struct Function;
 	}
 
-
-
-	[[nodiscard]] VMByteCode BuildByteCode(bloop::ast::Program* code);
+	[[nodiscard]] void BuildByteCode(bloop::ast::Program* code, bloop::metadata::Metadata& metadata);
 
 }

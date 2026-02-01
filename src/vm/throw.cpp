@@ -3,6 +3,7 @@
 #include "vm/heap/dvalue.hpp"
 #include "vm/exception.hpp"
 #include "utils/fmt.hpp"
+#include "vm/frame.hpp"
 
 using namespace bloop::vm;
 

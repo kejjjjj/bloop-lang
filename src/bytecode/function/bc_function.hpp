@@ -2,6 +2,7 @@
 
 #include "bytecode/defs.hpp"
 #include "utils/defs.hpp"
+#include "metadata/metadata.hpp"
 
 namespace bloop::ast {
 	struct FunctionDeclarationStatement;
@@ -14,7 +15,7 @@ namespace bloop::bytecode {
 		CByteCodeFunction() = delete;
 		CByteCodeFunction(bloop::ast::FunctionDeclarationStatement* funcDecl);
 
-		void Generate(std::vector<vmdata::Function>& funcs);
+		void Generate(bloop::metadata::Metadata& metadata);
 
 	private:
 		bloop::ast::FunctionDeclarationStatement* m_pFunc;

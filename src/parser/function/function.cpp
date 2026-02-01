@@ -23,6 +23,7 @@ bloop::EStatus CParserFunction::Parse() {
 	if (ParseScope() != bloop::EStatus::success)
 		return bloop::EStatus::failure;
 
+	m_oEndPos = GetIteratorSafe()->GetCodePosition();
 	return bloop::EStatus::success;
 }
 bloop::EStatus CParserFunction::ParseDeclaration() {
@@ -95,5 +96,6 @@ bloop::EStatus CParserFunction::ParseScope() {
 }
 
 UniqueStatement CParserFunction::ToStatement() {
-	return std::make_unique<bloop::ast::FunctionDeclarationStatement>(m_sName, std::move(m_oParameters), std::move(m_pBody), m_oDeclPos);
+	return std::make_unique<bloop::ast::FunctionDeclarationStatement>
+		(m_sName, std::move(m_oParameters), std::move(m_pBody), m_oDeclPos, m_oEndPos);
 }
