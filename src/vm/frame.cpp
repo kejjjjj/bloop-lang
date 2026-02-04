@@ -4,6 +4,8 @@
 #include "vm/frame.hpp"
 #include "utils/fmt.hpp"
 
+#include <ranges>
+
 using namespace bloop::vm;
 CallFrame::CallFrame(Chunk* chunk, bloop::BloopUInt stackBase) 
 	: m_pChunk(chunk), m_uBase(stackBase), m_eChunkType(ChunkType::ct_chunk){}
@@ -84,12 +86,9 @@ bloop::BloopString VM::FormatStackTraceMessage(const bc::InstrDebugRef& ref)
 	msg += bloop::BloopString(lineData) + '\n';
 
 	bloop::BloopUInt visualCol{};
-	for (bloop::BloopUInt i{}; i < offset; ++i) {
-		char c = lineData[i];
-		if (c == '\t')
-			visualCol += 8u - (visualCol % 8u);
-		else
-			visualCol += 1u;
+	for (const auto i : std::views::iota(0u, offset)) {
+		const auto c = lineData[i];
+		visualCol += c == '\t' ? 8u - (visualCol % 8u) : 1u;
 	}
 
 	msg += bloop::BloopString(visualCol, ' ');

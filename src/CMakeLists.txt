@@ -39,7 +39,8 @@ if (MSVC)
         /W4 /WX
         /wd4514 /wd4626 /wd4820 /wd5267 /wd4351 /wd5045 /wd4371 /wd4324
         $<$<CONFIG:Debug>:/Od /Zi /RTC1>
-        $<$<CONFIG:Release>:/O2 /MD>
+        $<$<CONFIG:RelWithDebInfo>:/O2 /Zi /MD>
+        $<$<CONFIG:Release>:/O2>
     )
 else()
     target_compile_options(bloop PRIVATE

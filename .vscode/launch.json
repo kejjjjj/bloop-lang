@@ -2,30 +2,15 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug (CMake – Linux/macOS)",
-      "type": "cppdbg",
-      "request": "launch",
-      "program": "${command:cmake.launchTargetPath}",
-      "args": [],
-      "cwd": "${workspaceFolder}",
-      "stopAtEntry": false,
-      "externalConsole": false,
-      "preLaunchTask": "cmake: build",
-      "linux": {
-        "MIMode": "gdb"
-      },
-      "osx": {
-        "MIMode": "lldb"
-      }
-    },
-    {
       "name": "Debug (CMake – Windows)",
       "type": "cppvsdbg",
       "request": "launch",
       "program": "${command:cmake.launchTargetPath}",
       "args": [],
       "cwd": "${workspaceFolder}",
-      "stopAtEntry": false
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "preLaunchTask": "cmake: build"
     }
   ]
 }

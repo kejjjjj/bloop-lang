@@ -1,22 +1,71 @@
 R"(
 
-fn a(v1, v2) {
-	return b(v1, v2);
+fn runTests() {
+
+    // Storage for results
+    let r1 = "unset";
+    let r3 = "unset";
+    let r5 = "unset";
+
+    // 1. Normal function throw
+    try {
+        fn f1() {
+            r1 = "f1:before";
+            throw "f1:error";
+            r1 = "f1:after"; // unreachable
+        }
+        f1();
+    } catch (e) {
+        r1 = e;
+    }
+
+    // 3. Nested try/catch with rethrow
+    try {
+        try {
+            throw "inner";
+        } catch (e) {
+            r3 = e;
+            throw "outer";
+        }
+    } catch (e) {
+        r3 = r3 + ":" + e;
+    }
+
+    // 5. Deep closure with multiple nested throws
+    let deepState = "start";
+    fn makeDeepThrower(level) {
+        fn inner(n) {
+            if (n <= 0) {
+                deepState = "deep";
+                throw deepState;
+            } else {
+                try {
+                    inner(n - 1);
+                } catch (e) {
+                    throw "wrapped:" + e;
+                }
+            }
+        }
+        return inner;
+    }
+
+    try {
+        let deep = makeDeepThrower(3);
+        deep(3);
+    } catch (e) {
+        r5 = e;
+    }
+
+    return r1 + "|" + r3 + "|" + r5;
 }
 
-fn b(v1, v2) {
-	return c(v1, v2);
+
+fn main(){
+
+    let r;
+    for(let i = 0; i <= 1_000_000; i++)
+        r = runTests();
+
+    return r;
 }
-
-fn c(v1, v2) {
-	return v1 + v2;
-}
-
-fn main() {
-	
-	return a("aa", 3);
-
-}
-
-
 )"

@@ -109,10 +109,11 @@ Value VM::Run(const bloop::BloopString& entryFuncName) {
 
 	} catch (exception::VMError& ex) {
 		const auto positions = StackTrace();
-		auto msg = bloop::fmt::format("\n\nruntime error:\n\n{}\n", ex.what());
+		bloop::BloopString msg = BLOOPTEXT("\nruntime error\n\n");
 		for (const auto& src : positions)
 			msg += FormatStackTraceMessage(src) + '\n';
 
+		msg += bloop::fmt::format(BLOOPTEXT("\n{}\n"), ex.what());
 		std::cout << msg << '\n';
 
 		m_oGC.CloseUpValues(m_oStack.data());
@@ -155,8 +156,11 @@ void VM::RunFunction(Function* fn) {
 	if (returnCode == ExecutionReturnCode::rc_throw)
 		return;
 
+	Value ret;
+	if (returnCode == ExecutionReturnCode::rc_return_value)
+		ret = Pop();
+
 	m_oGC.CloseUpValues(m_oStack.data() + m_oFrames.back().m_uBase);
-	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
 	Push(ret);
 }
@@ -168,8 +172,11 @@ void VM::RunClosure(Closure* closure)
 	if (returnCode == ExecutionReturnCode::rc_throw)
 		return;
 
+	Value ret;
+	if (returnCode == ExecutionReturnCode::rc_return_value)
+		ret = Pop();
+
 	m_oGC.CloseUpValues(m_oStack.data() + m_oFrames.back().m_uBase);
-	const Value ret = returnCode == ExecutionReturnCode::rc_return_value ? Pop() : Value();
 	PopFrame();
 	Push(ret);
 }

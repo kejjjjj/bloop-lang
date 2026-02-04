@@ -15,10 +15,8 @@ namespace bloop::metadata {
 			m_oChunks.emplace_back(data).m_uId = idx;
 			return idx;
 		}
-		[[nodiscard]] bloop::BloopIndex AddFunction(const bloop::bc::Function& data) {
-			const auto idx = static_cast<bloop::BloopIndex>(m_oFunctions.size());
-			m_oFunctions.emplace_back(data).m_uId = idx;
-			return idx;
+		void AddFunction(const bloop::bc::Function& data, bloop::BloopIndex idx) {
+			m_oFunctions[idx] = data;
 		}
 
 		std::vector<bloop::bc::Chunk> m_oChunks;

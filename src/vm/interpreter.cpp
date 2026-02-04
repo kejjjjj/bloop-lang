@@ -254,13 +254,12 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 					obj->closure.upvalues[i] = m_pCurrentFrame->m_pClosure->upvalues[slot];
 			}
 			Push(obj);
-			m_oGC.Continue();
 			//m_oGC.PopTempRoot();
-
+			m_oGC.Continue();
 			break;
 		} case TOpCode::TRY: {
-			//ip, stackbase, catchvar
-			m_pCurrentFrame->m_oExceptionHandlers.push_back({ FetchOperand(), FetchOperand(), FetchOperand() });
+			//ip, catchvar
+			m_pCurrentFrame->m_oExceptionHandlers.push_back({ FetchOperand(), m_oStack.size(), FetchOperand() });
 			break;
 		}case TOpCode::TRY_END: {
 			assert(!m_pCurrentFrame->m_oExceptionHandlers.empty());

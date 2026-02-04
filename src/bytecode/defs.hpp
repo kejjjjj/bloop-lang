@@ -15,10 +15,6 @@ namespace bloop::bytecode
 		#undef BLOOP_OP
 	};
 
-	struct VMByteCode {
-		bc::Chunk chunk;
-		bloop::BloopIndex numGlobals;
-	};
 	static std::unordered_map<EPunctuation, EOpCode> conversionTable = {
 		{ EPunctuation::p_add, EOpCode::ADD },
 		{ EPunctuation::p_sub, EOpCode::SUB },

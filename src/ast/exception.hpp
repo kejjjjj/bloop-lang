@@ -9,7 +9,7 @@ namespace bloop::ast {
 		TryCatch(const bloop::CodePosition& cp) : Statement(cp){}
 
 		void Resolve(TResolver& resolver) override {
-			m_uStackBase = resolver.CountLocals();
+			//m_uStackBase = resolver.CountLocals();
 			m_pTryBlock->Resolve(resolver);
 
 			resolver.BeginScope();
@@ -17,12 +17,12 @@ namespace bloop::ast {
 			m_pCatchBlock->ResolveNoScopeManagement(resolver);
 			resolver.EndScope();
 
-			if (m_uStackBase >= bloop::INVALID_SLOT)
-				throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("more than {} locals in a chunk"), bloop::INVALID_SLOT));
+			//if (m_uStackBase >= bloop::INVALID_SLOT)
+			//	throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("more than {} locals in a chunk"), bloop::INVALID_SLOT));
 		}
 		void EmitByteCode(TBCBuilder& builder) override {
 
-			const auto idx = builder.EmitTry(TOpCode::TRY, m_uStackBase, m_pCatchVariable->m_uSlot, m_oApproximatePosition);
+			const auto idx = builder.EmitTry(TOpCode::TRY, m_pCatchVariable->m_uSlot, m_oApproximatePosition);
 			m_pTryBlock->EmitByteCode(builder);
 			Emit(builder, TOpCode::TRY_END);
 			auto jumpIdx = EmitJump(builder, TOpCode::JMP); // jump to the position after the catch
@@ -34,7 +34,7 @@ namespace bloop::ast {
 		std::unique_ptr<BlockStatement> m_pTryBlock;
 		std::unique_ptr<BlockStatement> m_pCatchBlock;
 		std::unique_ptr<ConstVariableDeclaration> m_pCatchVariable; //resolver
-		bloop::BloopIndex m_uStackBase{};
+		//bloop::BloopIndex m_uStackBase{}; //calculated during runtime
 	};
 
 

@@ -7,6 +7,7 @@
 #include "bytecode/function/bc_function.hpp"
 #include "vm/vm.hpp"
 #include "utils/fmt.hpp"
+#include "metadata/metadata.hpp"
 
 #include <memory>
 #include <fstream>
@@ -33,17 +34,19 @@ std::optional<Value> bloop::test::TEST_ExecuteFile(const bloop::BloopString& rel
 std::optional<Value> bloop::test::TEST_ExecuteBuffer(bloop::BloopStringView buffer) {
 
     try {
-		auto lex = bloop::lexer::CLexer(buffer);
+		bloop::metadata::Metadata metadata;
+		auto lex = bloop::lexer::CLexer(buffer, metadata);
 		lex.Parse();
 			
 		bloop::parser::CLexParser parser(lex);
 
 		if (const auto code = parser.Parse()) {
-			bloop::resolver::Resolve(code.get());
+			bloop::resolver::Resolve(code.get(), metadata);
+			bloop::bytecode::BuildByteCode(code.get(), metadata);
 
 			//silly, but it doesn't destroy the vm
 			static std::unique_ptr<bloop::vm::VM> vm;
-			vm = std::make_unique<bloop::vm::VM>(bloop::bytecode::BuildByteCode(code.get()));
+			vm = std::make_unique<bloop::vm::VM>(metadata);
 
 			return vm->Run(BLOOPTEXT("main"));
 		}

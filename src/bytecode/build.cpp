@@ -9,6 +9,7 @@ void bloop::bytecode::BuildByteCode(bloop::ast::Program* code, bloop::metadata::
 
 	CByteCodeGlobals globals(code);
 	metadata.m_oVMData.AddChunk(globals.Generate(metadata));
+	metadata.m_oVMData.m_oFunctions.resize(code->m_uNumFunctions);
 
 	for (const auto& stmt : code->m_oStatements) {
 		if (stmt->IsFunction()) {

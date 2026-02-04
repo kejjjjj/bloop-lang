@@ -19,6 +19,7 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/resolver/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/bytecode/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/vm/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/std/*.cpp"
 )
 
 add_executable(bloop_test ${PROJECT_SOURCES})

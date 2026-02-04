@@ -10,7 +10,7 @@
 
 using namespace bloop::resolver;
 
-void bloop::resolver::Resolve(bloop::ast::Program* code, bloop::metadata::Metadata& metadata){
+void bloop::resolver::Resolve(bloop::ast::Program* code, bloop::metadata::Metadata& metadata) {
 	internal::Resolver resolver(metadata);
 
 	//clear out any silly business
@@ -20,7 +20,7 @@ void bloop::resolver::Resolve(bloop::ast::Program* code, bloop::metadata::Metada
 
 	}
 
-	if(resolver.m_oAllFunctions.size() >= bloop::INVALID_SLOT)
+	if (resolver.m_oAllFunctions.size() >= bloop::INVALID_SLOT)
 		throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the code has more than {} functions"), bloop::INVALID_SLOT));
 
 	resolver.m_oDeclaredIdentifiers.push_back({});
@@ -31,8 +31,23 @@ void bloop::resolver::Resolve(bloop::ast::Program* code, bloop::metadata::Metada
 	resolver.EndScope();
 
 	for (auto& func : metadata.m_oFunctionDebugInfo) {
-		assert(!metadata.m_oFunctionTable.contains(func.m_sName));
-		metadata.m_oFunctionTable[func.m_sName] = &func;
+
+		bloop::BloopString funcName = func.m_sName;
+
+		static_assert(1u < bloop::INVALID_SLOT);
+		for (const auto i : std::views::iota(1u, bloop::INVALID_SLOT)) {
+			if (metadata.m_oFunctionTable.contains(funcName)) {
+				funcName = func.m_sName + '#' + std::to_string(i);
+				continue;
+			}
+			break;
+		}
+
+		//would be funny if someone just defined the same function like 65k times in different scopes
+		if (metadata.m_oFunctionTable.contains(funcName))
+			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the function \"{}\" appears more than {} times"), func.m_sName, bloop::INVALID_SLOT));
+
+		metadata.m_oFunctionTable[funcName] = &func;
 	}
 
 	resolver.m_oDeclaredIdentifiers.pop_back();

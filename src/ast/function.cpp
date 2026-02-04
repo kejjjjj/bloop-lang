@@ -21,7 +21,9 @@ void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 	f.m_uChunkIndex = parent.m_refMetadata.m_oVMData.AddChunk(fnBuilder.Finalize());
 	f.m_uLocalCount = m_uLocalCount;
 	f.m_uParamCount = static_cast<bloop::BloopIndex>(m_oParams.size());
-	parent.AddFunction(parent.m_refMetadata.m_oVMData.AddFunction(f));
+	f.m_uId = m_uFunctionId;
+	parent.m_refMetadata.m_oVMData.AddFunction(f, f.m_uId);
+	parent.AddFunction(f.m_uId);
 
 	if (m_oCaptures.empty()) {
 		Emit(parent, TOpCode::MAKE_FUNCTION, m_uFunctionId);

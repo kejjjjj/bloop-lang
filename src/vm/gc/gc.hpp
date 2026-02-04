@@ -88,6 +88,7 @@ namespace bloop::vm
 
 		UpValue* CaptureUpValue(Value* slot);
 		void CloseUpValues(Value* lastSlot);
+		void CheckUpValueList();
 
 		UpValue* m_pOpenUpValues{};
 

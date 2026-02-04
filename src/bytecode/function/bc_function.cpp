@@ -26,5 +26,7 @@ void CByteCodeFunction::Generate(bloop::metadata::Metadata& metadata) {
 	f.m_uChunkIndex = metadata.m_oVMData.AddChunk(b.Finalize());
 	f.m_uLocalCount = m_pFunc->m_uLocalCount;
 	f.m_uParamCount = static_cast<bloop::BloopIndex>(m_pFunc->m_oParams.size());
-	b.AddFunction(metadata.m_oVMData.AddFunction(f));
+	f.m_uId = m_pFunc->m_uFunctionId;
+	metadata.m_oVMData.AddFunction(f, f.m_uId);
+	b.AddFunction(f.m_uId);
 }

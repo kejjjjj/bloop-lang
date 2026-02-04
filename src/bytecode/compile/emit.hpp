@@ -106,7 +106,7 @@ namespace bloop::bytecode
 		void EmitJump(EOpCode opcode, bloop::BloopIndex offset, CodePosition pos);
 		void PatchJump(bloop::BloopIndex src, bloop::BloopIndex dst);
 
-		[[nodiscard]] bloop::BloopIndex EmitTry(EOpCode opcode, bloop::BloopIndex base, bloop::BloopIndex catchVar, CodePosition pos); //returns the index of m_oByteCode
+		[[nodiscard]] bloop::BloopIndex EmitTry(EOpCode opcode, bloop::BloopIndex catchVar, CodePosition pos); //returns the index of m_oByteCode
 		void PatchTry(bloop::BloopIndex src, bloop::BloopIndex dst);
 
 

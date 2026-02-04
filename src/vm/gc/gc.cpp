@@ -33,6 +33,10 @@ void GC::Collect() {
 }
 void GC::MarkRoots(VM* vm) {
 
+	for (UpValue* uv = m_pOpenUpValues; uv; uv = uv->next) {
+		MarkUpValue(uv);
+	}
+
 	for (auto& glob : vm->m_oGlobals) {
 		if (glob.type == Value::Type::t_object)
 			Mark(glob.obj);
@@ -64,7 +68,15 @@ void GC::Mark(Object* _obj) {
 	Trace(_obj);
 }
 void GC::MarkUpValue(UpValue* uv) {
+
+	if (!uv)
+		return;
+
 	assert(uv && uv->location);
+
+	auto header = GCHeader::GetHeader(uv);
+	header->marked = true;
+
 	if (uv && uv->location == &uv->closed && uv->location->type == Value::Type::t_object)
 		Mark(uv->closed.obj);
 }

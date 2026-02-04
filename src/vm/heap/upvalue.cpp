@@ -6,28 +6,41 @@ using namespace bloop::vm;
 
 UpValue* GC::CaptureUpValue(Value* slot) {
 
-	UpValue* prev = nullptr;
-	UpValue* curr = m_pOpenUpValues;
+    UpValue** pp = &m_pOpenUpValues;           // pointer-to-pointer for clean insert
+    UpValue* curr = *pp;
 
     while (curr && curr->location > slot) {
-        prev = curr;
-        curr = curr->next;
+        pp = &curr->next;
+        curr = *pp;
     }
 
     if (curr && curr->location == slot)
         return curr;
 
     auto up = Allocate<UpValue>(slot, Value{}, curr);
-
-    if (prev) prev->next = up;
-    else m_pOpenUpValues = up;
+    up->next = curr;
+    *pp = up;
     return up;
 }
 void GC::CloseUpValues(Value* lastSlot)
 {
-    while (m_pOpenUpValues && m_pOpenUpValues->location >= lastSlot) {
-        m_pOpenUpValues->closed = *m_pOpenUpValues->location;
-        m_pOpenUpValues->location = &m_pOpenUpValues->closed;
-        m_pOpenUpValues = m_pOpenUpValues->next;
+    CheckUpValueList();
+    UpValue* uv = m_pOpenUpValues;
+    assert(!uv || uv->next == nullptr || uv->location >= uv->next->location);
+    while (uv && uv->location >= lastSlot) {
+        uv->closed = *uv->location;
+        uv->location = &uv->closed;
+        uv = uv->next;
+    }
+    m_pOpenUpValues = uv;
+}
+void GC::CheckUpValueList() {
+    UpValue* uv = m_pOpenUpValues;
+    Value* prevLoc = (Value*)UINTPTR_MAX;
+    while (uv) {
+        if (uv->location >= prevLoc)
+            printf("!!! UPVALUE LIST OUT OF ORDER %p >= %p\n", uv->location, prevLoc);
+        prevLoc = uv->location;
+        uv = uv->next;
     }
 }
