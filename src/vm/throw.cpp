@@ -15,7 +15,7 @@ void VM::Throw(Value value) {
         assert(frame != nullptr && "Current frame pointer is null while frames exist");
         assert(frame == &m_oFrames.back() && "m_pCurrentFrame does not point to top of frame stack");
 
-        const auto& bytecode = m_refMetaData.m_oVMData.m_oChunks[frame->m_pChunk->m_uMetadata].m_oByteCode;
+        [[maybe_unused]] const auto& bytecode = m_refMetaData.m_oVMData.m_oChunks[frame->m_pChunk->m_uMetadata].m_oByteCode;
 
         assert(frame->m_uBase <= m_oStack.size() && "Frame base is beyond current stack size");
         assert(frame->m_uBase >= 0 && "Frame base is negative");
@@ -35,10 +35,14 @@ void VM::Throw(Value value) {
 
             m_oStack.resize(top.m_uBase);
 
+#if (DEBUG || _DEBUG)
+            m_oGC.CheckUpValueList();
+#endif
+
             assert(m_oStack.size() == top.m_uBase && "Stack resize did not set expected size");
             assert(frame->m_uBase <= m_oStack.size() && "Frame base now invalid after resize");
 
-            size_t catch_slot = frame->m_uBase + top.m_uCatchVar;
+            const auto catch_slot = frame->m_uBase + top.m_uCatchVar;
             assert(catch_slot < m_oStack.size() && "Catch variable slot is out of bounds after resize");
             assert(catch_slot >= frame->m_uBase && "Catch slot below frame base");
 
@@ -55,23 +59,12 @@ void VM::Throw(Value value) {
 
         assert(frame->m_uBase <= m_oStack.size() && "Frame base exceeds stack size before close");
         m_oGC.CloseUpValues(m_oStack.data() + frame->m_uBase);
-
-#ifdef DEBUG_UPVALUES
-        for (UpValue* uv = m_oGC.m_pOpenUpValues; uv != nullptr; uv = uv->next) {
-            if (!uv->IsClosed()) {
-                assert(uv->location < m_oStack.data() + frame->m_uBase &&
-                    "Open upvalue still points into popped frame after CloseUpValues");
-            }
-        }
-#endif
-
         PopFrame();
 
         if (!m_oFrames.empty()) {
             assert(m_pCurrentFrame == &m_oFrames.back() && "Current frame not updated after PopFrame");
             assert(m_pCurrentFrame->m_uBase <= m_oStack.size() && "New frame base exceeds stack after pop");
-        }
-        else {
+        } else {
             assert(m_pCurrentFrame == nullptr && "Current frame not cleared after last pop");
         }
     }

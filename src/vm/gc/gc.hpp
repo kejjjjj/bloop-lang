@@ -4,6 +4,7 @@
 #include "vm/heap/dvalue.hpp"
 
 #include <vector>
+#include <cassert>
 
 namespace bloop::vm
 {
@@ -12,12 +13,12 @@ namespace bloop::vm
 	class VM;
 	struct Value;
 
-	struct GCHeader {
+	struct alignas(std::max_align_t) GCHeader {
 
 		GCHeader* next{};
 		bloop::BloopUInt size{};
 		bool marked{};
-		bool is_object{}; //built in type
+		bool is_object{};
 
 		[[nodiscard]] static inline GCHeader* GetHeader(void* p) noexcept {
 			return reinterpret_cast<GCHeader*>(p) - 1u;
@@ -27,6 +28,8 @@ namespace bloop::vm
 			return reinterpret_cast<T*>(this + 1u);
 		}
 	};
+
+	static_assert(alignof(GCHeader) >= alignof(std::max_align_t));
 
 	class GC {
 		BLOOP_NONCOPYABLE(GC);
@@ -42,22 +45,21 @@ namespace bloop::vm
 			if (ShouldCollect())
 				Collect();
 
-			auto mem = static_cast<GCHeader*>(::operator new(sizeof(GCHeader) + sizeof(T)));
-			mem->next = m_pObjects;
-			m_pObjects = mem;
-			
+			constexpr auto header_size = sizeof(GCHeader);
+			constexpr auto payload_size = sizeof(T);
+
+			auto mem = static_cast<GCHeader*>(::operator new(header_size + payload_size));
+			mem->is_object = std::is_base_of_v<Object, T>;
+			mem->size = payload_size;
+			mem->marked = false; //this line missing caused heap corruptions.. lol
+
 			auto obj = reinterpret_cast<T*>(mem + 1u); //skip header
 			auto result = new (obj) T(std::forward<Args>(args)...);
 
-			if constexpr (std::is_same_v<std::decay_t<Object>, T> && requires{ result->GetSize; }) {
-				mem->is_object = true;
-				mem->size = result->GetSize();
-			} else {
-				mem->is_object = false;
-				mem->size = sizeof(T);
-			}
+			mem->next = m_pObjects;
+			m_pObjects = mem;
 
-			m_uBytesAllocated += mem->size;
+			AddExternalBytes(header_size + payload_size);
 			return result;
 		}
 
@@ -66,9 +68,13 @@ namespace bloop::vm
 		void PopTempRoot(bloop::BloopUInt count=1u);
 		[[nodiscard]] constexpr auto GetAllocatedSize() const noexcept { return m_uBytesAllocated; }
 
-		void Pause() { m_bIsPaused = true; }
-		void Continue() { m_bIsPaused = false; }
-
+		inline void AddExternalBytes(bloop::BloopUInt bytes) {
+			m_uBytesAllocated += bytes;
+		}
+		inline void SubtractExternalBytes(bloop::BloopUInt bytes) {
+			assert(m_uBytesAllocated >= bytes);
+			m_uBytesAllocated -= bytes;
+		}
 
 	private:
 		[[nodiscard]] constexpr bool ShouldCollect() const noexcept {
@@ -88,8 +94,10 @@ namespace bloop::vm
 
 		UpValue* CaptureUpValue(Value* slot);
 		void CloseUpValues(Value* lastSlot);
-		void CheckUpValueList();
 
+#if (DEBUG || _DEBUG)
+		void CheckUpValueList();
+#endif
 		UpValue* m_pOpenUpValues{};
 
 		GCHeader* m_pObjects{};
@@ -98,7 +106,6 @@ namespace bloop::vm
 
 		bloop::BloopUInt m_uBytesAllocated{};
 		bloop::BloopUInt m_uNextGCLimit{ 1024 * 1024 };
-		bool m_bIsPaused{};
 
 	};
 }

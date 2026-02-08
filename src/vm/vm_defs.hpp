@@ -8,7 +8,7 @@
 namespace bloop::vm
 {
 	struct Chunk {
-		bloop::BloopIndex m_uMetadata;
+		bloop::BloopIndex m_uMetadata{};
 		std::vector<Value> m_oConstants;
 	};
 	struct Function : bc::Function {

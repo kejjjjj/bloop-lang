@@ -9,6 +9,7 @@ using namespace bloop::standard;
 using namespace bloop::vm;
 
 FWD_DECLARE_NATIVE(Length);
+FWD_DECLARE_NATIVE(RunGC);
 
 std::vector<NativeDef> bloop::standard::g_Natives = {
 	{ IncludeStandardLibrary() }
@@ -19,9 +20,15 @@ NativeDef bloop::standard::IncludeStandardLibrary() {
 	return NativeDef(BLOOPTEXT("std"), NativeObject{
 		.m_oFields = {
 			NativeField(BLOOPTEXT("console"), bloop::standard::GetConsoleDefinitions()),
-			NativeField(BLOOPTEXT("length"), { 1u, Length })
+			NativeField(BLOOPTEXT("length"), { 1u, Length }),
+			NativeField(BLOOPTEXT("gc_run"), { 0u, RunGC })
 		}
 	});
+}
+
+DEFINE_NATIVE(RunGC, vm, args) {
+	vm.RunGC();
+	return {};
 }
 
 DEFINE_NATIVE(Length, vm, args) {

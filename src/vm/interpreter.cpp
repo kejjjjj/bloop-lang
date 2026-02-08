@@ -235,27 +235,62 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			return ExecutionReturnCode::rc_return_value;
 		} case TOpCode::MAKE_CLOSURE: {
 			const auto funcIdx = FetchOperand();
-			assert(funcIdx < static_cast<bloop::BloopIndex>(m_oFunctions.size()));
+
+			assert(funcIdx < static_cast<bloop::BloopIndex>(m_oFunctions.size()) && "Function index out of bounds");
+			assert(funcIdx < 10000 && "Suspiciously large function index - possible bytecode corruption");
+
 			auto& func = m_oFunctions[funcIdx];
+
+			assert(func.m_oCaptures.size() <= 1024 && "Unreasonably large number of captures in function");
+			assert(!func.m_oCaptures.empty() || func.m_oCaptures.size() == 0 && "Function capture metadata inconsistent");
 
 			auto obj = m_oHeap.AllocClosure(&func, static_cast<bloop::BloopIndex>(func.m_oCaptures.size()));
 
-			//m_oGC.PushTempRoot(obj);
-			m_oGC.Pause();
+			assert(obj != nullptr && "AllocClosure returned null");
+			assert(obj->type == Object::Type::ot_closure && "Allocated object is not a closure");
+			assert(GCHeader::GetHeader(obj) != nullptr && "Allocated closure has no GC header");
+			assert(obj->closure.numValues == func.m_oCaptures.size() && "Closure upvalue count doesn't match function captures");
+			assert(obj->closure.upvalues != nullptr || obj->closure.numValues == 0 && "Closure has null upvalues array but numValues > 0");
+
+			m_oGC.PushTempRoot(obj);
 
 			for (const auto i : std::views::iota(0u, obj->closure.numValues)) {
 				const auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
+
+				assert(m_pCurrentFrame->m_pChunk->m_uMetadata < m_refMetaData.m_oVMData.m_oChunks.size() && "Current chunk metadata index out of bounds");
+
+				assert(m_pCurrentFrame->m_uIp < chunk.m_oByteCode.size() && "IP out of bounds before reading opcode");
 				const auto opcode = static_cast<TOpCode>(chunk.m_oByteCode[m_pCurrentFrame->m_uIp++]);
+				assert(m_pCurrentFrame->m_uIp <= chunk.m_oByteCode.size() && "IP advanced past end after opcode read");
+
 				const auto slot = FetchOperand();
 
-				if (opcode == TOpCode::CAPTURE_LOCAL)
+				if (opcode == TOpCode::CAPTURE_LOCAL) {
+
+					const auto stack_idx = m_pCurrentFrame->m_uBase + slot;
+					assert(stack_idx < m_oStack.size() && "Capture local: stack index out of bounds");
+					assert(&m_oStack[stack_idx] >= m_oStack.data() && &m_oStack[stack_idx] < m_oStack.data() + m_oStack.size()
+						&& "Capture local: computed pointer outside stack");
+
+					auto* slot_ptr = &m_oStack[stack_idx];
+					obj->closure.upvalues[i] = m_oGC.CaptureUpValue(slot_ptr);
+
+					assert(obj->closure.upvalues[i] != nullptr && "CaptureUpValue returned null upvalue");
+					assert(obj->closure.upvalues[i]->location == slot_ptr
+						&& "Captured upvalue location doesn't match requested stack slot");
+
 					obj->closure.upvalues[i] = m_oGC.CaptureUpValue(&m_oStack[m_pCurrentFrame->m_uBase + slot]);
-				else
+				} else {
+
+					assert(m_pCurrentFrame->m_pClosure != nullptr && "CAPTURE_UPVALUE but current frame has no closure");
+					assert(slot < m_pCurrentFrame->m_pClosure->numValues && "Parent upvalue index out of bounds");
+					assert(m_pCurrentFrame->m_pClosure->upvalues != nullptr && "Parent closure has null upvalues array");
+
 					obj->closure.upvalues[i] = m_pCurrentFrame->m_pClosure->upvalues[slot];
+				}
 			}
 			Push(obj);
-			//m_oGC.PopTempRoot();
-			m_oGC.Continue();
+			m_oGC.PopTempRoot();
 			break;
 		} case TOpCode::TRY: {
 			//ip, catchvar

@@ -23,13 +23,16 @@ using namespace bloop::vm;
 //}
 Object* Heap::AllocString(bloop::BloopUInt len) {
 	auto newBuf = new bloop::BloopChar[len];
-	return Allocate<Object>(newBuf, len);
+	auto str = Allocate<Object>(newBuf, len);
+	m_pGC->AddExternalBytes(len);
+	return str;
 }
 Object* Heap::AllocString(bloop::BloopChar* data, bloop::BloopUInt len) {
 	auto newBuf = new bloop::BloopChar[len];
 	std::memcpy(newBuf, data, len);
 	auto ptr = Allocate<Object>(newBuf, len);
 	ptr->string.hash = bloop::hash::FNV1a(newBuf, len);
+	m_pGC->AddExternalBytes(len);
 	return ptr;
 }
 Object* Heap::AllocCallable(Function* callable) {
@@ -39,6 +42,7 @@ Object* Heap::AllocArray(bloop::BloopIndex numValues) {
 
 	auto vals = new Value[numValues];
 	auto arr = Allocate<Object>(vals, numValues);
+	m_pGC->AddExternalBytes(sizeof(Value) * numValues);
 	return arr;
 }
 Object* Heap::AllocObject(bloop::BloopIndex numValues) {
@@ -47,11 +51,15 @@ Object* Heap::AllocObject(bloop::BloopIndex numValues) {
 	while (capacity < numValues) capacity <<= 1;
 	auto entries = new ObjectEntry[capacity];
 	auto obj = Allocate<Object>(entries, 0, capacity);
+
+	m_pGC->AddExternalBytes(sizeof(ObjectEntry) * capacity);
 	return obj;
 }
 Object* Heap::AllocClosure(Function* function, bloop::BloopIndex numVals) {
-	auto vals = new UpValue * [numVals] {};
-	return Allocate<Object>(function, vals, numVals);
+	auto vals = new UpValue*[numVals] {};
+	auto closure = Allocate<Object>(function, vals, numVals);
+	m_pGC->AddExternalBytes(sizeof(UpValue*) * numVals);
+	return closure;
 }
 Object* Heap::AllocNativeFunction(const bloop::standard::NativeFunction* function) {
 	return Allocate<Object>(function);

@@ -18,45 +18,64 @@ Object::Object(ObjectEntry* entries, bloop::BloopInt ucount, bloop::BloopInt cap
 
 void Object::Free()
 {
+	assert(this != nullptr && "Object::Free called on null this");
+
 	switch (type) {
 	case Type::ot_string:
+		assert(string.data != nullptr || string.len == 0
+			&& "String has null data but non-zero length");
 		delete[] string.data;
-		return;
+		string.data = nullptr;  // poison after free
+		string.len = 0;
+		break;
+
 	case Type::ot_array:
+		assert(array.values != nullptr || array.count == 0 && "Array has null values but non-zero length");
 		delete[] array.values;
-		return;
+		array.values = nullptr;
+		array.count = 0;
+		break;
+
 	case Type::ot_object:
+		assert(object.entries != nullptr || object.count == 0 || object.capacity == 0 && "Object has null entries but non-zero length");
 		delete[] object.entries;
-		return;
+		object.entries = nullptr;
+		object.count = 0;
+		object.capacity = 0;
+		break;
+
 	case Type::ot_nativefunction:
 	case Type::ot_function:
-		//just a handle
+		// just handles - no owned allocations
 		break;
 	case Type::ot_closure:
+		assert(closure.upvalues != nullptr || closure.numValues == 0 && "Closure has null upvalues but numValues > 0");
 		delete[] closure.upvalues;
+		closure.upvalues = nullptr;
+		closure.numValues = 0;
 		break;
 	default:
+		assert(false && "Unknown / unhandled object type during Free()");
 		break;
 	}
 }
 
-std::size_t Object::GetSize() const
+bloop::BloopUInt Object::GetExternalBytes() const
 {
 	switch (type) {
 	case Type::ot_string:
-		return sizeof(Object) + string.len + sizeof(string.hash);
+		return string.len;
 	case Type::ot_array:
-		return sizeof(Object) + (sizeof(array.values) * array.count);
+		return sizeof(Value) * array.count;
 	case Type::ot_object:
-		return sizeof(Object) + sizeof(*object.entries) + sizeof(object.count) + sizeof(object.capacity);
-	case Type::ot_function:
-		return sizeof(Object) + sizeof(function); //just a handle, has no allocated size
-	case Type::ot_nativefunction:
-		return sizeof(Object) + sizeof(nativeFunction); //just a handle, has no allocated size
+		return sizeof(*object.entries) * object.capacity;
 	case Type::ot_closure:
-		return sizeof(Object) + (sizeof(closure.upvalues) * closure.numValues);
+		return sizeof(UpValue*) * closure.numValues;
+	case Type::ot_function:
+	case Type::ot_nativefunction:
+		return 0;   // no external heap data
 	default:
-		return sizeof(Object);
+		return 0;
 	}
 }
 

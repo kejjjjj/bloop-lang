@@ -59,7 +59,7 @@ namespace bloop::vm
 		[[nodiscard]] constexpr bool IsClosure() const noexcept { return type == Type::ot_closure; }
 
 		void Free();
-		[[nodiscard]] std::size_t GetSize() const;
+		[[nodiscard]] bloop::BloopUInt GetExternalBytes() const;
 
 		[[nodiscard]] bool IsIndexable() const;
 		[[nodiscard]] bool IsAggregate() const;

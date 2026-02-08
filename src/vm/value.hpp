@@ -67,6 +67,10 @@ namespace bloop::vm {
         Value* location{}; //stack slot or &closed
         Value closed; //when stack slot goes out of scope
         UpValue* next{};
+
+        [[nodiscard]] inline bool IsClosed() const { return location == &closed; }
+        [[nodiscard]] inline bool IsOpen()   const { return location != &closed && location != nullptr; }
+
     };
 
     struct ObjectEntry {

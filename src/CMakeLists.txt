@@ -34,6 +34,15 @@ set_target_properties(bloop PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
+target_compile_definitions(bloop PRIVATE
+    $<$<CONFIG:Debug>:DEBUG_MODE=1>
+)
+
+#if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+#    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+#endif()
+
 if (MSVC)
     target_compile_options(bloop PRIVATE
         /W4 /WX
@@ -50,6 +59,4 @@ else()
     )
 endif()
 
-target_compile_definitions(bloop PRIVATE
-    $<$<CONFIG:Debug>:DEBUG_MODE=1>
-)
+

@@ -4,7 +4,9 @@ fn runTests() {
 
     // Storage for results
     let r1 = "unset";
+    let r2 = "unset";
     let r3 = "unset";
+    let r4 = "unset";
     let r5 = "unset";
 
     // 1. Normal function throw
@@ -19,6 +21,23 @@ fn runTests() {
         r1 = e;
     }
 
+    // 2. Closure modifying outer state
+    let state = "init";
+    fn makeThrower() {
+        fn inner() {
+            state = "modified";
+            throw state;
+        }
+        return inner;
+    }
+
+    try {
+        let t = makeThrower();
+        t();
+    } catch (e) {
+        r2 = e;
+    }
+
     // 3. Nested try/catch with rethrow
     try {
         try {
@@ -29,6 +48,18 @@ fn runTests() {
         }
     } catch (e) {
         r3 = r3 + ":" + e;
+    }
+
+    // 4. Throw inside catch, caught outside nested
+    try {
+        try {
+            throw "first";
+        } catch (e) {
+            r4 = e;
+            throw "second";
+        }
+    } catch (e) {
+        r4 = r4 + ":" + e;
     }
 
     // 5. Deep closure with multiple nested throws
@@ -56,7 +87,7 @@ fn runTests() {
         r5 = e;
     }
 
-    return r1 + "|" + r3 + "|" + r5;
+    return r1 + "|" + r2 + "|" + r3 + "|" + r4 + "|" + r5;
 }
 
 

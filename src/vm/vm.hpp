@@ -20,11 +20,14 @@ namespace bloop::vm {
 		friend class GC;
 		friend class Heap;
 		friend struct CallFrame;
+
 	public:
 		VM(bloop::metadata::Metadata& metadata);
 		~VM();
 
 		[[maybe_unused]] Value Run(const bloop::BloopString& entryFuncName);
+
+		void RunGC() { m_oGC.Collect(); }
 
 	private:
 		enum class ExecutionReturnCode : bloop::BloopByte {
@@ -61,12 +64,13 @@ namespace bloop::vm {
 		std::vector<Value> m_oGlobals;
 		CallFrame* m_pCurrentFrame{};
 
-		Heap m_oHeap;
 		GC m_oGC;
+		Heap m_oHeap;
 		Chunk m_oGlobalChunk; //executed in the beginning
 
 		//debugging
 		bloop::metadata::Metadata& m_refMetaData;
+
 	};
 
 }

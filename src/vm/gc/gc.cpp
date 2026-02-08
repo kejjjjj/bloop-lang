@@ -3,7 +3,10 @@
 #include "vm/vm.hpp"
 #include "vm/heap/dvalue.hpp"
 
+#include "utils/fmt.hpp"
+
 #include <ranges>
+#include <iostream>
 
 using namespace bloop::vm;
 
@@ -22,7 +25,7 @@ void GC::PopTempRoot(bloop::BloopUInt count) {
 void GC::Collect() {
 
 	//no allocations
-	if (m_bIsPaused || !m_pObjects)
+	if (!m_pObjects)
 		return;
 
 	MarkRoots(m_pVM);
@@ -61,7 +64,7 @@ void GC::MarkRoots(VM* vm) {
 void GC::Mark(Object* _obj) {
 
 	auto obj = GCHeader::GetHeader(_obj);
-
+	assert(obj);
 	if (!obj || obj->marked)
 		return;
 	obj->marked = true;
@@ -69,38 +72,73 @@ void GC::Mark(Object* _obj) {
 }
 void GC::MarkUpValue(UpValue* uv) {
 
-	if (!uv)
+	if (!uv) //GC was called when allocating upvalues
 		return;
 
-	assert(uv && uv->location);
-
+	assert(uv != nullptr && "Null upvalue pointer passed to MarkUpValue");
+	assert(uv->location != nullptr && "UpValue has null location — dangling or uninitialized?");
 	auto header = GCHeader::GetHeader(uv);
+	assert(header != nullptr && "UpValue object has no GC header — not heap allocated?");
+
 	header->marked = true;
 
-	if (uv && uv->location == &uv->closed && uv->location->type == Value::Type::t_object)
-		Mark(uv->closed.obj);
+	if (uv->location == &uv->closed) {
+		assert(uv->closed.type != Value::Type::t_undefined && "Closed upvalue contains uninitialized/none value");
+		if (uv->closed.type == Value::Type::t_object) {
+			assert(uv->closed.obj != nullptr && "Closed upvalue points to null object");
+			assert(GCHeader::GetHeader(uv->closed.obj) != nullptr && "Closed object has no GC header");
+			Mark(uv->closed.obj);
+		}
+	}
 }
 void GC::Sweep() {
+
+	assert(m_pObjects != nullptr || m_uBytesAllocated == 0 && "m_pObjects is null but bytes still allocated");
+
 	auto** obj = &m_pObjects;
 
+	[[maybe_unused]] bloop::BloopUInt swept_count = 0u;
+	[[maybe_unused]] bloop::BloopUInt kept_count = 0u;
+
 	while (*obj) {
-		if (!(*obj)->marked) {
-			auto* unreached = *obj;
-			*obj = unreached->next;
-			if (unreached->is_object)
-				FreeObject(unreached->GetValue<Object>());
-			else
+		GCHeader* current = *obj;
+		assert(current != nullptr && "Null pointer found in object list");
+		assert(current->next != current && "Self-loop in GC list detected");
+
+		if (!current->marked) {
+			auto* unreached = current;
+			*obj = unreached->next;  // unlink before freeing
+
+			assert(unreached->size > 0 && "Zero-size object being swept");
+			assert(m_uBytesAllocated >= unreached->size && "Bytes allocated underflow during sweep");
+
+			if (unreached->is_object) {
+				const auto value = unreached->GetValue<Object>();
+				assert(value != nullptr && "is_object set but GetValue<Object>() returned null");
+				assert(reinterpret_cast<char*>(value) - sizeof(GCHeader) == reinterpret_cast<char*>(unreached)
+					&& "Header placement broken - wrong offset");
+
+				FreeObject(value);
+			} else {
 				FreeOther(unreached);
+			}
 
-			delete unreached;
-
+			::operator delete(unreached, unreached->size + sizeof(GCHeader));
+			swept_count++;
 		} else {
-			(*obj)->marked = false; // reset flags to avoid false positives
-			obj = &(*obj)->next;
+			assert(current->marked && "Marked flag lost before sweep");
+			current->marked = false; 
+			obj = &current->next;
+			kept_count++;
 		}
 	}
 }
 void GC::Trace(Object* obj) {
+
+	assert(obj != nullptr && "Trace called on null object");
+	[[maybe_unused]] const auto header = GCHeader::GetHeader(obj);
+	assert(header != nullptr && "Object has no GC header");
+	assert(header->marked && "Tracing unmarked object — should be gray/black already");
 
 	switch (obj->type) {
 	case Object::Type::ot_array: 
@@ -112,6 +150,7 @@ void GC::Trace(Object* obj) {
 	case Object::Type::ot_object:
 		for (const auto i : std::views::iota(0, obj->object.capacity)) {
 			const auto& entry = obj->object.entries[i];
+			assert(entry.key.type == Value::Type::t_object || entry.key.type == Value::Type::t_undefined);
 			if (entry.key.type == Value::Type::t_object)
 				Mark(entry.key.obj);
 			if (entry.value.type == Value::Type::t_object)
@@ -119,8 +158,13 @@ void GC::Trace(Object* obj) {
 		}
 		break;
 	case Object::Type::ot_closure:
+		assert(obj->closure.upvalues != nullptr || obj->closure.numValues == 0 && "Closure has null upvalues array but numValues > 0");
+
+		assert(obj->closure.numValues <= 1024 && "Suspiciously large number of upvalues");
+
 		for (const auto i : std::views::iota(0u, obj->closure.numValues)) {
-			MarkUpValue(obj->closure.upvalues[i]);
+			auto* uv = obj->closure.upvalues[i];
+			MarkUpValue(uv);
 		}
 		break;
 	}
@@ -129,11 +173,23 @@ void GC::Trace(Object* obj) {
 }
 
 void GC::FreeObject(Object* obj) {
-	assert(m_uBytesAllocated >= obj->GetSize());
-	m_uBytesAllocated -= obj->GetSize();
+
+	SubtractExternalBytes(sizeof(GCHeader) + sizeof(Object));
+	const auto external = obj->GetExternalBytes();
+
+	if (external > 0) {
+		SubtractExternalBytes(external);
+		assert(m_uBytesAllocated <= m_uBytesAllocated + external);
+	}
+
 	obj->Free();
 }
 void GC::FreeOther(GCHeader* header) {
-	assert(m_uBytesAllocated >= header->size);
-	m_uBytesAllocated -= header->size;
+	assert(header != nullptr && "FreeOther called with null header");
+	assert(header->size > 0 && "Zero-size non-object being freed");
+	assert(!header->is_object && "is_object flag set on non-object header");
+	assert(m_uBytesAllocated >= header->size && "Bytes allocated underflow in FreeOther");
+
+	SubtractExternalBytes(sizeof(GCHeader) + header->size);
+	assert(m_uBytesAllocated <= m_uBytesAllocated + header->size && "Underflow after subtracting non-object size");
 }
