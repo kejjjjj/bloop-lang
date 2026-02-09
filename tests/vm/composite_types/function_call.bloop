@@ -4,7 +4,5 @@ fn return50()
 	return 50;
 }
 
-fn main()
-{
-	return return50();
-}
+return return50();
+

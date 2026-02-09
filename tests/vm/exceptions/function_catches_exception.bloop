@@ -8,11 +8,10 @@ fn throwFunc()
 	}
 }
 
-fn main()
-{
-	try{
-		return throwFunc();
-	}catch(ex){
-		return "failure";
-	}
+
+
+try{
+	return throwFunc();
+}catch(ex){
+	return "failure";
 }

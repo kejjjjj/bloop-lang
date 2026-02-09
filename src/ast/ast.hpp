@@ -59,6 +59,7 @@ namespace bloop::ast {
 		[[nodiscard]] virtual constexpr bool IsFunction() const noexcept { return false; }
 		[[nodiscard]] virtual constexpr bool IsReturn() const noexcept { return false; }
 		[[nodiscard]] virtual constexpr bool IsDeclaration() const noexcept { return false; }
+		[[nodiscard]] virtual constexpr bool IsTryCatch() const noexcept { return false; }
 
 	};
 

@@ -3,8 +3,7 @@ fn testPass(value)
 	return value;
 }
 
-fn main()
-{
-	let shared = [50, 1];
-	return testPass(shared);
-}
+
+
+let shared = [50, 1];
+return testPass(shared);

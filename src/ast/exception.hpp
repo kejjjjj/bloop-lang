@@ -8,13 +8,17 @@ namespace bloop::ast {
 	struct TryCatch : Statement {
 		TryCatch(const bloop::CodePosition& cp) : Statement(cp){}
 
+		[[nodiscard]] constexpr bool IsTryCatch() const noexcept override { return true; }
+
 		void Resolve(TResolver& resolver) override {
 			//m_uStackBase = resolver.CountLocals();
 			m_pTryBlock->Resolve(resolver);
 
 			resolver.BeginScope();
+
 			m_pCatchVariable->Resolve(resolver);
 			m_pCatchBlock->ResolveNoScopeManagement(resolver);
+
 			resolver.EndScope();
 
 			//if (m_uStackBase >= bloop::INVALID_SLOT)

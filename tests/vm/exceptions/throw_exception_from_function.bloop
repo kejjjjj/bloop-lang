@@ -4,11 +4,10 @@ fn throwFunc()
 	throw "catch";
 }
 
-fn main()
-{
-	try{
-		return throwFunc();
-	}catch(ex){
-		return ex;
-	}
+
+
+try{
+	return throwFunc();
+}catch(ex){
+	return ex;
 }

@@ -180,8 +180,8 @@ namespace bloop::ast {
 
 		void Resolve(TResolver& resolver) override {
 
-			if (resolver.m_oFunctions.empty())
-				throw bloop::exception::ResolverError(BLOOPTEXT("don't return in the global scope"), m_oApproximatePosition);
+			//if (resolver.m_oFunctions.empty())
+			//	throw bloop::exception::ResolverError(BLOOPTEXT("don't return in the global scope"), m_oApproximatePosition);
 
 			if (m_pExpression)
 				ExpressionStatement::Resolve(resolver);

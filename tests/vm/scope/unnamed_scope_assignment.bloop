@@ -1,5 +1,5 @@
-fn main()
-{
+
+fn main() {
 	let thing;
 
 	{
@@ -8,3 +8,5 @@ fn main()
 
 	return thing;
 }
+
+return main();

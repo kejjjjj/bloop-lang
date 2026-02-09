@@ -25,7 +25,7 @@ namespace bloop::vm {
 		VM(bloop::metadata::Metadata& metadata);
 		~VM();
 
-		[[maybe_unused]] Value Run(const bloop::BloopString& entryFuncName);
+		[[maybe_unused]] Value Run();
 
 		void RunGC() { m_oGC.Collect(); }
 

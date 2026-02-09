@@ -1,4 +1,4 @@
-fn main() {
+fn main(){
 	let x = "a";
 
 	fn setA() { x = "A"; }
@@ -9,3 +9,5 @@ fn main() {
 
 	return x;
 }
+
+return main();

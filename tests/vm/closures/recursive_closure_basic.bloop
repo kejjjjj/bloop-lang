@@ -9,3 +9,5 @@ fn main() {
 
 	return rec(3);
 }
+
+return main();

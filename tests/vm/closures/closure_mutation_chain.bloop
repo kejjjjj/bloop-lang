@@ -17,3 +17,5 @@ fn main() {
 
 	return x;
 }
+
+return main();

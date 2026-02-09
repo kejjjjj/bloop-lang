@@ -7,7 +7,6 @@ fn recurseUntil6(v)
 	return v;
 }
 
-fn main()
-{
-	return recurseUntil6(0);
-}
+
+
+return recurseUntil6(0);

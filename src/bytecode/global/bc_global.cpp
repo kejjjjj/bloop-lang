@@ -26,9 +26,17 @@ bloop::bc::Chunk CByteCodeGlobals::Generate(bloop::metadata::Metadata& metadata)
 			continue;
 		}
 
-		if (stmt->IsDeclaration())
+		//try-catch as well since those do create globals
+		if (stmt->IsDeclaration() || stmt->IsTryCatch())
 			metadata.m_uNumGlobals++;
-		
+	}
+
+	for (auto& stmt : m_pCode->m_oStatements) {
+
+		if (stmt->IsFunction()) {
+			continue;
+		}
+
 		stmt->EmitByteCode(builder);
 
 	}

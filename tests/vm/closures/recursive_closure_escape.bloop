@@ -17,3 +17,5 @@ fn main() {
 	let g = f(3);
 	return g();
 }
+
+return main();

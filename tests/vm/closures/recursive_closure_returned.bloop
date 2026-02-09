@@ -13,3 +13,5 @@ fn main() {
 	let f = make();
 	return f(4);
 }
+
+return main();

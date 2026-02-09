@@ -4,8 +4,8 @@ fn return50()
 	return 50;
 }
 
-fn main()
-{
-	let f = return50;
-	return f();
-}
+
+
+let f = return50;
+return f();
+

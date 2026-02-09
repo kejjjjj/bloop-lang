@@ -1,6 +1,5 @@
 fn main() {
 
-
 	fn make() {
 		fn g() {
 			return f();
@@ -13,3 +12,5 @@ fn main() {
 	let h = make();
 	return h();
 }
+
+return main();

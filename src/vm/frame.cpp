@@ -72,6 +72,9 @@ std::vector<bloop::bc::InstrDebugRef> VM::StackTrace()
 	positions.reserve(m_oFrames.size());
 	while (m_oFrames.size()) {
 		positions.push_back(m_oFrames.back().GetCurrentPosition(*this));
+		m_oGC.CloseUpValues(m_oStack.data() + m_oFrames.back().m_uBase);
+		m_oStack.resize(m_oFrames.back().m_uBase);
+
 		PopFrame();
 	}
 
@@ -79,14 +82,25 @@ std::vector<bloop::bc::InstrDebugRef> VM::StackTrace()
 }
 bloop::BloopString VM::FormatStackTraceMessage(const bc::InstrDebugRef& ref)
 {
+
+	const auto trim = [](bloop::BloopString const& str) {
+		static char const* whitespaceChars = "\n\r\t ";
+		const auto start = str.find_first_not_of(whitespaceChars);
+		const auto end = str.find_last_not_of(whitespaceChars);
+
+		return start != bloop::BloopString::npos ? str.substr(start, 1 + end - start) : bloop::BloopString();
+	};
+
 	auto& lineData = m_refMetaData.m_oLineMap[std::get<0>(ref.m_oPosition) - 1];
 	auto offset = std::get<1>(ref.m_oPosition);
 
 	bloop::BloopString msg = bloop::fmt::format(BLOOPTEXT("at [{}, {}]\n"), std::get<0>(ref.m_oPosition), offset);
-	msg += bloop::BloopString(lineData) + '\n';
+	
+	const auto trimmed = trim(bloop::BloopString(lineData));
+	msg += trimmed + '\n';
 
 	bloop::BloopUInt visualCol{};
-	for (const auto i : std::views::iota(0u, offset)) {
+	for (const auto i : std::views::iota(0u, offset - (lineData.length() - trimmed.length()))) {
 		const auto c = lineData[i];
 		visualCol += c == '\t' ? 8u - (visualCol % 8u) : 1u;
 	}

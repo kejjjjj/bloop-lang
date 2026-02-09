@@ -15,3 +15,5 @@ fn main() {
 
 	return [a, b];
 }
+
+return main();

@@ -1,5 +1,4 @@
 fn main() {
-
 	fn makeBox(v) {
 		let x = v;
 		fn get() { return x; }
@@ -12,3 +11,5 @@ fn main() {
 
 	return [ a(), b() ];
 }
+
+return main();

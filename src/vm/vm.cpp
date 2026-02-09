@@ -84,25 +84,31 @@ void Benchmark(const char* name, Callable&& fn) {
 	std::cout << name << ": " << std::setprecision(6) << seconds << "s\n";
 }
 
-Value VM::Run(const bloop::BloopString& entryFuncName) {
+Value VM::Run() {
 
-	if (!m_refMetaData.m_oFunctionTable.contains(entryFuncName))
-		throw exception::VMError(BLOOPTEXT("couldn't find the entry function: " + entryFuncName));
-
-	const auto idx = m_refMetaData.m_oFunctionTable.at(entryFuncName)->m_uId;
-	const auto func = &m_oFunctions[idx];
+	//const auto entryFuncName = BLOOPTEXT("main");
+	//bloop::vm::Function* func{ nullptr };
+	//if (m_refMetaData.m_oFunctionTable.contains(entryFuncName)) {
+	//	const auto idx = m_refMetaData.m_oFunctionTable.at(entryFuncName)->m_uId;
+	//	func = &m_oFunctions[idx];
+	//	//throw exception::VMError(BLOOPTEXT("couldn't find the entry function: " + entryFuncName));
+	//}
 
 	try {
 		#ifdef BLOOP_TEST
-			RunGlobal();
-			RunFunction(func);
-			assert(m_oStack.size() == 1u);
-			m_oGC.Collect();
+		RunGlobal();
+		//if (func) {
+		//	RunFunction(func);
+		//	assert(m_oStack.size() == 1u);
+		//}
+		m_oGC.Collect();
 		#else
 		Benchmark("glob+main", [&]() {
 			RunGlobal();
-			RunFunction(func);
-			assert(m_oStack.size() == 1u);
+			//if (func) {
+			//	RunFunction(func);
+			//	assert(m_oStack.size() == 1u);
+			//}
 			m_oGC.Collect();
 		});
 		#endif
@@ -110,19 +116,19 @@ Value VM::Run(const bloop::BloopString& entryFuncName) {
 	} catch (exception::VMError& ex) {
 		const auto positions = StackTrace();
 		bloop::BloopString msg = BLOOPTEXT("\nruntime error\n\n");
+
+		msg += bloop::fmt::format(BLOOPTEXT("\n{}\n\n"), ex.what());
+
 		for (const auto& src : positions)
 			msg += FormatStackTraceMessage(src) + '\n';
 
-		msg += bloop::fmt::format(BLOOPTEXT("\n{}\n"), ex.what());
 		std::cout << msg << '\n';
-
-		m_oGC.CloseUpValues(m_oStack.data());
 		Push({});
 	}
 
-	//std::cout << bloop::fmt::format("\nreturned: {} : {}\n", m_oStack.front().ValueToString(), m_oStack.front().TypeToString());
-	return m_oStack.front();
+	return m_oStack.size() ? m_oStack.front() : Value{};
 }
+
 VM::ExecutionReturnCode VM::RunFrame() {
 	ExecutionReturnCode returnCode{};
 
@@ -145,9 +151,15 @@ void VM::RunGlobal() {
 		m_oGlobals[i++] = bloop::standard::FromDefinitionToObject(m_oHeap, native);
 	}
 
-	[[maybe_unused]] const auto returnCode = RunFrame();
+	const auto returnCode = RunFrame();
+
+	Value ret;
+	if (returnCode == ExecutionReturnCode::rc_return_value)
+		ret = Pop();
+
 	m_oFrames.clear();
 	m_pCurrentFrame = nullptr;
+	Push(ret);
 }
 void VM::RunFunction(Function* fn) {
 	PushFrame(fn);

@@ -1,7 +1,7 @@
 
-fn main() {
-	return helper();
-}
+ 
+return helper();
+
 fn helper() { 
     return "ok"; 
 }

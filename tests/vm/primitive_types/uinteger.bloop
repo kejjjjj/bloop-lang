@@ -1,4 +1,3 @@
-fn main()
-{
-	return 64u;
-}
+
+
+return 64u;

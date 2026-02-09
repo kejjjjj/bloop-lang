@@ -1,5 +1,2 @@
-fn main()
-{
-	let v = [ 0, 1, 2 ];
-	return v;
-}
+let v = [ 0, 1, 2 ];
+return v;

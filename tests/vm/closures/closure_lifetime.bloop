@@ -11,3 +11,5 @@ fn main() {
 	let r = make();
 	return r();
 }
+
+return main();

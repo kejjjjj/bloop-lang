@@ -1,5 +1,4 @@
-fn main()
-{
-	let v = 64u;
-	return v;
-}
+
+
+let v = 64u;
+return v;

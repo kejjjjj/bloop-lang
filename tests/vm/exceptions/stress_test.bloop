@@ -89,6 +89,4 @@ fn runTests() {
     return r1 + "|" + r2 + "|" + r3 + "|" + r4 + "|" + r5;
 }
 
-fn main(){
-    return runTests();
-}
+return runTests();

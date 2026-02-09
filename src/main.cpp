@@ -30,7 +30,7 @@ int main() {
 			bloop::bytecode::BuildByteCode(code.get(), metadata);
 			bloop::vm::VM vm(metadata);
 
-			auto ret = vm.Run("main");
+			auto ret = vm.Run();
 
 			std::cout << "\nreturned: " << ret.TypeToString() << " : " << ret.ValueToString() << '\n';
 			std::cout << "\n\nfinished!\n";

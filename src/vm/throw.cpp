@@ -8,7 +8,7 @@
 using namespace bloop::vm;
 
 void VM::Throw(Value value) {
-    assert(!m_oStack.empty() && "Throw called with empty stack");
+    //assert(!m_oStack.empty() && "Throw called with empty stack");
 
     while (!m_oFrames.empty()) {
         auto& frame = m_pCurrentFrame;
@@ -43,10 +43,14 @@ void VM::Throw(Value value) {
             assert(frame->m_uBase <= m_oStack.size() && "Frame base now invalid after resize");
 
             const auto catch_slot = frame->m_uBase + top.m_uCatchVar;
-            assert(catch_slot < m_oStack.size() && "Catch variable slot is out of bounds after resize");
             assert(catch_slot >= frame->m_uBase && "Catch slot below frame base");
 
-            m_oStack[catch_slot] = value;
+            if (m_oStack.empty()) {
+                m_oGlobals[catch_slot] = value;
+            } else {
+                assert(catch_slot < m_oStack.size() && "Catch variable slot is out of bounds after resize");
+                m_oStack[catch_slot] = value;
+            }
 
             frame->m_uIp = top.m_uIp;
             assert(frame->m_uIp < bytecode.size() && "Restored IP out of bounds");

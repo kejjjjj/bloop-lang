@@ -1,4 +1,4 @@
-fn main()
-{
-	return 64;
-}
+
+
+return 64;
+

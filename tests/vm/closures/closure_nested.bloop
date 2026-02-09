@@ -15,3 +15,5 @@ fn main() {
 	let f = outer("X");
 	return f();
 }
+
+return main();

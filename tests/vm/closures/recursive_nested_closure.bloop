@@ -13,3 +13,5 @@ fn main() {
 	let f = outer();
 	return f(5);
 }
+
+return main();

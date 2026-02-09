@@ -1,6 +1,5 @@
-fn main() {
-	return [ even(4), even(5), odd(4), odd(5) ];
-}
+ 
+return [ even(4), even(5), odd(4), odd(5) ];
 
 fn even(n) {
     if (n == 0) return 1;

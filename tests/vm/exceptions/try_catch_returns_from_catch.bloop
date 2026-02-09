@@ -1,9 +1,8 @@
 
-fn main()
-{
-	try{
-		throw "error";
-	}catch(ex){
-		return "catch";
-	}
+
+
+try{
+	throw "error";
+}catch(ex){
+	return "catch";
 }

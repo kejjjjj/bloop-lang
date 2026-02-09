@@ -1,5 +1,4 @@
-fn main()
-{
-	let var = undefined;
-	return var;
-}
+
+
+let var = undefined;
+return var;

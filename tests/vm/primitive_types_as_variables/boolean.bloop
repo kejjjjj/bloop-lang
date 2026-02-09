@@ -1,5 +1,4 @@
-fn main()
-{
-	let var = true;
-	return var;
-}
+
+
+let var = true;
+return var;

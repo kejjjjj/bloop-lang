@@ -48,7 +48,7 @@ std::optional<Value> bloop::test::TEST_ExecuteBuffer(bloop::BloopStringView buff
 			static std::unique_ptr<bloop::vm::VM> vm;
 			vm = std::make_unique<bloop::vm::VM>(metadata);
 
-			return vm->Run(BLOOPTEXT("main"));
+			return vm->Run();
 		}
 	} catch (std::runtime_error& ex) {
 		FAIL(ex.what());

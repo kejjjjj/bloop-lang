@@ -129,6 +129,8 @@ ResolvedIdentifier Resolver::ResolveIdentifier(const bloop::BloopString& name) {
 		auto funcs = m_oFunctions | std::views::drop(sym->m_iFunctionDepth);
 		auto t = std::list<FunctionContext>(funcs.begin(), funcs.end());
 
+		assert(!t.empty());
+
 		t.front().m_pCurrentFunction->PropagateCaptureInward(nullptr, t, sym);
 		return ResolvedIdentifier{ 
 			ResolvedIdentifier::Kind::Upvalue, 
@@ -158,8 +160,26 @@ Symbol* Resolver::ResolveLocal(const bloop::BloopString& name) {
 	return nullptr;
 }
 Symbol* Resolver::ResolveGlobal(const bloop::BloopString& name) {
-	if (m_oScopes.front().symbols.contains(name))
-		return m_oScopes.front().symbols.at(name).get();
+
+	if (m_oFunctions.empty()) {
+		const auto itr = std::ranges::find_if(m_oScopes.rbegin(), m_oScopes.rend(), [&name](Scope& s) {
+			return s.symbols.contains(name);
+		});
+
+		if (itr == m_oScopes.rend())
+			return nullptr;
+
+		return itr->symbols.at(name).get();
+	}
+
+	auto& func = m_oFunctions.front().m_pCurrentFunction;
+	auto range = std::vector<Scope>(m_oScopes.begin(), m_oScopes.begin() + func->m_iScopeDepth);
+
+	if (const auto itr = std::ranges::find_if(range.rbegin(), range.rend(), [&name](Scope& s) {
+		return s.symbols.contains(name); }); itr != range.rend()) {
+		return itr->symbols.at(name).get();
+	}
+
 	return nullptr;
 }
 Symbol* Resolver::ResolveOuter(const bloop::BloopString& name)

@@ -16,3 +16,5 @@ fn main() {
 
 	return a(4);
 }
+
+return main();

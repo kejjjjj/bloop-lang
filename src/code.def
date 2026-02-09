@@ -1,5 +1,6 @@
 R"(
 
+
 fn runTests() {
 
     // Storage for results
@@ -68,7 +69,7 @@ fn runTests() {
         fn inner(n) {
             if (n <= 0) {
                 deepState = "deep";
-                throw deepState;
+                throw deepState();
             } else {
                 try {
                     inner(n - 1);
@@ -90,13 +91,7 @@ fn runTests() {
     return r1 + "|" + r2 + "|" + r3 + "|" + r4 + "|" + r5;
 }
 
+return runTests();
 
-fn main(){
 
-    let r;
-    for(let i = 0; i <= 1_000_000; i++)
-        r = runTests();
-
-    return r;
-}
 )"

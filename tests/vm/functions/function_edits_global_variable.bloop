@@ -6,8 +6,7 @@ fn editGlob()
 	glob = 50;
 }
 
-fn main()
-{
-	editGlob();
-	return glob;
-}
+
+
+editGlob();
+return glob;

@@ -1,6 +1,8 @@
-fn main()
-{
+
+fn main(){
 	{
 		return "scope!";
 	}
 }
+
+return main();

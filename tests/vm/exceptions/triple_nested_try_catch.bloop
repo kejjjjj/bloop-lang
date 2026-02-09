@@ -10,21 +10,18 @@ fn exceptionFunc()
 
 }
 
-fn main()
-{
-	let str = undefined;
-	
+let str = undefined;
+
+try{
+
 	try{
-
-		try{
-			exceptionFunc();
-		} catch(ex){
-			throw ex;
-		}
-
-	}catch(ex){
-		str = ex;
+		exceptionFunc();
+	} catch(ex){
+		throw ex;
 	}
 
-	return str;
+}catch(ex){
+	str = ex;
 }
+
+return str;
