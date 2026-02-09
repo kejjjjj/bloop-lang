@@ -50,6 +50,11 @@ void GC::MarkRoots(VM* vm) {
 			Mark(v.obj);
 	}
 
+	for (auto& c : vm->m_oGlobalChunk.m_oConstants) {
+		if (c.type == Value::Type::t_object)
+			Mark(c.obj);
+	}
+
 	for (auto& fn : vm->m_oFunctions) {
 		for (auto& c : fn.chunk.m_oConstants) {
 			if (c.type == Value::Type::t_object)

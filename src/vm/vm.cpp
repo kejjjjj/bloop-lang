@@ -63,6 +63,7 @@ VM::~VM() {
 		m_oStack.clear(); //free everything for the GC
 		m_oGlobals.clear(); // let the gc get rid of these
 		m_oFunctions.clear();
+		m_oGlobalChunk.m_oConstants.clear();
 		m_oGC.Collect(); //clear everything
 
 	}

@@ -59,7 +59,6 @@ namespace bloop::ast {
 		[[nodiscard]] virtual constexpr bool IsFunction() const noexcept { return false; }
 		[[nodiscard]] virtual constexpr bool IsReturn() const noexcept { return false; }
 		[[nodiscard]] virtual constexpr bool IsDeclaration() const noexcept { return false; }
-		[[nodiscard]] virtual constexpr bool IsTryCatch() const noexcept { return false; }
 
 	};
 
@@ -124,6 +123,7 @@ namespace bloop::ast {
 		Program(const bloop::CodePosition& cp) : BlockStatement(cp) {}
 
 		bloop::BloopIndex m_uNumFunctions{};
+		bloop::BloopIndex m_uNumGlobals{}; //includes functions
 	};
 
 	struct LiteralExpression : Expression {

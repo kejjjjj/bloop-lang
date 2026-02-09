@@ -14,21 +14,15 @@ bloop::bc::Chunk CByteCodeGlobals::Generate(bloop::metadata::Metadata& metadata)
 
 	CByteCodeBuilder builder(metadata);
 
-	metadata.m_uNumGlobals += static_cast<bloop::BloopIndex>(bloop::standard::g_Natives.size());
-
 	for (auto& stmt : m_pCode->m_oStatements) {
 
 		if (stmt->IsFunction()) {
 			auto func = dynamic_cast<bloop::ast::FunctionDeclarationStatement*>(stmt.get());
 			stmt->Emit(builder, EOpCode::MAKE_FUNCTION, func->m_uFunctionId);
 			stmt->Emit(builder, EOpCode::STORE_GLOBAL, func->m_oIdentifier.m_uSlot);
-			metadata.m_uNumGlobals++;
 			continue;
 		}
 
-		//try-catch as well since those do create globals
-		if (stmt->IsDeclaration() || stmt->IsTryCatch())
-			metadata.m_uNumGlobals++;
 	}
 
 	for (auto& stmt : m_pCode->m_oStatements) {

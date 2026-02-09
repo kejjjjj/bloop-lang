@@ -8,7 +8,7 @@ namespace bloop::ast {
 	struct TryCatch : Statement {
 		TryCatch(const bloop::CodePosition& cp) : Statement(cp){}
 
-		[[nodiscard]] constexpr bool IsTryCatch() const noexcept override { return true; }
+		[[nodiscard]] constexpr bool IsDeclaration() const noexcept override { return true; }
 
 		void Resolve(TResolver& resolver) override {
 			//m_uStackBase = resolver.CountLocals();

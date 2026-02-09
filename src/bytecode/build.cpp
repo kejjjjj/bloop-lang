@@ -11,6 +11,8 @@ void bloop::bytecode::BuildByteCode(bloop::ast::Program* code, bloop::metadata::
 	metadata.m_oVMData.AddChunk(globals.Generate(metadata));
 	metadata.m_oVMData.m_oFunctions.resize(code->m_uNumFunctions);
 
+	metadata.m_uNumGlobals = code->m_uNumGlobals;
+
 	for (const auto& stmt : code->m_oStatements) {
 		if (stmt->IsFunction()) {
 			CByteCodeFunction f(dynamic_cast<bloop::ast::FunctionDeclarationStatement*>(stmt.get()));

@@ -13,13 +13,6 @@ using namespace bloop::resolver;
 void bloop::resolver::Resolve(bloop::ast::Program* code, bloop::metadata::Metadata& metadata) {
 	internal::Resolver resolver(metadata);
 
-	//clear out any silly business
-	for (auto& globalStatement : code->m_oStatements) {
-		if (dynamic_cast<bloop::ast::UnnamedScopeStatement*>(globalStatement.get()))
-			throw exception::ResolverError(BLOOPTEXT("unnamed scopes aren't allowed in the global scope"), globalStatement->m_oApproximatePosition);
-
-	}
-
 	if (resolver.m_oAllFunctions.size() >= bloop::INVALID_SLOT)
 		throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the code has more than {} functions"), bloop::INVALID_SLOT));
 
@@ -50,8 +43,18 @@ void bloop::resolver::Resolve(bloop::ast::Program* code, bloop::metadata::Metada
 		metadata.m_oFunctionTable[funcName] = &func;
 	}
 
-	resolver.m_oDeclaredIdentifiers.pop_back();
+	std::cout << "global variables:\n";
+
+	for (const auto& [v, k] : resolver.m_oDeclaredIdentifiers.front()) {
+		std::cout << bloop::fmt::format(BLOOPTEXT("[{}] - {}\n"), k, v);
+	}
+
+	
 	code->m_uNumFunctions = static_cast<bloop::BloopIndex>(resolver.m_oAllFunctions.size());
+	code->m_uNumGlobals = static_cast<bloop::BloopIndex>(resolver.m_oDeclaredIdentifiers.front().size());
+
+	resolver.m_oDeclaredIdentifiers.pop_back();
+
 }
 
 using namespace bloop::resolver::internal;
@@ -87,10 +90,12 @@ Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst, bo
 		slot = m_oDeclaredIdentifiers.back().at(name); //give it the same slot
 	} else if (m_oFunctions.empty()) {
 
-		if (scope.size() >= bloop::INVALID_SLOT)
+		slot = CountLocals();
+
+		if (slot >= bloop::INVALID_SLOT)
 			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the code has more than {} globals"), bloop::INVALID_SLOT));
 
-		slot = static_cast<bloop::BloopIndex>(scope.size());
+		//slot = static_cast<bloop::BloopIndex>(scope.size());
 		m_oDeclaredIdentifiers.back()[name] = slot; //to avoid redeclarations
 
 	} else {
