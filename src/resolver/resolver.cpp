@@ -43,15 +43,16 @@ void bloop::resolver::Resolve(bloop::ast::Program* code, bloop::metadata::Metada
 		metadata.m_oFunctionTable[funcName] = &func;
 	}
 
-	std::cout << "global variables:\n";
+	//std::cout << "global variables:\n";
 
-	for (const auto& [v, k] : resolver.m_oDeclaredIdentifiers.front()) {
-		std::cout << bloop::fmt::format(BLOOPTEXT("[{}] - {}\n"), k, v);
-	}
+	//for (const auto& [v, k] : resolver.m_oDeclaredIdentifiers.front()) {
+	//	std::cout << bloop::fmt::format(BLOOPTEXT("[{}] - {}\n"), k, v);
+	//}
 
 	
 	code->m_uNumFunctions = static_cast<bloop::BloopIndex>(resolver.m_oAllFunctions.size());
 	code->m_uNumGlobals = static_cast<bloop::BloopIndex>(resolver.m_oDeclaredIdentifiers.front().size());
+	code->m_oAllFunctions = std::move(resolver.m_oAllFunctions);
 
 	resolver.m_oDeclaredIdentifiers.pop_back();
 
@@ -90,7 +91,7 @@ Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst, bo
 		slot = m_oDeclaredIdentifiers.back().at(name); //give it the same slot
 	} else if (m_oFunctions.empty()) {
 
-		slot = CountLocals();
+		slot = CountLocals(); //counts globals
 
 		if (slot >= bloop::INVALID_SLOT)
 			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the code has more than {} globals"), bloop::INVALID_SLOT));

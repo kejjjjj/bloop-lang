@@ -27,7 +27,7 @@ Object* Heap::AllocString(bloop::BloopUInt len) {
 	m_pGC->AddExternalBytes(len);
 	return str;
 }
-Object* Heap::AllocString(bloop::BloopChar* data, bloop::BloopUInt len) {
+Object* Heap::AllocString(const bloop::BloopChar* data, bloop::BloopUInt len) {
 	auto newBuf = new bloop::BloopChar[len];
 	std::memcpy(newBuf, data, len);
 	auto ptr = Allocate<Object>(newBuf, len);

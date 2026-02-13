@@ -7,6 +7,7 @@
 
 namespace bloop::ast {
 	struct BlockStatement;
+	struct FunctionDeclarationStatement;
 }
 
 namespace bloop::parser {
@@ -14,6 +15,7 @@ namespace bloop::parser {
 
 	class CParserFunction final : CParserSingle<bloop::CToken>, protected IStatement {
 		BLOOP_NONCOPYABLE(CParserFunction);
+		friend class CLambdaChecker;
 	public:
 		CParserFunction() = delete;
 		CParserFunction(const CParserContext& ctx);
@@ -21,6 +23,7 @@ namespace bloop::parser {
 
 		[[nodiscard]] bloop::EStatus Parse();
 		[[nodiscard]] UniqueStatement ToStatement() override;
+		[[nodiscard]] std::unique_ptr<bloop::ast::FunctionDeclarationStatement> ToActualStatement();
 
 	private:
 		[[nodiscard]] bloop::EStatus ParseDeclaration();

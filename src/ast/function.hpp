@@ -26,12 +26,16 @@ namespace bloop::ast {
 
 		void Resolve(TResolver& resolver) override {
 
-			if (auto sym = resolver.ResolveSymbol(m_sName); !sym->m_bIsFunction) {
-				throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + m_sName, m_oApproximatePosition);
+
+			if (const auto sym = resolver.ResolveSymbol(m_sName)) {
+				if(!sym->m_bIsFunction)
+					throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + m_sName, m_oApproximatePosition);
+			} else {
+				resolver.DeclareSymbol(m_sName, true, true);
 			}
 
 			resolver.m_oDeclaredIdentifiers.push_back({});
-			//resolver.DeclareSymbol(m_sName, true); //already did this during hoisting
+
 			m_oIdentifier = resolver.ResolveIdentifier(m_sName);
 
 			if(resolver.m_oAllFunctions.size() >= bloop::INVALID_SLOT)
@@ -44,7 +48,7 @@ namespace bloop::ast {
 			resolver.BeginScope();
 			m_iScopeDepth = resolver.m_iScopeDepth;
 
-			std::ranges::for_each(m_oParams, [this, &resolver](const std::string& param) {
+			std::ranges::for_each(m_oParams, [this, &resolver](const bloop::BloopString& param) {
 				if (resolver.ResolveSymbol(param))
 					throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + param, m_oApproximatePosition);
 				resolver.DeclareSymbol(param);
@@ -104,6 +108,8 @@ namespace bloop::ast {
 		}
 
 		void EmitByteCode(TBCBuilder& parent) override;
+		void EmitCaptures(TBCBuilder& parent);
+		void EmitStoreIdentifier(TBCBuilder& parent);
 
 		bloop::BloopString m_sName;
 		std::vector<BloopString> m_oParams;

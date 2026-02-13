@@ -22,7 +22,8 @@
 
 using namespace bloop::parser;
 
-CLexParser::CLexParser(const bloop::lexer::CLexer& lexer) {
+CLexParser::CLexParser(const bloop::lexer::CLexer& lexer, metadata::Metadata& metadata) 
+	: m_refMetadata(metadata) {
 	for (auto& t : lexer.GetTokens())
 		m_oTokens.push_back(t.get());
 
@@ -35,21 +36,22 @@ CLexParser::~CLexParser() = default;
 
 std::unique_ptr<bloop::ast::Program> CLexParser::Parse(){
 	assert(m_pInternal);
-	return m_pInternal->Parse();
+	return m_pInternal->Parse(m_refMetadata);
 }
 
 CLexParserInternal::CLexParserInternal(ParserIterator& start, ParserIterator& end)
 	: CParser(start, end) {}
 CLexParserInternal::~CLexParserInternal() = default;
 
-std::unique_ptr<bloop::ast::Program> CLexParserInternal::Parse()
+std::unique_ptr<bloop::ast::Program> CLexParserInternal::Parse(metadata::Metadata& metadata)
 {
 	auto&& program = std::make_unique<ast::Program>(GetIteratorSafe()->GetCodePosition());
 
 	auto ctx = CParserContext{
 		.m_iterPos = m_iterPos,
 		.m_iterEnd = m_iterEnd,
-		.m_pCurrentBlock = program.get()
+		.m_pCurrentBlock = program.get(),
+		.m_refMetadata = metadata
 	};
 
 	while (!IsEndOfBuffer()) {

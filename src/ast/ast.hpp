@@ -59,7 +59,6 @@ namespace bloop::ast {
 		[[nodiscard]] virtual constexpr bool IsFunction() const noexcept { return false; }
 		[[nodiscard]] virtual constexpr bool IsReturn() const noexcept { return false; }
 		[[nodiscard]] virtual constexpr bool IsDeclaration() const noexcept { return false; }
-
 	};
 
 	struct BlockStatement : Statement {
@@ -124,6 +123,10 @@ namespace bloop::ast {
 
 		bloop::BloopIndex m_uNumFunctions{};
 		bloop::BloopIndex m_uNumGlobals{}; //includes functions
+
+		//used by the bytecode generator
+		std::vector<bloop::ast::FunctionDeclarationStatement*> m_oAllFunctions;
+		std::vector<bloop::ast::FunctionDeclarationStatement*> m_oTopLevelFunctions;
 	};
 
 	struct LiteralExpression : Expression {
@@ -231,7 +234,16 @@ namespace bloop::ast {
 		void Resolve(TResolver& resolver) override;
 		void EmitByteCode(TBCBuilder& builder, bool want_value) override;
 	};
+	struct FunctionExpression : Expression {
 
+		FunctionExpression(std::unique_ptr<FunctionDeclarationStatement>&& funcDecl, const bloop::CodePosition& cp);
+		~FunctionExpression();
+
+		void Resolve(TResolver& resolver) override;
+		void EmitByteCode(TBCBuilder& builder, bool want_value) override;
+
+		std::unique_ptr<FunctionDeclarationStatement> m_pFuncDecl;
+	};
 	struct ArrayExpression : Expression {
 
 		ArrayExpression(std::vector<std::unique_ptr<Expression>>&& inits, const bloop::CodePosition& cp) 

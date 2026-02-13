@@ -31,7 +31,7 @@ bloop::EStatus CParserOperand::Parse([[maybe_unused]]std::optional<PairMatcher>&
 	if (bloop::token::IsConstant(token->Type())) {
 		m_pOperand = ParseConstant();
 	} else if (token->IsOperator(EPunctuation::p_par_open)) {
-		m_pOperand = ParseParentheses();
+		m_pOperand = ParseParentheses(eoe);
 	} else if (token->IsOperator(EPunctuation::p_bracket_open)) {
 		m_pOperand = ParseArray();
 	} else if (token->IsOperator(EPunctuation::p_curlybracket_open)) {

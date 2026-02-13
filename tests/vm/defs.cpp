@@ -38,7 +38,7 @@ std::optional<Value> bloop::test::TEST_ExecuteBuffer(bloop::BloopStringView buff
 		auto lex = bloop::lexer::CLexer(buffer, metadata);
 		lex.Parse();
 			
-		bloop::parser::CLexParser parser(lex);
+		bloop::parser::CLexParser parser(lex, metadata);
 
 		if (const auto code = parser.Parse()) {
 			bloop::resolver::Resolve(code.get(), metadata);

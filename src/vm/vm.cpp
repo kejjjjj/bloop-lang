@@ -21,7 +21,7 @@ std::vector<Value> VM::BuildConstants(const std::vector<bloop::ConstantData>& co
 		const auto type = std::get<1>(c);
 
 		if (type == bloop::EValueType::t_string) {
-			vals.emplace_back(Value{ m_oHeap.AllocString(const_cast<char*>(data.data()), data.size()) });
+			vals.emplace_back(Value{ m_oHeap.AllocString(data.data(), data.size()) });
 		} else {
 			vals.emplace_back(Value{ c });
 		}
@@ -62,8 +62,8 @@ VM::~VM() {
 		//assert(m_oStack.size() == 1); //something leaked if not true
 		m_oStack.clear(); //free everything for the GC
 		m_oGlobals.clear(); // let the gc get rid of these
-		m_oFunctions.clear();
 		m_oGlobalChunk.m_oConstants.clear();
+		m_oFunctions.clear();
 		m_oGC.Collect(); //clear everything
 
 	}
@@ -133,10 +133,13 @@ Value VM::Run() {
 VM::ExecutionReturnCode VM::RunFrame() {
 	ExecutionReturnCode returnCode{};
 
-	const auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
+	auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
+	m_pCurrentFrame->m_pIpBase = chunk.m_oByteCode.data();
+	m_pCurrentFrame->m_pIp = m_pCurrentFrame->m_pIpBase;
+	const auto end = m_pCurrentFrame->m_pIp + chunk.m_oByteCode.size();
 
-	while (m_pCurrentFrame->m_uIp != chunk.m_oByteCode.size()) {
-		returnCode = InterpretOpCode(static_cast<bloop::bytecode::EOpCode>(chunk.m_oByteCode[m_pCurrentFrame->m_uIp++]));
+	while (m_pCurrentFrame->m_pIp != end) {
+		returnCode = InterpretOpCode(static_cast<bloop::bytecode::EOpCode>(*m_pCurrentFrame->m_pIp++));
 
 		if (returnCode != ExecutionReturnCode::rc_continue) {
 			break;

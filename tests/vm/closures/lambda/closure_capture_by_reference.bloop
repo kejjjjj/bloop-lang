@@ -1,0 +1,13 @@
+const main = () => {
+	let x = "a";
+
+	const setA = () => x = "A";
+	const setB = () => x = "B";
+
+	setA();
+	setB();
+
+	return x;
+};
+
+return main();

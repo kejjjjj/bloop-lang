@@ -25,6 +25,15 @@ void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 	parent.m_refMetadata.m_oVMData.AddFunction(f, f.m_uId);
 	parent.AddFunction(f.m_uId);
 
+	EmitCaptures(parent);
+
+	//normal functions implicitly store the identifier ( fn main() {} )
+	//lambdas have already loaded the identifier ( main = () => {} ) 
+	if(!parent.m_bIsLambda)
+		EmitStoreIdentifier(parent);
+}
+
+void FunctionDeclarationStatement::EmitCaptures(TBCBuilder& parent) {
 	if (m_oCaptures.empty()) {
 		Emit(parent, TOpCode::MAKE_FUNCTION, m_uFunctionId);
 	} else {
@@ -34,8 +43,8 @@ void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 			parent.EmitCapture(cap, m_oApproximatePosition);
 		}
 	}
-	
-
+}
+void FunctionDeclarationStatement::EmitStoreIdentifier(TBCBuilder& parent) {
 	switch (m_oIdentifier.m_eKind) {
 	case ResolvedIdentifier::Kind::Local:
 		Emit(parent, TOpCode::STORE_LOCAL, m_oIdentifier.m_uSlot);
@@ -47,7 +56,4 @@ void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 		Emit(parent, TOpCode::STORE_GLOBAL, m_oIdentifier.m_uSlot);
 		break;
 	}
-
-
 }
-

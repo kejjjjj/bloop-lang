@@ -20,7 +20,7 @@ void VM::Throw(Value value) {
         assert(frame->m_uBase <= m_oStack.size() && "Frame base is beyond current stack size");
         assert(frame->m_uBase >= 0 && "Frame base is negative");
         assert(frame->m_pChunk != nullptr && "Frame has no chunk");
-        assert(frame->m_uIp <= bytecode.size() && "IP out of bounds in chunk");
+        assert(frame->m_pIp <= bytecode.data() + bytecode.size() && "IP out of bounds in chunk");
 
         if (!frame->m_oExceptionHandlers.empty()) {
             const auto& top = frame->m_oExceptionHandlers.back();
@@ -52,8 +52,8 @@ void VM::Throw(Value value) {
                 m_oStack[catch_slot] = value;
             }
 
-            frame->m_uIp = top.m_uIp;
-            assert(frame->m_uIp < bytecode.size() && "Restored IP out of bounds");
+            frame->m_pIp = frame->m_pIpBase + top.m_uIp;
+            assert(frame->m_pIp < bytecode.data() + bytecode.size() && "Restored IP out of bounds");
 
             frame->m_oExceptionHandlers.pop_back();
 

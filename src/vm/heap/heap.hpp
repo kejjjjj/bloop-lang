@@ -32,7 +32,7 @@ namespace bloop::vm
 		}
 
 		//[[nodiscard]] Object* Allocate(Object* newObj);
-		[[nodiscard]] Object* AllocString(bloop::BloopChar* data, bloop::BloopUInt len);
+		[[nodiscard]] Object* AllocString(const bloop::BloopChar* data, bloop::BloopUInt len);
 		[[nodiscard]] Object* AllocString(bloop::BloopUInt len);
 		[[nodiscard]] Object* AllocCallable(Function* callable);
 		[[nodiscard]] Object* AllocArray(bloop::BloopIndex numValues);

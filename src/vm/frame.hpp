@@ -17,7 +17,8 @@ namespace bloop::vm
 		};
 
 		Chunk* m_pChunk{};
-		bloop::BloopUInt m_uIp{};
+		bloop::BloopByte* m_pIp{};
+		bloop::BloopByte* m_pIpBase{};
 		bloop::BloopUInt m_uBase{};
 		std::vector<ExceptionHandler> m_oExceptionHandlers;
 

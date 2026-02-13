@@ -14,8 +14,9 @@
 #define BLOOPTEXT(str) str
 #endif
 
+#if !defined(BLOOP8) && !defined(BLOOP16) && !defined(BLOOP32) && !defined(BLOOP64)
 #define BLOOP16
-
+#endif
 
 namespace bloop {
 	using BloopString = std::string;

@@ -75,3 +75,21 @@ void AssignExpression::Resolve(TResolver& resolver) {
 		throw bloop::exception::ResolverError(BLOOPTEXT("lhs is declared as const"), left->m_oApproximatePosition);
 
 }
+
+FunctionExpression::FunctionExpression(std::unique_ptr<FunctionDeclarationStatement>&& funcDecl, const bloop::CodePosition& cp)
+	: Expression(cp), m_pFuncDecl(std::forward<decltype(funcDecl)>(funcDecl)) {}
+
+FunctionExpression::~FunctionExpression() = default;
+
+void FunctionExpression::Resolve(TResolver& resolver) {
+	m_pFuncDecl->Resolve(resolver);
+}
+void FunctionExpression::EmitByteCode(TBCBuilder& builder, bool want_value) {
+
+	builder.m_bIsLambda = true;
+	m_pFuncDecl->EmitByteCode(builder);
+	builder.m_bIsLambda = false;
+
+	if (!want_value)
+		Emit(builder, TOpCode::POP);
+}

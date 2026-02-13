@@ -8,11 +8,15 @@ using namespace bloop::bytecode;
 void bloop::bytecode::BuildByteCode(bloop::ast::Program* code, bloop::metadata::Metadata& metadata) {
 
 	CByteCodeGlobals globals(code);
-	metadata.m_oVMData.AddChunk(globals.Generate(metadata));
 	metadata.m_oVMData.m_oFunctions.resize(code->m_uNumFunctions);
-
 	metadata.m_uNumGlobals = code->m_uNumGlobals;
 
+	metadata.m_oVMData.AddChunk(globals.Generate(metadata));
+	assert(metadata.m_oVMData.m_oChunks.size());
+	const auto globalChunkIdx = metadata.m_oVMData.m_oChunks.size() - 1u;
+
+
+	//todo: include lambdas
 	for (const auto& stmt : code->m_oStatements) {
 		if (stmt->IsFunction()) {
 			CByteCodeFunction f(dynamic_cast<bloop::ast::FunctionDeclarationStatement*>(stmt.get()));
@@ -20,5 +24,5 @@ void bloop::bytecode::BuildByteCode(bloop::ast::Program* code, bloop::metadata::
 		}
 	}
 
-	metadata.m_oVMData.m_pGlobalChunk = &metadata.m_oVMData.m_oChunks.front();
+	metadata.m_oVMData.m_pGlobalChunk = &metadata.m_oVMData.m_oChunks[globalChunkIdx];
 }

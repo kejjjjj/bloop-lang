@@ -124,6 +124,7 @@ namespace bloop::bytecode
 		std::vector<bloop::ConstantData> m_oConstants;
 		std::vector<CSingularByteCode> m_oByteCode;
 		bloop::BloopIndex m_uOffset{};
+		bloop::BloopBool m_bIsLambda{};
 
 		std::vector<LoopContext> m_oLoops;
 

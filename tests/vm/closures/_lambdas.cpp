@@ -1,6 +1,6 @@
 #include "tests/vm/defs.hpp"
 
-#define PREFIX "closures"
+#define PREFIX JOIN_PATH("closures", "lambda")
 
 TEST_CASE("local capture with a mutation") {
     bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "closure_capture_mutation"), Value::Type::t_int, std::array{2,3,3});

@@ -9,6 +9,7 @@
 #include "metadata/metadata.hpp"
 #include "vm/gc/gc.hpp"
 #include "vm/heap/heap.hpp"
+#include "vm/heap/arena.hpp"
 
 namespace bloop::bytecode {
 	enum class EOpCode : unsigned char;
@@ -64,6 +65,7 @@ namespace bloop::vm {
 		std::vector<Value> m_oGlobals;
 		CallFrame* m_pCurrentFrame{};
 
+		//Arena m_oArena;
 		GC m_oGC;
 		Heap m_oHeap;
 		Chunk m_oGlobalChunk; //executed in the beginning

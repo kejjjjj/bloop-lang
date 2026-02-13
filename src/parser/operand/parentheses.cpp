@@ -2,9 +2,16 @@
 #include "ast/ast.hpp"
 #include "parser/expression/expression.hpp"
 #include "parser/exception.hpp"
+#include "parser/operand/lambda.hpp"
 using namespace bloop::parser;
 
-std::unique_ptr<IOperand> CParserOperand::ParseParentheses() {
+std::unique_ptr<IOperand> CParserOperand::ParseParentheses(std::optional<PairMatcher>& eoe) {
+
+	CLambdaChecker lambda(m_oCtx);
+
+	if (lambda.Parse(eoe) == bloop::EStatus::success) {
+		return std::make_unique<CLambdaOperand>(lambda.ToExpression());
+	}
 
 	Advance(1); // skip (
 

@@ -5,8 +5,13 @@
 
 #include <vector>
 #include <unordered_map>
+#include <cassert>
 
 namespace bloop::metadata {
+
+	struct ParserMetadata {
+		bloop::BloopUInt m_uNumLambdas{};
+	};
 
 	struct VMMetadata {
 
@@ -16,6 +21,7 @@ namespace bloop::metadata {
 			return idx;
 		}
 		void AddFunction(const bloop::bc::Function& data, bloop::BloopIndex idx) {
+			assert(idx < m_oFunctions.size());
 			m_oFunctions[idx] = data;
 		}
 
@@ -33,10 +39,10 @@ namespace bloop::metadata {
 		struct FunctionDebugInfo {
 
 			//references m_oLineMap
-			bloop::BloopIndex m_uId;
+			bloop::BloopIndex m_uId{};
 			bloop::BloopString m_sName;
-			bloop::BloopUInt m_uStartLine;
-			bloop::BloopUInt m_uEndLine;
+			bloop::BloopUInt m_uStartLine{};
+			bloop::BloopUInt m_uEndLine{};
 
 		};
 
@@ -44,6 +50,7 @@ namespace bloop::metadata {
 		std::unordered_map<bloop::BloopString, FunctionDebugInfo*> m_oFunctionTable;
 		bloop::BloopIndex m_uNumGlobals{};
 
+		ParserMetadata m_oParserData;
 		VMMetadata m_oVMData;
 	};
 

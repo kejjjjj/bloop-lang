@@ -2,6 +2,7 @@
 
 #include "parser/defs.hpp"
 #include "utils/defs.hpp"
+#include "metadata/metadata.hpp"
 
 #include <vector>
 #include <memory>
@@ -19,6 +20,7 @@ namespace bloop::parser {
 		ParserIterator& m_iterPos;
 		ParserIterator& m_iterEnd;
 		mutable bloop::ast::BlockStatement* m_pCurrentBlock;
+		metadata::Metadata& m_refMetadata;
 
 		auto& GetIterator() const noexcept { return *m_iterPos; }
 	};
@@ -27,7 +29,7 @@ namespace bloop::parser {
 
 	class CLexParser final  {
 	public:
-		CLexParser(const bloop::lexer::CLexer& lexer);
+		CLexParser(const bloop::lexer::CLexer& lexer, metadata::Metadata& metadata);
 		~CLexParser();
 
 		[[nodiscard]] std::unique_ptr<bloop::ast::Program> Parse();
@@ -36,6 +38,7 @@ namespace bloop::parser {
 		std::vector<bloop::CToken*> m_oTokens;
 		std::unique_ptr<CLexParserInternal> m_pInternal;
 		ParserIterator m_iterPos, m_iterEnd;
+		metadata::Metadata& m_refMetadata;
 	};
 
 	class CLexParserInternal : public CParser {
@@ -43,7 +46,7 @@ namespace bloop::parser {
 		CLexParserInternal(ParserIterator& start, ParserIterator& end);
 		~CLexParserInternal();
 
-		[[nodiscard]] std::unique_ptr<bloop::ast::Program> Parse();
+		[[nodiscard]] std::unique_ptr<bloop::ast::Program> Parse(metadata::Metadata& metadata);
 
 	private:
 	};

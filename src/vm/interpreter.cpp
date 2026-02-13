@@ -142,10 +142,10 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			const auto target = FetchOperand();
 			const Value v = Pop();
 			if (!v.IsTruthy())
-				m_pCurrentFrame->m_uIp = target; // skip to the end of the loop
+				m_pCurrentFrame->m_pIp = m_pCurrentFrame->m_pIpBase + target; // skip to the end of the loop
 			break;
 		} case TOpCode::JMP: {
-			m_pCurrentFrame->m_uIp = FetchOperand();
+			m_pCurrentFrame->m_pIp = m_pCurrentFrame->m_pIpBase + FetchOperand();
 			break;
 		} case TOpCode::CALL: {
 			const auto argc = FetchOperand();
@@ -255,13 +255,13 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			m_oGC.PushTempRoot(obj);
 
 			for (const auto i : std::views::iota(0u, obj->closure.numValues)) {
-				const auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
+				[[maybe_unused]] const auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
 
 				assert(m_pCurrentFrame->m_pChunk->m_uMetadata < m_refMetaData.m_oVMData.m_oChunks.size() && "Current chunk metadata index out of bounds");
 
-				assert(m_pCurrentFrame->m_uIp < chunk.m_oByteCode.size() && "IP out of bounds before reading opcode");
-				const auto opcode = static_cast<TOpCode>(chunk.m_oByteCode[m_pCurrentFrame->m_uIp++]);
-				assert(m_pCurrentFrame->m_uIp <= chunk.m_oByteCode.size() && "IP advanced past end after opcode read");
+				assert(m_pCurrentFrame->m_pIp < chunk.m_oByteCode.data() + chunk.m_oByteCode.size() && "IP out of bounds before reading opcode");
+				const auto opcode = static_cast<TOpCode>(*m_pCurrentFrame->m_pIp++);
+				assert(m_pCurrentFrame->m_pIp < chunk.m_oByteCode.data() + chunk.m_oByteCode.size() && "IP advanced past end after opcode read");
 
 				const auto slot = FetchOperand();
 
@@ -329,12 +329,11 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 }
 #define NOMINMAX
 bloop::BloopIndex VM::FetchOperand() {
-	const auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
-	auto* p = &chunk.m_oByteCode[m_pCurrentFrame->m_uIp];
+	auto* p = &*m_pCurrentFrame->m_pIp;
 
 	bloop::BloopIndex value;
 	std::memcpy(&value, p, sizeof(value));
 
-	m_pCurrentFrame->m_uIp += sizeof(value);
+	m_pCurrentFrame->m_pIp += sizeof(value);
 	return value;
 }

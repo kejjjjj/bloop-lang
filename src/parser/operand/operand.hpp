@@ -51,7 +51,7 @@ namespace bloop::parser {
 	private:
 		[[nodiscard]] std::unique_ptr<IOperand> ParseConstant();
 		[[nodiscard]] std::unique_ptr<IOperand> ParseIdentifier();
-		[[nodiscard]] std::unique_ptr<IOperand> ParseParentheses();
+		[[nodiscard]] std::unique_ptr<IOperand> ParseParentheses(std::optional<PairMatcher>&);
 		[[nodiscard]] std::unique_ptr<IOperand> ParseArray();
 		[[nodiscard]] std::unique_ptr<IOperand> ParseObject();
 

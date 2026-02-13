@@ -116,5 +116,5 @@ namespace bloop::test {
     #define BLOOP_DIRECTORY_SEPARATOR_CHAR bloop::BloopChar('/')
 #endif
 
-#define MAKE_RELATIVE_PATH(prefix, name) \
-bloop::BloopString(BLOOPTEXT(prefix)) + BLOOP_DIRECTORY_SEPARATOR + bloop::BloopString(BLOOPTEXT(name)) + BLOOPTEXT(".bloop")
+#define JOIN_PATH(a, b) bloop::BloopString(BLOOPTEXT(a)) + BLOOP_DIRECTORY_SEPARATOR + bloop::BloopString(BLOOPTEXT(b))
+#define MAKE_RELATIVE_PATH(prefix, name) JOIN_PATH(prefix, name) + BLOOPTEXT(".bloop")

@@ -23,7 +23,7 @@ int main() {
 		auto lex = bloop::lexer::CLexer(_code, metadata);
 		lex.Parse();
 			
-		bloop::parser::CLexParser parser(lex);
+		bloop::parser::CLexParser parser(lex, metadata);
 
 		if (const auto code = parser.Parse()) {
 			bloop::resolver::Resolve(code.get(), metadata);

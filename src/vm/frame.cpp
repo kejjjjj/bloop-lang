@@ -17,7 +17,7 @@ CallFrame::CallFrame(Closure* closure, bloop::BloopUInt stackBase)
 const bloop::bc::InstrDebugRef& CallFrame::GetCurrentPosition(VM& vm) const {
 	const auto& data = vm.m_refMetaData.m_oVMData.m_oChunks[m_pChunk->m_uMetadata];
 
-	auto it = std::upper_bound(data.m_oInstructions.begin(), data.m_oInstructions.end(), m_uIp,
+	auto it = std::upper_bound(data.m_oInstructions.begin(), data.m_oInstructions.end(), static_cast<bloop::BloopUInt>(m_pIp - m_pIpBase),
 		[](bloop::BloopUInt ip, const bc::InstrDebugRef& p) {
 			return ip <= p.m_uByteOffset;
 		});

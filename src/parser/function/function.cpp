@@ -96,6 +96,9 @@ bloop::EStatus CParserFunction::ParseScope() {
 }
 
 UniqueStatement CParserFunction::ToStatement() {
+	return ToActualStatement();
+}
+std::unique_ptr<bloop::ast::FunctionDeclarationStatement> CParserFunction::ToActualStatement() {
 	return std::make_unique<bloop::ast::FunctionDeclarationStatement>
 		(m_sName, std::move(m_oParameters), std::move(m_pBody), m_oDeclPos, m_oEndPos);
 }
