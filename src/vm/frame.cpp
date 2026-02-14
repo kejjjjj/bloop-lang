@@ -28,7 +28,7 @@ void VM::PushFrame(Function* fn) {
 	const auto frameBase = m_oStack.size() - fn->m_uParamCount;
 	const auto needed = fn->m_uParamCount + fn->m_uLocalCount;
 
-	if (m_oStack.size() + static_cast<bloop::BloopUInt>(needed) > BLOOP_MAX_STACK)
+	if (m_oStack.size() + static_cast<bloop::BloopUInt>(needed) >= BLOOP_MAX_STACK)
 		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} stack values"), BLOOP_MAX_STACK));
 
 	if (m_oFrames.size() >= BLOOP_MAX_FRAMES)

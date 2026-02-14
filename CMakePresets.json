@@ -75,24 +75,24 @@
                 "CMAKE_BUILD_TYPE": "Debug"
             }
         },
-      {
-        "name": "clang-release",
-        "inherits": "clang-debug",
-        "cacheVariables": {
-          "CMAKE_BUILD_TYPE": "Release"
-        }
-      },
-      {
-        "name": "x64-relwithdebinfo",
-        "inherits": "windows-msvc-base",
-        "architecture": {
-          "value": "x64",
-          "strategy": "external"
+        {
+            "name": "clang-release",
+            "inherits": "clang-debug",
+            "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "Release"
+            }
         },
-        "cacheVariables": {
-          "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        {
+            "name": "x64-relwithdebinfo",
+            "inherits": "windows-msvc-base",
+            "architecture": {
+            "value": "x64",
+            "strategy": "external"
+            },
+            "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
         }
-      }
 
     ]
 }

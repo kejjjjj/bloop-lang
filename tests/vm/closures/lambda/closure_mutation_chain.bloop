@@ -1,0 +1,21 @@
+const main = () => {
+
+	let x = 0;
+
+	const a = () => {
+		const b = () => {
+			const c = () => {
+				x = x + 1;
+			};
+			c();
+		};
+		b();
+	};
+
+	a();
+	a();
+
+	return x;
+};
+
+return main();

@@ -1,0 +1,10 @@
+
+fn main(){
+	{
+		{
+			return "scope!2";
+		}
+	}
+}
+
+return main();

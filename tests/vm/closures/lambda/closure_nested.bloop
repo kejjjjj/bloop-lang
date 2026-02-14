@@ -1,0 +1,17 @@
+const main = () => {
+
+	const outer = (x) => {
+		let y = "Y";
+		const middle = () => {
+			let z = "Z";
+			const inner = () => x + y + z;
+			return inner;
+		};
+		return middle();
+	};
+
+	let f = outer("X");
+	return f();
+};
+
+return main();

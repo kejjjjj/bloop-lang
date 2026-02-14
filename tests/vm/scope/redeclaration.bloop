@@ -1,0 +1,13 @@
+//blockers to make sure that the indices don't get mixed up
+{
+    {
+        let blocker;
+        const f = 3;
+    }
+    const f = 2;
+    let blocker;
+}
+
+const f = 1;
+let blocker;
+return f;

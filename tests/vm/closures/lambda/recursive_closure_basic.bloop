@@ -1,0 +1,13 @@
+const main = () => {
+	let x = 0;
+
+	const rec = (n) => {
+		if (n == 0) return x;
+		x = x + 1;
+		return rec(n - 1);
+	};
+
+	return rec(3);
+};
+
+return main();

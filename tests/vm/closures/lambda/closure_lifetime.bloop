@@ -1,0 +1,13 @@
+const main = () => {
+
+	const make = () => {
+		let secret = "alive";
+		const reveal = () => secret;
+		return reveal;
+	};
+
+	let r = make();
+	return r();
+};
+
+return main();

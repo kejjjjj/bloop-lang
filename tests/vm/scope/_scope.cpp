@@ -8,9 +8,15 @@ TEST_CASE("unnamed scope") {
 TEST_CASE("double unnamed scope") {
     bloop::test::CheckConstant(MAKE_RELATIVE_PATH(PREFIX, "double_unnamed_scope"), Value::Type::t_object, BLOOPTEXT("scope!2"));
 }
+TEST_CASE("double unnamed scope in a function") {
+    bloop::test::CheckConstant(MAKE_RELATIVE_PATH(PREFIX, "function_double_unnamed_scope"), Value::Type::t_object, BLOOPTEXT("scope!2"));
+}
 TEST_CASE("unnamed scope assignment") {
     bloop::test::CheckConstant(MAKE_RELATIVE_PATH(PREFIX, "unnamed_scope_assignment"), Value::Type::t_object, BLOOPTEXT("scope!3"));
 }
 TEST_CASE("closure references 'deleted' variables") {
     bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "closure"), Value::Type::t_int, std::array{1, 1});
+}
+TEST_CASE("f gets redeclared in scopes") {
+    bloop::test::CheckConstant(MAKE_RELATIVE_PATH(PREFIX, "redeclaration"), Value::Type::t_int, 1);
 }

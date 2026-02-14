@@ -4,12 +4,12 @@ const main = () => {
 	const inc = () => {
 		x = x + 1;
 		return x;
-	}
+	};
 
 	const a = inc();
 	const b = inc();
 
 	return [a, b, x];
-}
+};
 
 return main();

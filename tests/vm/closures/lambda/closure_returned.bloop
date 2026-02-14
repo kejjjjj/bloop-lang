@@ -1,0 +1,19 @@
+const main = () => {
+
+	const makeCounter = () => {
+		let c = 0;
+		const inc = () => {
+			c = c + 1;
+			return c;
+		};
+		return inc;
+	};
+
+	let counter = makeCounter();
+	const a = counter();
+	const b = counter();
+
+	return [a, b];
+};
+
+return main();

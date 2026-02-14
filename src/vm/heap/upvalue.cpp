@@ -130,7 +130,7 @@ void GC::CheckUpValueList() {
             if (reinterpret_cast<char*>(u->location) >= stack_top) {
                 std::fprintf(stderr, "!!! DANGLING open upvalue %p >= stack top %p\n", u->location, stack_top);
                 std::fflush(stderr);
-                std::abort();           // or __debugbreak() / breakpoint intrinsic
+                std::abort();
             }
         }
     }
