@@ -25,6 +25,7 @@ namespace bloop::bytecode
 		{ EPunctuation::p_strict_equality, EOpCode::S_EQ },
 		{ EPunctuation::p_unequality, EOpCode::NE },
 		{ EPunctuation::p_strict_unequality, EOpCode::S_NE },
+		{ EPunctuation::p_comma, EOpCode::SEQUENCE },
 	};
 
 	static std::unordered_map<EOpCode, bloop::BloopString> stringConversionTable = {

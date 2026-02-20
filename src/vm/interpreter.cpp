@@ -138,6 +138,12 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 				Push(a != b);
 				
 			break;
+		} case TOpCode::SEQUENCE: {
+			Value b = Pop();
+			[[maybe_unused]] Value a = Pop();
+
+			Push(b);
+			break;
 		} case TOpCode::JZ: {
 			const auto target = FetchOperand();
 			const Value v = Pop();
