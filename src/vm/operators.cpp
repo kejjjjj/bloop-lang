@@ -163,6 +163,46 @@ Value Value::operator/(Value v) {
     }
     throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
 }
+Value Value::operator%(Value v) {
+
+    Coerce(v);
+
+    switch (type) {
+    case VT::t_uint:
+        if (v.u == 0)
+            throw exception::VMError(BLOOPTEXT("division by 0"));
+        return u % v.u;
+    case VT::t_int:
+        if (v.u == 0)
+            throw exception::VMError(BLOOPTEXT("division by 0"));
+        return i % v.i;
+    case VT::t_double:
+        return std::fmod(d, v.d);
+    default:
+        break;
+    }
+    throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
+}
+Value Value::operator<(Value v) {
+
+    Coerce(v);
+
+    switch (type) {
+    case VT::t_undefined:
+        return true;
+    case VT::t_bool:
+        return b < v.b;
+    case VT::t_uint:
+        return u < v.u;
+    case VT::t_int:
+        return i < v.i;
+    case VT::t_double:
+        return d < v.d;
+    default:
+        break;
+    }
+    throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
+}
 Value Value::operator<=(Value v) {
 
     Coerce(v);

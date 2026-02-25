@@ -1,0 +1,6 @@
+const v = 50;
+
+if(v === 50)
+    return true;
+
+return false;

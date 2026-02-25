@@ -103,6 +103,16 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			Value a = Pop();
 			Push(a / b);
 			break;
+		} case TOpCode::MOD: {
+			Value b = Pop();
+			Value a = Pop();
+			Push(a % b);
+			break;
+		} case TOpCode::LESS: {
+			Value b = Pop();
+			Value a = Pop();
+			Push(a < b);
+			break;
 		} case TOpCode::LESS_EQUAL: {
 			Value b = Pop();
 			Value a = Pop();

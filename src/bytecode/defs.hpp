@@ -20,6 +20,8 @@ namespace bloop::bytecode
 		{ EPunctuation::p_sub, EOpCode::SUB },
 		{ EPunctuation::p_multiplication, EOpCode::MUL },
 		{ EPunctuation::p_division, EOpCode::DIV },
+		{ EPunctuation::p_modulo, EOpCode::MOD },
+		{ EPunctuation::p_less_than, EOpCode::LESS },
 		{ EPunctuation::p_less_equal, EOpCode::LESS_EQUAL },
 		{ EPunctuation::p_equality, EOpCode::EQ },
 		{ EPunctuation::p_strict_equality, EOpCode::S_EQ },

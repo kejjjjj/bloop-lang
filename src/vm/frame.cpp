@@ -91,7 +91,7 @@ bloop::BloopString VM::FormatStackTraceMessage(const bc::InstrDebugRef& ref)
 		return start != bloop::BloopString::npos ? str.substr(start, 1 + end - start) : bloop::BloopString();
 	};
 
-	auto& lineData = m_refMetaData.m_oLineMap[std::get<0>(ref.m_oPosition) - 1];
+	auto& lineData = m_refMetaData.m_oLineMap[std::get<0>(ref.m_oPosition) - 1u];
 	auto offset = std::get<1>(ref.m_oPosition);
 
 	bloop::BloopString msg = bloop::fmt::format(BLOOPTEXT("at [{}, {}]\n"), std::get<0>(ref.m_oPosition), offset);

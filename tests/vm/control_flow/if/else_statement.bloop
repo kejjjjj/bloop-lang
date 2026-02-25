@@ -1,0 +1,8 @@
+const v = 50;
+
+if(v === 49)
+    return false;
+else if(v === 51)
+    return false;
+else
+    return true;
