@@ -1,6 +1,12 @@
 R"(
+let v = 0;
 
-let ass = false;
-return ass, true, asss;
+while(v < 5){
+    v++;
 
+    if(v === 2)
+        break;
+}
+
+return v;
 )"

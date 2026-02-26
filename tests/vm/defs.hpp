@@ -35,11 +35,11 @@ namespace bloop::test {
 		} else if constexpr (std::is_same_v<T, bloop::BloopBool>) {
 			REQUIRE(ret.b == expectedValue);
 		} else if constexpr (std::is_integral_v<T> && std::is_signed_v<T>) {
-			REQUIRE(static_cast<long long>(ret.i) == static_cast<long long>(expectedValue));
+			REQUIRE(static_cast<bloop::BloopInt>(ret.i) == static_cast<bloop::BloopInt>(expectedValue));
 		} else if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
-			REQUIRE(static_cast<unsigned long long>(ret.u) == static_cast<unsigned long long>(expectedValue));
+			REQUIRE(static_cast<bloop::BloopUInt>(ret.u) == static_cast<bloop::BloopUInt>(expectedValue));
 		} else if constexpr (std::is_floating_point_v<T>) {
-			REQUIRE(ret.d == static_cast<double>(expectedValue));
+			REQUIRE(ret.d == static_cast<bloop::BloopDouble>(expectedValue));
 		} else if constexpr (std::is_convertible_v<T, bloop::BloopString>) {
 			const auto str = bloop::BloopString(expectedValue);
 
@@ -76,8 +76,9 @@ namespace bloop::test {
 			for(const auto i : std::views::iota(0, ret->obj->array.count)){
 				AssertValue(ret->obj->array.values[i], ExpectedValue{ expectedType, vals[i] });
 			}
-
+			return;
 		}
+		FAIL("code didn't execute correctly");
 
 	}
 
@@ -97,8 +98,10 @@ namespace bloop::test {
 				
 				AssertValue(ret->obj->object.entries[i].value, ExpectedValue{ expectedType, vals[i].second });
 			}
+			return;
 
 		}
+		FAIL("code didn't execute correctly");
 
 	}
 

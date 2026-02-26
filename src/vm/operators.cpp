@@ -223,6 +223,46 @@ Value Value::operator<=(Value v) {
     }
     throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
 }
+Value Value::operator>=(Value v) {
+
+    Coerce(v);
+
+    switch (type) {
+    case VT::t_undefined:
+        return true;
+    case VT::t_bool:
+        return b >= v.b;
+    case VT::t_uint:
+        return u >= v.u;
+    case VT::t_int:
+        return i >= v.i;
+    case VT::t_double:
+        return d >= v.d;
+    default:
+        break;
+    }
+    throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
+}
+Value Value::operator>(Value v) {
+
+    Coerce(v);
+
+    switch (type) {
+    case VT::t_undefined:
+        return true;
+    case VT::t_bool:
+        return b > v.b;
+    case VT::t_uint:
+        return u > v.u;
+    case VT::t_int:
+        return i > v.i;
+    case VT::t_double:
+        return d > v.d;
+    default:
+        break;
+    }
+    throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
+}
 Value Value::operator==(Value v) {
 
     Coerce(v);
@@ -262,6 +302,82 @@ Value Value::operator!=(Value v) {
         return d != v.d;
     case VT::t_object:
         return !obj->IsEqual(v.obj);
+    default:
+        break;
+    }
+    throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
+}
+Value Value::operator&&(Value v) {
+    return IsTruthy() && v.IsTruthy();
+}
+Value Value::operator||(Value v) {
+    return IsTruthy() || v.IsTruthy();
+}
+Value Value::operator<<(Value v) {
+
+    Coerce(v);
+
+    switch (type) {
+    case VT::t_uint:
+        return u << v.u;
+    case VT::t_int:
+        return i << v.i;
+    default:
+        break;
+    }
+    throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
+}
+Value Value::operator>>(Value v) {
+
+    Coerce(v);
+
+    switch (type) {
+    case VT::t_uint:
+        return u >> v.u;
+    case VT::t_int:
+        return i >> v.i;
+    default:
+        break;
+    }
+    throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
+}
+Value Value::operator&(Value v) {
+
+    Coerce(v);
+
+    switch (type) {
+    case VT::t_uint:
+        return u & v.u;
+    case VT::t_int:
+        return i & v.i;
+    default:
+        break;
+    }
+    throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
+}
+Value Value::operator|(Value v) {
+
+    Coerce(v);
+
+    switch (type) {
+    case VT::t_uint:
+        return u | v.u;
+    case VT::t_int:
+        return i | v.i;
+    default:
+        break;
+    }
+    throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
+}
+Value Value::operator^(Value v) {
+
+    Coerce(v);
+
+    switch (type) {
+    case VT::t_uint:
+        return u ^ v.u;
+    case VT::t_int:
+        return i ^ v.i;
     default:
         break;
     }

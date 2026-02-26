@@ -14,7 +14,15 @@ using namespace bloop::vm;
 
 using TOpCode = bloop::bytecode::EOpCode;
 
+
+
 VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
+
+	const auto BinaryOp = [this]<typename F>(F&& fn) -> void {
+		Value b = Pop();
+		Value a = Pop();
+		Push(fn(a, b));
+	};
 
 	switch (op) {
 		case TOpCode::POP: {
@@ -78,83 +86,35 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			assert(idx <= static_cast<bloop::BloopIndex>(m_oFunctions.size()));
 			Push(m_oHeap.AllocCallable(&m_oFunctions.at(idx)));
 			break;
-		} case TOpCode::ADD: {
-			Value b = Pop();
-			Value a = Pop();
+		} case TOpCode::ADD:
+			BinaryOp([&](auto& a, auto& b) {
+				if (a.IsString() && b.IsString())
+					return Value(m_oHeap.StringConcat(a.obj, b.obj));
+				return a + b;
+			});
+			break;
+		case TOpCode::SUB:			BinaryOp([](auto& a, auto& b) { return a - b; }); break;
+		case TOpCode::MUL:			BinaryOp([](auto& a, auto& b) { return a * b; }); break;
+		case TOpCode::DIV:			BinaryOp([](auto& a, auto& b) { return a / b; }); break;
+		case TOpCode::MOD:			BinaryOp([](auto& a, auto& b) { return a % b; }); break;
+		case TOpCode::LESS:			BinaryOp([](auto& a, auto& b) { return a < b; }); break;
+		case TOpCode::LESS_EQUAL:	BinaryOp([](auto& a, auto& b) { return a <= b; }); break;
+		case TOpCode::GREATER:		BinaryOp([](auto& a, auto& b) { return a > b; }); break;
+		case TOpCode::GREATER_EQUAL:BinaryOp([](auto& a, auto& b) { return a >= b; }); break;
+		case TOpCode::LOGICAL_OR:	BinaryOp([](auto& a, auto& b) { return a || b; }); break;
+		case TOpCode::LOGICAL_AND:	BinaryOp([](auto& a, auto& b) { return a && b; }); break;
+		case TOpCode::EQ:			BinaryOp([](auto& a, auto& b) { return a == b; }); break;
+		case TOpCode::NE:			BinaryOp([](auto& a, auto& b) { return a != b; }); break;
+		case TOpCode::S_EQ:			BinaryOp([](auto& a, auto& b) { return (a.type == b.type) && a.IsEqual(b); }); break;
+		case TOpCode::S_NE:			BinaryOp([](auto& a, auto& b) { return (a.type != b.type) || !a.IsEqual(b); }); break;
+		case TOpCode::SEQUENCE:		BinaryOp([]([[maybe_unused]]auto&, auto& b) { return b; }); break; 
+		case TOpCode::LEFT_SHIFT:	BinaryOp([](auto& a, auto& b) { return a << b; }); break;
+		case TOpCode::RIGHT_SHIFT:	BinaryOp([](auto& a, auto& b) { return a >> b; }); break;
+		case TOpCode::BITWISE_OR:	BinaryOp([](auto& a, auto& b) { return a | b; }); break;
+		case TOpCode::BITWISE_AND:	BinaryOp([](auto& a, auto& b) { return a & b; }); break;
+		case TOpCode::BITWISE_XOR:	BinaryOp([](auto& a, auto& b) { return a ^ b; }); break;
 
-			if (a.IsString() && b.IsString()) {
-				Push(m_oHeap.StringConcat(a.obj, b.obj)); 
-			} else {
-				Push(a + b);
-			}
-			break;
-		} case TOpCode::SUB: {
-			Value b = Pop();
-			Value a = Pop();
-			Push(a - b);
-			break;
-		} case TOpCode::MUL: {
-			Value b = Pop();
-			Value a = Pop();
-			Push(a * b);
-			break;
-		} case TOpCode::DIV: {
-			Value b = Pop();
-			Value a = Pop();
-			Push(a / b);
-			break;
-		} case TOpCode::MOD: {
-			Value b = Pop();
-			Value a = Pop();
-			Push(a % b);
-			break;
-		} case TOpCode::LESS: {
-			Value b = Pop();
-			Value a = Pop();
-			Push(a < b);
-			break;
-		} case TOpCode::LESS_EQUAL: {
-			Value b = Pop();
-			Value a = Pop();
-			Push(a <= b);
-			break;
-		} case TOpCode::EQ: {
-			Value b = Pop();
-			Value a = Pop();
-			Push(a == b);
-			break;
-		} case TOpCode::S_EQ: {
-			Value b = Pop();
-			Value a = Pop();
-
-			if(b.type == a.type)
-				Push(a == b);
-			else
-				Push(false);
-			
-			break;
-		}case TOpCode::NE: {
-			Value b = Pop();
-			Value a = Pop();
-			Push(a != b);
-			break;
-		} case TOpCode::S_NE: {
-			Value b = Pop();
-			Value a = Pop();
-
-			if(b.type != a.type)
-				Push(true);
-			else
-				Push(a != b);
-				
-			break;
-		} case TOpCode::SEQUENCE: {
-			Value b = Pop();
-			[[maybe_unused]] Value a = Pop();
-
-			Push(b);
-			break;
-		} case TOpCode::JZ: {
+		case TOpCode::JZ: {
 			const auto target = FetchOperand();
 			const Value v = Pop();
 			if (!v.IsTruthy())
@@ -323,6 +283,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 				return ExecutionReturnCode::rc_throw;
 			break;
 		} case TOpCode::DUP: {
+			assert(!m_oStack.empty());
 			Push(m_oStack.back());
 			break;
 		} case TOpCode::INCR: {

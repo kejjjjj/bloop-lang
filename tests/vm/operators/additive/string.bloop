@@ -1,0 +1,6 @@
+return [
+    "hello" + " world",
+    "\"h\"" + "\"e\"",
+    "'hello, world'",
+    '"hello, world"'
+];

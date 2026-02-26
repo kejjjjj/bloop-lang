@@ -53,8 +53,21 @@ namespace bloop::vm {
 
         [[nodiscard]] Value operator<(Value b);
         [[nodiscard]] Value operator<=(Value b);
+        [[nodiscard]] Value operator>(Value b);
+        [[nodiscard]] Value operator>=(Value b);
         [[nodiscard]] Value operator==(Value b);
         [[nodiscard]] Value operator!=(Value b);
+
+        [[nodiscard]] Value operator&&(Value b);
+        [[nodiscard]] Value operator||(Value b);
+
+        [[nodiscard]] Value operator<<(Value b);
+        [[nodiscard]] Value operator>>(Value b);
+
+        [[nodiscard]] Value operator&(Value b);
+        [[nodiscard]] Value operator|(Value b);
+        [[nodiscard]] Value operator^(Value b);
+
 
         [[nodiscard]] Value operator-();
         [[nodiscard]] Value operator++();
