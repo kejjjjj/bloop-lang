@@ -1,0 +1,25 @@
+return [
+    // bool || bool
+    true || true,
+    true || false,
+    false || true,
+    false || false,
+
+    // int || int
+    1 || 2,
+    1 || 0,
+    0 || 1,
+    0 || 0,
+
+    // uint || uint
+    1u || 2u,
+    1u || 0u,
+    0u || 1u,
+    0u || 0u,
+
+    // double || double
+    1.0 || 2.0,
+    1.0 || 0.0,
+    0.0 || 1.0,
+    0.0 || 0.0
+];
