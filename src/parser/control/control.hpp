@@ -28,7 +28,7 @@ namespace bloop::parser {
 		[[nodiscard]] virtual UniqueExpression ParseExpression();
 		[[nodiscard]] virtual UniqueStatement ParseStatement();
 
-		[[nodiscard]] virtual void ParseScope();
+		virtual void ParseScope();
 		[[nodiscard]] virtual std::unique_ptr<bloop::ast::BlockStatement> ParseScopeNormal();
 
 		const CParserContext& m_oCtx;

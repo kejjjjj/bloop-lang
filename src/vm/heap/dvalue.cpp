@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <ranges>
+#include <cstring>
 
 using namespace bloop::vm;
 using namespace std::string_literals;
@@ -18,26 +19,23 @@ Object::Object(ObjectEntry* entries, bloop::BloopInt ucount, bloop::BloopInt cap
 
 void Object::Free()
 {
-	assert(this != nullptr && "Object::Free called on null this");
-
 	switch (type) {
 	case Type::ot_string:
-		assert(string.data != nullptr || string.len == 0
-			&& "String has null data but non-zero length");
+		assert(string.data != nullptr || (string.len == 0 && "String has null data but non-zero length"));
 		delete[] string.data;
 		string.data = nullptr;  // poison after free
 		string.len = 0;
 		break;
 
 	case Type::ot_array:
-		assert(array.values != nullptr || array.count == 0 && "Array has null values but non-zero length");
+		assert(array.values != nullptr || (array.count == 0 && "Array has null values but non-zero length"));
 		delete[] array.values;
 		array.values = nullptr;
 		array.count = 0;
 		break;
 
 	case Type::ot_object:
-		assert(object.entries != nullptr || object.count == 0 || object.capacity == 0 && "Object has null entries but non-zero length");
+		assert(object.entries != nullptr || object.count == 0 || (object.capacity == 0 && "Object has null entries but non-zero length"));
 		delete[] object.entries;
 		object.entries = nullptr;
 		object.count = 0;
@@ -49,7 +47,7 @@ void Object::Free()
 		// just handles - no owned allocations
 		break;
 	case Type::ot_closure:
-		assert(closure.upvalues != nullptr || closure.numValues == 0 && "Closure has null upvalues but numValues > 0");
+		assert(closure.upvalues != nullptr || (closure.numValues == 0 && "Closure has null upvalues but numValues > 0"));
 		delete[] closure.upvalues;
 		closure.upvalues = nullptr;
 		closure.numValues = 0;
@@ -93,7 +91,7 @@ bool Object::IsEqual(Object* obj)
 			return false;
 		if (string.len != obj->string.len)
 			return false;
-		return !memcmp(string.data, obj->string.data, string.len);
+		return !std::memcmp(string.data, obj->string.data, string.len);
 	default:
 		return this == obj;
 	}

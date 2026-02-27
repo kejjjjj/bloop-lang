@@ -72,7 +72,7 @@ void GC::CloseUpValues(Value* lastSlot)
     [[maybe_unused]] auto count = 0u;
 
     while (uv && uv->location >= lastSlot) {
-        assert(count++ < MAX_OPEN_UPVALUES && "Extremely long chain being closed — possible cycle?");
+        assert(count++ < MAX_OPEN_UPVALUES && "Extremely long chain being closed - possible cycle?");
         assert(uv->location != nullptr && "Encountered upvalue with null location during close");
         assert(!uv->IsClosed() && "Trying to close already-closed upvalue");
 

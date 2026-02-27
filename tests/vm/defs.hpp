@@ -12,7 +12,7 @@ using namespace bloop::vm;
 
 
 namespace bloop::test {
-	struct {} emptyStruct;
+	[[maybe_unused]] struct {} emptyStruct;
 
 	[[nodiscard]] std::optional<Value> TEST_ExecuteFile(const bloop::BloopString& relative_path);
 	[[nodiscard]] std::optional<Value> TEST_ExecuteBuffer(bloop::BloopStringView buffer);
@@ -65,7 +65,7 @@ namespace bloop::test {
 		FAIL("code didn't execute correctly");
 	}
 
-	template<typename T, bloop::BloopUInt size>
+	template<typename T, std::size_t size>
 	void CheckArray(const bloop::BloopString& filename, Value::Type expectedType, const std::array<T, size>& vals){
 		if (const auto ret = bloop::test::TEST_ExecuteFile(filename)) {
 			
@@ -82,7 +82,7 @@ namespace bloop::test {
 
 	}
 
-	template<typename T, bloop::BloopUInt size>
+	template<typename T, std::size_t size>
 	void CheckObject(const bloop::BloopString& filename, Value::Type expectedType, const std::array<std::pair<bloop::BloopString, T>, size>& vals){
 		if (const auto ret = bloop::test::TEST_ExecuteFile(filename)) {
 			

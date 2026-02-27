@@ -73,7 +73,7 @@ namespace bloop::parser {
 		[[nodiscard]] UniqueExpression CreateExpression(Operands& operands, Operators& operators);
 		[[nodiscard]] UniqueExpression GetLeaf(Operands& operands);
 		[[nodiscard]] Operators::iterator FindLowestPriorityOperator(Operators& operators);
-		[[nodiscard]] void CreateExpressionRecursively(bloop::ast::BinaryExpression* _this, Operands& operands, Operators& operators);
+		void CreateExpressionRecursively(bloop::ast::BinaryExpression* _this, Operands& operands, Operators& operators);
 		[[nodiscard]] std::unique_ptr<bloop::ast::AssignExpression> MakeAssignment(bloop::CodePosition pos);
 		void SetBranch(UniqueExpression& getter, const bloop::CPunctuationToken* t);
 

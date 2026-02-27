@@ -81,9 +81,9 @@ void GC::MarkUpValue(UpValue* uv) {
 		return;
 
 	assert(uv != nullptr && "Null upvalue pointer passed to MarkUpValue");
-	assert(uv->location != nullptr && "UpValue has null location — dangling or uninitialized?");
+	assert(uv->location != nullptr && "UpValue has null location ï¿½ dangling or uninitialized?");
 	auto header = GCHeader::GetHeader(uv);
-	assert(header != nullptr && "UpValue object has no GC header — not heap allocated?");
+	assert(header != nullptr && "UpValue object has no GC header ï¿½ not heap allocated?");
 
 	header->marked = true;
 
@@ -98,7 +98,7 @@ void GC::MarkUpValue(UpValue* uv) {
 }
 void GC::Sweep() {
 
-	assert(m_pObjects != nullptr || m_uBytesAllocated == 0 && "m_pObjects is null but bytes still allocated");
+	assert(m_pObjects != nullptr || (m_uBytesAllocated == 0 && "m_pObjects is null but bytes still allocated"));
 
 	auto** obj = &m_pObjects;
 
@@ -128,7 +128,8 @@ void GC::Sweep() {
 				FreeOther(unreached);
 			}
 
-			::operator delete(unreached, unreached->size + sizeof(GCHeader));
+			//::operator delete(unreached, unreached->size + sizeof(GCHeader));
+			::operator delete(unreached);
 			swept_count++;
 		} else {
 			assert(current->marked && "Marked flag lost before sweep");
@@ -143,7 +144,7 @@ void GC::Trace(Object* obj) {
 	assert(obj != nullptr && "Trace called on null object");
 	[[maybe_unused]] const auto header = GCHeader::GetHeader(obj);
 	assert(header != nullptr && "Object has no GC header");
-	assert(header->marked && "Tracing unmarked object — should be gray/black already");
+	assert(header->marked && "Tracing unmarked object ï¿½ should be gray/black already");
 
 	switch (obj->type) {
 	case Object::Type::ot_array: 
@@ -163,7 +164,7 @@ void GC::Trace(Object* obj) {
 		}
 		break;
 	case Object::Type::ot_closure:
-		assert(obj->closure.upvalues != nullptr || obj->closure.numValues == 0 && "Closure has null upvalues array but numValues > 0");
+		assert(obj->closure.upvalues != nullptr || (obj->closure.numValues == 0 && "Closure has null upvalues array but numValues > 0"));
 
 		assert(obj->closure.numValues <= 1024 && "Suspiciously large number of upvalues");
 
@@ -171,6 +172,8 @@ void GC::Trace(Object* obj) {
 			auto* uv = obj->closure.upvalues[i];
 			MarkUpValue(uv);
 		}
+		break;
+	default:
 		break;
 	}
 

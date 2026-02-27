@@ -12,7 +12,7 @@ void BlockStatement::ResolveStatements(TResolver& resolver) {
 		if (s->IsFunction()) {
 			const auto asFunc = dynamic_cast<FunctionDeclarationStatement*>(s.get());
 
-			if (auto sym = resolver.ResolveSymbol(asFunc->m_sName)) {
+			if (resolver.ResolveSymbol(asFunc->m_sName)) {
 				throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + asFunc->m_sName, asFunc->m_oApproximatePosition);
 			}
 
@@ -39,7 +39,7 @@ void AssignExpression::EmitByteCode(TBCBuilder& builder, bool want_value) {
 	//look for the identifier from the unary/postfix chain
 	if (const auto ptr = left->GetIdentifier()) {
 
-		if (auto pf = dynamic_cast<FunctionCall*>(left.get()))
+		if (dynamic_cast<FunctionCall*>(left.get()))
 			throw exception::ResolverError(BLOOPTEXT("invalid lhs operand"), m_oApproximatePosition);
 
 		if (auto pf = dynamic_cast<Subscript*>(left.get())) {
@@ -68,7 +68,7 @@ void AssignExpression::EmitByteCode(TBCBuilder& builder, bool want_value) {
 void AssignExpression::Resolve(TResolver& resolver) {
 	BinaryExpression::Resolve(resolver);
 
-	if (auto pf = dynamic_cast<FunctionCall*>(left.get()))
+	if (dynamic_cast<FunctionCall*>(left.get()))
 		throw exception::ResolverError(BLOOPTEXT("can't assign function calls"), m_oApproximatePosition);
 
 	if (left->IsConst())

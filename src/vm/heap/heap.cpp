@@ -6,21 +6,10 @@
 
 #include <cassert>
 #include <ranges>
+#include <cstring>
 
 using namespace bloop::vm;
 
-
-//Object* Heap::Allocate(Object* newObj) {
-//
-//	if (ShouldCollect())
-//		m_pVM->m_oGC.Collect(m_pVM);
-//
-//
-//	newObj->next = m_pObjects;
-//	m_pObjects = newObj;
-//	m_uBytesAllocated += newObj->GetSize();
-//	return newObj;
-//}
 Object* Heap::AllocString(bloop::BloopUInt len) {
 	auto newBuf = new bloop::BloopChar[len];
 	auto str = Allocate<Object>(newBuf, len);

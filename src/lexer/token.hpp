@@ -68,7 +68,7 @@ namespace bloop {
 		constexpr virtual ~CToken() = default;
 
 		[[nodiscard]] constexpr auto Type() const noexcept { return m_eTokenType; }
-		[[nodiscard]] constexpr void SetType(ETokenType t) noexcept { m_eTokenType = t; }
+		constexpr void SetType(ETokenType t) noexcept { m_eTokenType = t; }
 		[[nodiscard]] virtual bool IsOperator() const noexcept { return false; }
 		[[nodiscard]] virtual bool IsOperator([[maybe_unused]] EPunctuation p) const noexcept { return false; }
 		[[nodiscard]] constexpr auto& Source() const noexcept { return m_sSource; }

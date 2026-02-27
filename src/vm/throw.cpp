@@ -18,7 +18,6 @@ void VM::Throw(Value value) {
         [[maybe_unused]] const auto& bytecode = m_refMetaData.m_oVMData.m_oChunks[frame->m_pChunk->m_uMetadata].m_oByteCode;
 
         assert(frame->m_uBase <= m_oStack.size() && "Frame base is beyond current stack size");
-        assert(frame->m_uBase >= 0 && "Frame base is negative");
         assert(frame->m_pChunk != nullptr && "Frame has no chunk");
         assert(frame->m_pIp <= bytecode.data() + bytecode.size() && "IP out of bounds in chunk");
 

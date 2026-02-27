@@ -29,6 +29,7 @@ namespace bloop::standard {
 	struct NativeField;
 
 	struct NativeObject {
+		~NativeObject();
 		std::vector<NativeField> m_oFields;
 	};
 
@@ -36,12 +37,11 @@ namespace bloop::standard {
 
 		NativeDef(const bloop::BloopString& name, const NativeFunction& fn)
 			: m_sName(name), m_eType(NativeType::function), m_oData(fn) {}
-		NativeDef(const bloop::BloopString& name, const NativeObject& obj)
-			: m_sName(name), m_eType(NativeType::object), m_oData(obj) {}
+		NativeDef(const bloop::BloopString& name, const NativeObject& obj);
 
 		bloop::BloopString m_sName;
 		NativeType m_eType{ NativeType::function };
-		std::variant<NativeFunction, NativeObject> m_oData;
+		std::variant<NativeFunction, std::shared_ptr<NativeObject>> m_oData;
 	};
 
 	struct NativeField {

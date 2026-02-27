@@ -14,6 +14,6 @@ namespace bloop::bytecode{
 		struct Function;
 	}
 
-	[[nodiscard]] void BuildByteCode(bloop::ast::Program* code, bloop::metadata::Metadata& metadata);
+	void BuildByteCode(bloop::ast::Program* code, bloop::metadata::Metadata& metadata);
 
 }

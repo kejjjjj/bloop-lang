@@ -9,9 +9,9 @@ namespace bloop::vm {
 
     struct Value {
 
+        enum class Type : bloop::BloopByte { t_undefined, t_bool, t_uint, t_int, t_double, t_object } type;
         union { bloop::BloopBool b{}; bloop::BloopInt i; bloop::BloopUInt u; bloop::BloopDouble d; Object* obj; };
-        enum class Type : bloop::BloopByte { t_undefined, t_bool, t_uint, t_int, t_double, t_object } type{};
-
+        
         Value(bloop::ConstantData d);
         
         Value(Type t) : type(t){}
@@ -43,7 +43,7 @@ namespace bloop::vm {
 
         [[nodiscard]] bloop::BloopString ValueToString(bloop::BloopUInt objectIndent=0u) const;
         [[nodiscard]] bloop::BloopString TypeToString() const;
-        [[nodiscard]] void Coerce(Value& b); //weaker operand gets modified
+        void Coerce(Value& b); //weaker operand gets modified
 
         [[nodiscard]] Value operator+(Value b);
         [[nodiscard]] Value operator-(Value b);

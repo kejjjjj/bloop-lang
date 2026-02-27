@@ -40,9 +40,10 @@ Object* bloop::standard::FromDefinitionToObject(Heap& heap, const NativeDef& def
 		return heap.AllocNativeFunction(&std::get<0>(def.m_oData));
 	case NativeType::object: {
 		const auto& defObj = std::get<1>(def.m_oData);
-		auto obj = heap.AllocObject(static_cast<bloop::BloopIndex>(defObj.m_oFields.size()));
+		assert(defObj);
+		auto obj = heap.AllocObject(static_cast<bloop::BloopIndex>(defObj->m_oFields.size()));
 		
-		for (const auto& field : defObj.m_oFields) {
+		for (const auto& field : defObj->m_oFields) {
 			AssignField(heap, field, obj);
 		}
 

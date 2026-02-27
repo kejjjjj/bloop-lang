@@ -55,5 +55,7 @@ void FunctionDeclarationStatement::EmitStoreIdentifier(TBCBuilder& parent) {
 	case ResolvedIdentifier::Kind::Global:
 		Emit(parent, TOpCode::STORE_GLOBAL, m_oIdentifier.m_uSlot);
 		break;
+	default:
+		throw bloop::exception::ResolverError(BLOOPTEXT("error case in: ") + m_sName, m_oApproximatePosition);
 	}
 }

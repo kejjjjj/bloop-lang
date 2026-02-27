@@ -11,6 +11,11 @@ using namespace bloop::vm;
 FWD_DECLARE_NATIVE(Length);
 FWD_DECLARE_NATIVE(RunGC);
 
+NativeObject::~NativeObject() = default;
+
+NativeDef::NativeDef(const bloop::BloopString& name, const NativeObject& obj)
+: m_sName(name), m_eType(NativeType::object), m_oData(std::make_shared<NativeObject>(obj)) {}
+
 std::vector<NativeDef> bloop::standard::g_Natives = {
 	{ IncludeStandardLibrary() }
 };

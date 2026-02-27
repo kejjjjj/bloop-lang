@@ -2,18 +2,11 @@
 
 #include "ast/ast.hpp"
 #include "utils/fmt.hpp"
+
+#include <list>
 #include <iostream>
 
 namespace bloop::ast {
-
-	//struct Capture {
-	//	enum class Kind { Local, Upvalue } kind{};
-	//	bloop::BloopIndex m_uSlot{};
-
-	//	constexpr bloop::bytecode::vmdata::Capture ToBC() const noexcept {
-	//		return { kind == Kind::Local, m_uSlot };
-	//	}
-	//};
 	using Symbol = bloop::resolver::internal::Symbol;
 
 	struct FunctionDeclarationStatement : Statement {

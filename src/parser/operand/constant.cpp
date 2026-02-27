@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <cassert>
 #include <charconv>
+#include <cstring>
+
 using namespace bloop::parser;
 
 std::unique_ptr<IOperand> CParserOperand::ParseConstant() {

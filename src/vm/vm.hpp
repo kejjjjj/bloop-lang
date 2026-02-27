@@ -66,8 +66,8 @@ namespace bloop::vm {
 		CallFrame* m_pCurrentFrame{};
 
 		//Arena m_oArena;
-		GC m_oGC;
 		Heap m_oHeap;
+		GC m_oGC;
 		Chunk m_oGlobalChunk; //executed in the beginning
 
 		//debugging

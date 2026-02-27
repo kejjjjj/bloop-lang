@@ -36,6 +36,9 @@ Value::Value(bloop::ConstantData c) {
 		type = Type::t_double;
 		d = *reinterpret_cast<bloop::BloopDouble*>(const_cast<bloop::BloopChar*>(data.data()));
 		break;
+	default:
+		assert(false);
+		break;
 	}
 
 }
@@ -55,6 +58,8 @@ bool Value::IsTruthy() const
 		return u != 0u;
 	case VT::t_double:
 		return d != 0.0;
+	default:
+		break;
 	}
 
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to a boolean"), TypeToString()));
@@ -116,6 +121,8 @@ bloop::BloopInt Value::ToInt() const {
 		return static_cast<bloop::BloopInt>(u);
 	case VT::t_double:
 		return static_cast<bloop::BloopInt>(d);
+	default:
+		break;
 	}
 
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to an integer"), TypeToString()));

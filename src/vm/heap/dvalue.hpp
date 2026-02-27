@@ -21,10 +21,27 @@ namespace bloop::vm
 		bloop::BloopUInt numValues;
 	};
 
+	struct StringData {
+		bloop::BloopChar* data;
+		bloop::BloopInt len;
+		bloop::BloopUInt32 hash;
+	};
+	
+	struct ObjectData {
+		ObjectEntry* entries;
+		bloop::BloopInt count;
+		bloop::BloopInt capacity;
+	};
+	
+	struct ArrayData {
+		Value* values;
+		bloop::BloopInt count;
+	};
+
 	struct Object {
 		enum class Type { ot_string, ot_array, ot_object, ot_function, ot_closure, ot_nativefunction } type;
 
-		Object(bloop::BloopChar* _data, bloop::BloopInt _len) : type(Type::ot_string), string({.data=_data, .len=_len}) {}
+		Object(bloop::BloopChar* _data, bloop::BloopInt _len) : type(Type::ot_string), string({.data=_data, .len=_len,.hash={}}) {}
 		Object(Function* chunk) : type(Type::ot_function), function(chunk){}
 		Object(Function* function, UpValue** upVals, bloop::BloopUInt numVals);
 
@@ -33,20 +50,9 @@ namespace bloop::vm
 		Object(const standard::NativeFunction* def) : type(Type::ot_nativefunction), nativeFunction(def){}
 
 		union {
-			struct {
-				bloop::BloopChar* data;
-				bloop::BloopInt len;
-				bloop::BloopUInt32 hash;
-			}string;
-			struct {
-				ObjectEntry* entries;
-				bloop::BloopInt count;
-				bloop::BloopInt capacity;
-			}object;
-			struct {
-				Value* values;
-				bloop::BloopInt count;
-			}array;
+			StringData string;
+			ObjectData object;
+			ArrayData array;
 			Closure closure;
 			Function* function;
 			const standard::NativeFunction* nativeFunction;

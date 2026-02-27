@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <array>
+#include <cmath>
 
 using namespace bloop::vm;
 
@@ -131,7 +132,7 @@ Value Value::operator*(Value v) {
 
     switch (type) {
     case VT::t_bool:
-        return static_cast<bloop::BloopBool>(b * v.b);
+        return static_cast<bloop::BloopBool>(b && v.b);
     case VT::t_uint:
         return u * v.u;
     case VT::t_int:

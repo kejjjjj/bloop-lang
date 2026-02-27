@@ -1,4 +1,3 @@
-#pragma once
 #include "vm/vm.hpp"
 #include "vm/heap/dvalue.hpp"
 #include "vm/heap/heap.hpp"
@@ -9,6 +8,7 @@
 #include "vm/frame.hpp"
 
 #include <ranges>
+#include <cstring>
 
 using namespace bloop::vm;
 
@@ -156,6 +156,9 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 					Push(callee.obj->nativeFunction->m_pFunction(*this, args));
 					break;
 				}
+			default:
+				assert(false);
+				break;
 			}
 			break;
 		} case TOpCode::SUBSCRIPT_GET: {
@@ -218,7 +221,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			auto& func = m_oFunctions[funcIdx];
 
 			assert(func.m_oCaptures.size() <= 1024 && "Unreasonably large number of captures in function");
-			assert(!func.m_oCaptures.empty() || func.m_oCaptures.size() == 0 && "Function capture metadata inconsistent");
+			assert(!func.m_oCaptures.empty() || (func.m_oCaptures.size() == 0 && "Function capture metadata inconsistent"));
 
 			auto obj = m_oHeap.AllocClosure(&func, static_cast<bloop::BloopIndex>(func.m_oCaptures.size()));
 
@@ -226,7 +229,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			assert(obj->type == Object::Type::ot_closure && "Allocated object is not a closure");
 			assert(GCHeader::GetHeader(obj) != nullptr && "Allocated closure has no GC header");
 			assert(obj->closure.numValues == func.m_oCaptures.size() && "Closure upvalue count doesn't match function captures");
-			assert(obj->closure.upvalues != nullptr || obj->closure.numValues == 0 && "Closure has null upvalues array but numValues > 0");
+			assert(obj->closure.upvalues != nullptr || (obj->closure.numValues == 0 && "Closure has null upvalues array but numValues > 0"));
 
 			m_oGC.PushTempRoot(obj);
 

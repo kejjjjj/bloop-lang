@@ -31,7 +31,7 @@ namespace bloop::vm
 
 		template<typename T>
 		inline T* Alloc() {
-			return Alloc(sizeof(T), alignof(T));
+			return Alloc<T*>(static_cast<bloop::BloopUInt>(sizeof(T)), static_cast<bloop::BloopUInt>(alignof(T)));
 		}
 
 		inline void Reset() { m_pPtr = m_pBegin; }

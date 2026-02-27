@@ -3,6 +3,7 @@
 #include <sstream>
 #include <tuple>
 #include <numeric>
+#include <cstdint>
 
 #ifndef BLOOP_NONCOPYABLE
 #define BLOOP_NONCOPYABLE(className) \

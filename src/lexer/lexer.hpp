@@ -13,7 +13,7 @@ namespace bloop::lexer {
 		CLexer(bloop::BloopStringView buffer, bloop::metadata::Metadata& metadata);
 		~CLexer();
 
-		[[nodiscard]] void Parse();
+		void Parse();
 		[[nodiscard]] auto& GetTokens() const { return m_oTokens; }
 
 	private:

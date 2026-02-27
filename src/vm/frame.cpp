@@ -5,6 +5,7 @@
 #include "utils/fmt.hpp"
 
 #include <ranges>
+#include <algorithm>
 
 using namespace bloop::vm;
 CallFrame::CallFrame(Chunk* chunk, bloop::BloopUInt stackBase) 

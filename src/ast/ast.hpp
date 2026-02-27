@@ -173,6 +173,8 @@ namespace bloop::ast {
 				Emit(builder, TOpCode::STORE_GLOBAL, m_oResolver.m_uSlot);
 				Emit(builder, TOpCode::LOAD_GLOBAL, m_oResolver.m_uSlot);
 				break;
+			default:
+				throw bloop::exception::ResolverError(BLOOPTEXT("error case in: ") + m_sName, m_oApproximatePosition);
 			}
 
 			if (!want_value)
@@ -189,6 +191,8 @@ namespace bloop::ast {
 			case ResolvedIdentifier::Kind::Global:
 				Emit(builder, TOpCode::LOAD_GLOBAL, m_oResolver.m_uSlot);
 				break;
+			default:
+				throw bloop::exception::ResolverError(BLOOPTEXT("error case in: ") + m_sName, m_oApproximatePosition);
 			}
 
 			if (!want_value)

@@ -51,7 +51,7 @@ namespace bloop::vm
 			auto mem = static_cast<GCHeader*>(::operator new(header_size + payload_size));
 			mem->is_object = std::is_base_of_v<Object, T>;
 			mem->size = payload_size;
-			mem->marked = false; //this line missing caused heap corruptions.. lol
+			mem->marked = false;
 
 			auto obj = reinterpret_cast<T*>(mem + 1u); //skip header
 			auto result = new (obj) T(std::forward<Args>(args)...);

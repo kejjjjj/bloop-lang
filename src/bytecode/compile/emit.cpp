@@ -135,7 +135,7 @@ void CByteCodeBuilder::EmitCapture(const bc::Capture& capture, CodePosition pos)
 	return Emit(EOpCode::CAPTURE_UPVALUE, capture.m_uSlot, pos);
 }
 void CByteCodeBuilder::EnsureReturn(bloop::ast::AbstractSyntaxTree* node){
-	if (m_oByteCode.empty() || m_oByteCode.back().GetOpCode() != EOpCode::RETURN && m_oByteCode.back().GetOpCode() != EOpCode::RETURN_VALUE)
+	if (m_oByteCode.empty() || ((m_oByteCode.back().GetOpCode() != EOpCode::RETURN) && (m_oByteCode.back().GetOpCode() != EOpCode::RETURN_VALUE)))
 		Emit(EOpCode::RETURN, node->m_oApproximatePosition); //implicitly add a return statement to the end
 }
 void CByteCodeBuilder::AddFunction(bloop::BloopIndex idx) {
