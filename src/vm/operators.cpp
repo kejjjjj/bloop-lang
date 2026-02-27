@@ -91,8 +91,6 @@ Value Value::operator+(Value v) {
     Coerce(v);
 
     switch (type) {
-    case VT::t_undefined:
-        return false;
     case VT::t_bool:
         return static_cast<bloop::BloopBool>(b + v.b);
     case VT::t_uint:
@@ -111,8 +109,6 @@ Value Value::operator-(Value v) {
     Coerce(v);
 
     switch (type) {
-    case VT::t_undefined:
-        return false;
     case VT::t_bool:
         return static_cast<bloop::BloopBool>(b - v.b);
     case VT::t_uint:
@@ -189,8 +185,6 @@ Value Value::operator<(Value v) {
     Coerce(v);
 
     switch (type) {
-    case VT::t_undefined:
-        return true;
     case VT::t_bool:
         return b < v.b;
     case VT::t_uint:
@@ -209,8 +203,6 @@ Value Value::operator<=(Value v) {
     Coerce(v);
 
     switch (type) {
-    case VT::t_undefined:
-        return true;
     case VT::t_bool:
         return b <= v.b;
     case VT::t_uint:
@@ -229,8 +221,6 @@ Value Value::operator>=(Value v) {
     Coerce(v);
 
     switch (type) {
-    case VT::t_undefined:
-        return true;
     case VT::t_bool:
         return b >= v.b;
     case VT::t_uint:
@@ -249,8 +239,6 @@ Value Value::operator>(Value v) {
     Coerce(v);
 
     switch (type) {
-    case VT::t_undefined:
-        return true;
     case VT::t_bool:
         return b > v.b;
     case VT::t_uint:

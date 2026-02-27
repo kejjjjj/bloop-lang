@@ -1,6 +1,0 @@
-return [
-    undefined < undefined,
-    undefined <= undefined,
-    undefined >= undefined,
-    undefined > undefined
-];
