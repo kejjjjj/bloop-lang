@@ -1,0 +1,23 @@
+fn main(){ return 1; }
+
+return [
+    1 !== 1,
+    1 !== true,
+    1 !== 1.0,
+    1 !== 1u,
+
+    1 !== 2,
+    1 !== false,
+
+    "hello" !== "hello",
+    "hello1" !== "hello",
+
+    undefined !== undefined,
+
+    main !== main,
+
+    (() => 1) !== (() => 1),
+
+    [] !== [],
+    {} !== {}
+];

@@ -20,12 +20,6 @@ TEST_CASE("integer relational operations") {
         bloop::BloopBool(true),
         bloop::BloopBool(false),
         bloop::BloopBool(false),
-        // equal
-        bloop::BloopBool(true),
-        bloop::BloopBool(false),
-        // not equal
-        bloop::BloopBool(true),
-        bloop::BloopBool(false),
     });
 }
 TEST_CASE("uinteger relational operations") {
@@ -45,12 +39,6 @@ TEST_CASE("uinteger relational operations") {
         // greater than
         bloop::BloopBool(true),
         bloop::BloopBool(false),
-        bloop::BloopBool(false),
-        // equal
-        bloop::BloopBool(true),
-        bloop::BloopBool(false),
-        // not equal
-        bloop::BloopBool(true),
         bloop::BloopBool(false),
     });
 }
@@ -72,21 +60,13 @@ TEST_CASE("double relational operations") {
         bloop::BloopBool(true),
         bloop::BloopBool(false),
         bloop::BloopBool(false),
-        // equal
-        bloop::BloopBool(true),
-        bloop::BloopBool(false),
-        // not equal
-        bloop::BloopBool(true),
-        bloop::BloopBool(false),
     });
 }
-TEST_CASE("string relational operations") {
-    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "string"), Value::Type::t_bool, std::array{
-        // equal
-        bloop::BloopBool(true),
-        bloop::BloopBool(false),
-        // not equal
-        bloop::BloopBool(true),
-        bloop::BloopBool(false),
+TEST_CASE("undefined relational operations") {
+    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "undefined"), Value::Type::t_bool, std::array{
+        bloop::BloopBool(true),   // undefined < undefined
+        bloop::BloopBool(true),   // undefined <= undefined
+        bloop::BloopBool(true),   // undefined >= undefined
+        bloop::BloopBool(true),   // undefined > undefined
     });
 }
