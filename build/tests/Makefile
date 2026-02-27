@@ -1355,6 +1355,30 @@ catch_amalgamated.cpp.s:
 	cd /home/runner/work/bloop-lang/bloop-lang/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bloop_test.dir/build.make tests/CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.s
 .PHONY : catch_amalgamated.cpp.s
 
+vm/algorithms/_algorithms.o: vm/algorithms/_algorithms.cpp.o
+.PHONY : vm/algorithms/_algorithms.o
+
+# target to build an object file
+vm/algorithms/_algorithms.cpp.o:
+	cd /home/runner/work/bloop-lang/bloop-lang/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bloop_test.dir/build.make tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o
+.PHONY : vm/algorithms/_algorithms.cpp.o
+
+vm/algorithms/_algorithms.i: vm/algorithms/_algorithms.cpp.i
+.PHONY : vm/algorithms/_algorithms.i
+
+# target to preprocess a source file
+vm/algorithms/_algorithms.cpp.i:
+	cd /home/runner/work/bloop-lang/bloop-lang/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bloop_test.dir/build.make tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.i
+.PHONY : vm/algorithms/_algorithms.cpp.i
+
+vm/algorithms/_algorithms.s: vm/algorithms/_algorithms.cpp.s
+.PHONY : vm/algorithms/_algorithms.s
+
+# target to generate assembly for a file
+vm/algorithms/_algorithms.cpp.s:
+	cd /home/runner/work/bloop-lang/bloop-lang/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bloop_test.dir/build.make tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.s
+.PHONY : vm/algorithms/_algorithms.cpp.s
+
 vm/closures/_functions.o: vm/closures/_functions.cpp.o
 .PHONY : vm/closures/_functions.o
 
@@ -2117,6 +2141,9 @@ help:
 	@echo "... catch_amalgamated.o"
 	@echo "... catch_amalgamated.i"
 	@echo "... catch_amalgamated.s"
+	@echo "... vm/algorithms/_algorithms.o"
+	@echo "... vm/algorithms/_algorithms.i"
+	@echo "... vm/algorithms/_algorithms.s"
 	@echo "... vm/closures/_functions.o"
 	@echo "... vm/closures/_functions.i"
 	@echo "... vm/closures/_functions.s"

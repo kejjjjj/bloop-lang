@@ -102,6 +102,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/bloop_test.dir/__/src/vm/vm.cpp.o.d"
   "CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.o"
   "CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.o.d"
+  "CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o"
+  "CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o.d"
   "CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o"
   "CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o.d"
   "CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o"

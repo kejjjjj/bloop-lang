@@ -59,6 +59,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/runner/work/bloop-lang/bloop-lang/src/vm/value.cpp" "tests/CMakeFiles/bloop_test.dir/__/src/vm/value.cpp.o" "gcc" "tests/CMakeFiles/bloop_test.dir/__/src/vm/value.cpp.o.d"
   "/home/runner/work/bloop-lang/bloop-lang/src/vm/vm.cpp" "tests/CMakeFiles/bloop_test.dir/__/src/vm/vm.cpp.o" "gcc" "tests/CMakeFiles/bloop_test.dir/__/src/vm/vm.cpp.o.d"
   "/home/runner/work/bloop-lang/bloop-lang/tests/catch_amalgamated.cpp" "tests/CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.o" "gcc" "tests/CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.o.d"
+  "/home/runner/work/bloop-lang/bloop-lang/tests/vm/algorithms/_algorithms.cpp" "tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o" "gcc" "tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o.d"
   "/home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_functions.cpp" "tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o" "gcc" "tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o.d"
   "/home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_lambdas.cpp" "tests/CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o" "gcc" "tests/CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o.d"
   "/home/runner/work/bloop-lang/bloop-lang/tests/vm/coercion/_coercion.cpp" "tests/CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o" "gcc" "tests/CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o.d"

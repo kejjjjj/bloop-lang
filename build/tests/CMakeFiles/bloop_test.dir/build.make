@@ -786,10 +786,24 @@ tests/CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.s"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/bloop-lang/bloop-lang/tests/catch_amalgamated.cpp -o CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.s
 
+tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
+tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/algorithms/_algorithms.cpp
+tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_52) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o"
+	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o -MF CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/algorithms/_algorithms.cpp
+
+tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.i"
+	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/runner/work/bloop-lang/bloop-lang/tests/vm/algorithms/_algorithms.cpp > CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.i
+
+tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.s"
+	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/bloop-lang/bloop-lang/tests/vm/algorithms/_algorithms.cpp -o CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.s
+
 tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_functions.cpp
 tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_52) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_53) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o -MF CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_functions.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.i: cmake_force
@@ -803,7 +817,7 @@ tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_lambdas.cpp
 tests/CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_53) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_54) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o -MF CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_lambdas.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.i: cmake_force
@@ -817,7 +831,7 @@ tests/CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/coercion/_coercion.cpp
 tests/CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_54) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_55) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o -MF CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/coercion/_coercion.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.i: cmake_force
@@ -831,7 +845,7 @@ tests/CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/composite_types/_composite_types.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/composite_types/_composite_types.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/composite_types/_composite_types.cpp
 tests/CMakeFiles/bloop_test.dir/vm/composite_types/_composite_types.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_55) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/composite_types/_composite_types.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_56) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/composite_types/_composite_types.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/composite_types/_composite_types.cpp.o -MF CMakeFiles/bloop_test.dir/vm/composite_types/_composite_types.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/composite_types/_composite_types.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/composite_types/_composite_types.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/composite_types/_composite_types.cpp.i: cmake_force
@@ -845,7 +859,7 @@ tests/CMakeFiles/bloop_test.dir/vm/composite_types/_composite_types.cpp.s: cmake
 tests/CMakeFiles/bloop_test.dir/vm/composite_types_as_variables/_composite_types_as_variables.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/composite_types_as_variables/_composite_types_as_variables.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/composite_types_as_variables/_composite_types_as_variables.cpp
 tests/CMakeFiles/bloop_test.dir/vm/composite_types_as_variables/_composite_types_as_variables.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_56) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/composite_types_as_variables/_composite_types_as_variables.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_57) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/composite_types_as_variables/_composite_types_as_variables.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/composite_types_as_variables/_composite_types_as_variables.cpp.o -MF CMakeFiles/bloop_test.dir/vm/composite_types_as_variables/_composite_types_as_variables.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/composite_types_as_variables/_composite_types_as_variables.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/composite_types_as_variables/_composite_types_as_variables.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/composite_types_as_variables/_composite_types_as_variables.cpp.i: cmake_force
@@ -859,7 +873,7 @@ tests/CMakeFiles/bloop_test.dir/vm/composite_types_as_variables/_composite_types
 tests/CMakeFiles/bloop_test.dir/vm/control_flow/for/_for.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/control_flow/for/_for.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/control_flow/for/_for.cpp
 tests/CMakeFiles/bloop_test.dir/vm/control_flow/for/_for.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_57) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/control_flow/for/_for.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_58) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/control_flow/for/_for.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/control_flow/for/_for.cpp.o -MF CMakeFiles/bloop_test.dir/vm/control_flow/for/_for.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/control_flow/for/_for.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/control_flow/for/_for.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/control_flow/for/_for.cpp.i: cmake_force
@@ -873,7 +887,7 @@ tests/CMakeFiles/bloop_test.dir/vm/control_flow/for/_for.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/control_flow/if/_if.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/control_flow/if/_if.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/control_flow/if/_if.cpp
 tests/CMakeFiles/bloop_test.dir/vm/control_flow/if/_if.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_58) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/control_flow/if/_if.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_59) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/control_flow/if/_if.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/control_flow/if/_if.cpp.o -MF CMakeFiles/bloop_test.dir/vm/control_flow/if/_if.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/control_flow/if/_if.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/control_flow/if/_if.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/control_flow/if/_if.cpp.i: cmake_force
@@ -887,7 +901,7 @@ tests/CMakeFiles/bloop_test.dir/vm/control_flow/if/_if.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/control_flow/while/_while.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/control_flow/while/_while.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/control_flow/while/_while.cpp
 tests/CMakeFiles/bloop_test.dir/vm/control_flow/while/_while.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_59) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/control_flow/while/_while.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_60) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/control_flow/while/_while.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/control_flow/while/_while.cpp.o -MF CMakeFiles/bloop_test.dir/vm/control_flow/while/_while.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/control_flow/while/_while.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/control_flow/while/_while.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/control_flow/while/_while.cpp.i: cmake_force
@@ -901,7 +915,7 @@ tests/CMakeFiles/bloop_test.dir/vm/control_flow/while/_while.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/defs.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/defs.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/defs.cpp
 tests/CMakeFiles/bloop_test.dir/vm/defs.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_60) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/defs.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_61) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/defs.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/defs.cpp.o -MF CMakeFiles/bloop_test.dir/vm/defs.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/defs.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/defs.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/defs.cpp.i: cmake_force
@@ -915,7 +929,7 @@ tests/CMakeFiles/bloop_test.dir/vm/defs.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/exceptions/_exceptions.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/exceptions/_exceptions.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/exceptions/_exceptions.cpp
 tests/CMakeFiles/bloop_test.dir/vm/exceptions/_exceptions.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_61) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/exceptions/_exceptions.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_62) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/exceptions/_exceptions.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/exceptions/_exceptions.cpp.o -MF CMakeFiles/bloop_test.dir/vm/exceptions/_exceptions.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/exceptions/_exceptions.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/exceptions/_exceptions.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/exceptions/_exceptions.cpp.i: cmake_force
@@ -929,7 +943,7 @@ tests/CMakeFiles/bloop_test.dir/vm/exceptions/_exceptions.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/expressions/_expressions.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/expressions/_expressions.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/expressions/_expressions.cpp
 tests/CMakeFiles/bloop_test.dir/vm/expressions/_expressions.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_62) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/expressions/_expressions.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_63) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/expressions/_expressions.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/expressions/_expressions.cpp.o -MF CMakeFiles/bloop_test.dir/vm/expressions/_expressions.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/expressions/_expressions.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/expressions/_expressions.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/expressions/_expressions.cpp.i: cmake_force
@@ -943,7 +957,7 @@ tests/CMakeFiles/bloop_test.dir/vm/expressions/_expressions.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/functions/_functions.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/functions/_functions.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/functions/_functions.cpp
 tests/CMakeFiles/bloop_test.dir/vm/functions/_functions.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_63) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/functions/_functions.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_64) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/functions/_functions.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/functions/_functions.cpp.o -MF CMakeFiles/bloop_test.dir/vm/functions/_functions.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/functions/_functions.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/functions/_functions.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/functions/_functions.cpp.i: cmake_force
@@ -957,7 +971,7 @@ tests/CMakeFiles/bloop_test.dir/vm/functions/_functions.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/hoisting/_hoisting.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/hoisting/_hoisting.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/hoisting/_hoisting.cpp
 tests/CMakeFiles/bloop_test.dir/vm/hoisting/_hoisting.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_64) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/hoisting/_hoisting.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_65) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/hoisting/_hoisting.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/hoisting/_hoisting.cpp.o -MF CMakeFiles/bloop_test.dir/vm/hoisting/_hoisting.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/hoisting/_hoisting.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/hoisting/_hoisting.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/hoisting/_hoisting.cpp.i: cmake_force
@@ -971,7 +985,7 @@ tests/CMakeFiles/bloop_test.dir/vm/hoisting/_hoisting.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/operators/additive/_additive.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/operators/additive/_additive.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/additive/_additive.cpp
 tests/CMakeFiles/bloop_test.dir/vm/operators/additive/_additive.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_65) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/additive/_additive.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_66) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/additive/_additive.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/operators/additive/_additive.cpp.o -MF CMakeFiles/bloop_test.dir/vm/operators/additive/_additive.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/operators/additive/_additive.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/additive/_additive.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/operators/additive/_additive.cpp.i: cmake_force
@@ -985,7 +999,7 @@ tests/CMakeFiles/bloop_test.dir/vm/operators/additive/_additive.cpp.s: cmake_for
 tests/CMakeFiles/bloop_test.dir/vm/operators/bitwise/_bitwise.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/operators/bitwise/_bitwise.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/bitwise/_bitwise.cpp
 tests/CMakeFiles/bloop_test.dir/vm/operators/bitwise/_bitwise.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_66) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/bitwise/_bitwise.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_67) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/bitwise/_bitwise.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/operators/bitwise/_bitwise.cpp.o -MF CMakeFiles/bloop_test.dir/vm/operators/bitwise/_bitwise.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/operators/bitwise/_bitwise.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/bitwise/_bitwise.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/operators/bitwise/_bitwise.cpp.i: cmake_force
@@ -999,7 +1013,7 @@ tests/CMakeFiles/bloop_test.dir/vm/operators/bitwise/_bitwise.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/operators/equality/_equality.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/operators/equality/_equality.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/equality/_equality.cpp
 tests/CMakeFiles/bloop_test.dir/vm/operators/equality/_equality.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_67) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/equality/_equality.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_68) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/equality/_equality.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/operators/equality/_equality.cpp.o -MF CMakeFiles/bloop_test.dir/vm/operators/equality/_equality.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/operators/equality/_equality.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/equality/_equality.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/operators/equality/_equality.cpp.i: cmake_force
@@ -1013,7 +1027,7 @@ tests/CMakeFiles/bloop_test.dir/vm/operators/equality/_equality.cpp.s: cmake_for
 tests/CMakeFiles/bloop_test.dir/vm/operators/logical/_logical.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/operators/logical/_logical.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/logical/_logical.cpp
 tests/CMakeFiles/bloop_test.dir/vm/operators/logical/_logical.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_68) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/logical/_logical.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_69) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/logical/_logical.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/operators/logical/_logical.cpp.o -MF CMakeFiles/bloop_test.dir/vm/operators/logical/_logical.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/operators/logical/_logical.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/logical/_logical.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/operators/logical/_logical.cpp.i: cmake_force
@@ -1027,7 +1041,7 @@ tests/CMakeFiles/bloop_test.dir/vm/operators/logical/_logical.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/operators/multiplicative/_multiplicative.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/operators/multiplicative/_multiplicative.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/multiplicative/_multiplicative.cpp
 tests/CMakeFiles/bloop_test.dir/vm/operators/multiplicative/_multiplicative.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_69) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/multiplicative/_multiplicative.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_70) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/multiplicative/_multiplicative.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/operators/multiplicative/_multiplicative.cpp.o -MF CMakeFiles/bloop_test.dir/vm/operators/multiplicative/_multiplicative.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/operators/multiplicative/_multiplicative.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/multiplicative/_multiplicative.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/operators/multiplicative/_multiplicative.cpp.i: cmake_force
@@ -1041,7 +1055,7 @@ tests/CMakeFiles/bloop_test.dir/vm/operators/multiplicative/_multiplicative.cpp.
 tests/CMakeFiles/bloop_test.dir/vm/operators/relational/_relational.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/operators/relational/_relational.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/relational/_relational.cpp
 tests/CMakeFiles/bloop_test.dir/vm/operators/relational/_relational.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_70) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/relational/_relational.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_71) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/relational/_relational.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/operators/relational/_relational.cpp.o -MF CMakeFiles/bloop_test.dir/vm/operators/relational/_relational.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/operators/relational/_relational.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/relational/_relational.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/operators/relational/_relational.cpp.i: cmake_force
@@ -1055,7 +1069,7 @@ tests/CMakeFiles/bloop_test.dir/vm/operators/relational/_relational.cpp.s: cmake
 tests/CMakeFiles/bloop_test.dir/vm/operators/shift/_shift.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/operators/shift/_shift.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/shift/_shift.cpp
 tests/CMakeFiles/bloop_test.dir/vm/operators/shift/_shift.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_71) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/shift/_shift.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_72) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/operators/shift/_shift.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/operators/shift/_shift.cpp.o -MF CMakeFiles/bloop_test.dir/vm/operators/shift/_shift.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/operators/shift/_shift.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/shift/_shift.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/operators/shift/_shift.cpp.i: cmake_force
@@ -1069,7 +1083,7 @@ tests/CMakeFiles/bloop_test.dir/vm/operators/shift/_shift.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/primitive_types/_primitive_types.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/primitive_types/_primitive_types.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/primitive_types/_primitive_types.cpp
 tests/CMakeFiles/bloop_test.dir/vm/primitive_types/_primitive_types.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_72) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/primitive_types/_primitive_types.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_73) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/primitive_types/_primitive_types.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/primitive_types/_primitive_types.cpp.o -MF CMakeFiles/bloop_test.dir/vm/primitive_types/_primitive_types.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/primitive_types/_primitive_types.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/primitive_types/_primitive_types.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/primitive_types/_primitive_types.cpp.i: cmake_force
@@ -1083,7 +1097,7 @@ tests/CMakeFiles/bloop_test.dir/vm/primitive_types/_primitive_types.cpp.s: cmake
 tests/CMakeFiles/bloop_test.dir/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp
 tests/CMakeFiles/bloop_test.dir/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_73) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_74) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp.o -MF CMakeFiles/bloop_test.dir/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp.i: cmake_force
@@ -1097,7 +1111,7 @@ tests/CMakeFiles/bloop_test.dir/vm/primitive_types_as_variables/_primitive_types
 tests/CMakeFiles/bloop_test.dir/vm/scope/_scope.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/scope/_scope.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/scope/_scope.cpp
 tests/CMakeFiles/bloop_test.dir/vm/scope/_scope.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_74) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/scope/_scope.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_75) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/scope/_scope.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/scope/_scope.cpp.o -MF CMakeFiles/bloop_test.dir/vm/scope/_scope.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/scope/_scope.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/scope/_scope.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/scope/_scope.cpp.i: cmake_force
@@ -1111,7 +1125,7 @@ tests/CMakeFiles/bloop_test.dir/vm/scope/_scope.cpp.s: cmake_force
 tests/CMakeFiles/bloop_test.dir/vm/shared_ownership/_shared_ownership.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/shared_ownership/_shared_ownership.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/shared_ownership/_shared_ownership.cpp
 tests/CMakeFiles/bloop_test.dir/vm/shared_ownership/_shared_ownership.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_75) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/shared_ownership/_shared_ownership.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_76) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/shared_ownership/_shared_ownership.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/shared_ownership/_shared_ownership.cpp.o -MF CMakeFiles/bloop_test.dir/vm/shared_ownership/_shared_ownership.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/shared_ownership/_shared_ownership.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/shared_ownership/_shared_ownership.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/shared_ownership/_shared_ownership.cpp.i: cmake_force
@@ -1125,7 +1139,7 @@ tests/CMakeFiles/bloop_test.dir/vm/shared_ownership/_shared_ownership.cpp.s: cma
 tests/CMakeFiles/bloop_test.dir/vm/std/native_functions/_native_functions.cpp.o: tests/CMakeFiles/bloop_test.dir/flags.make
 tests/CMakeFiles/bloop_test.dir/vm/std/native_functions/_native_functions.cpp.o: /home/runner/work/bloop-lang/bloop-lang/tests/vm/std/native_functions/_native_functions.cpp
 tests/CMakeFiles/bloop_test.dir/vm/std/native_functions/_native_functions.cpp.o: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_76) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/std/native_functions/_native_functions.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_77) "Building CXX object tests/CMakeFiles/bloop_test.dir/vm/std/native_functions/_native_functions.cpp.o"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/bloop_test.dir/vm/std/native_functions/_native_functions.cpp.o -MF CMakeFiles/bloop_test.dir/vm/std/native_functions/_native_functions.cpp.o.d -o CMakeFiles/bloop_test.dir/vm/std/native_functions/_native_functions.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/std/native_functions/_native_functions.cpp
 
 tests/CMakeFiles/bloop_test.dir/vm/std/native_functions/_native_functions.cpp.i: cmake_force
@@ -1189,6 +1203,7 @@ bloop_test_OBJECTS = \
 "CMakeFiles/bloop_test.dir/__/src/vm/value.cpp.o" \
 "CMakeFiles/bloop_test.dir/__/src/vm/vm.cpp.o" \
 "CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.o" \
+"CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o" \
 "CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o" \
 "CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o" \
 "CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o" \
@@ -1269,6 +1284,7 @@ tests/bloop_test: tests/CMakeFiles/bloop_test.dir/__/src/vm/throw.cpp.o
 tests/bloop_test: tests/CMakeFiles/bloop_test.dir/__/src/vm/value.cpp.o
 tests/bloop_test: tests/CMakeFiles/bloop_test.dir/__/src/vm/vm.cpp.o
 tests/bloop_test: tests/CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.o
+tests/bloop_test: tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o
 tests/bloop_test: tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o
 tests/bloop_test: tests/CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o
 tests/bloop_test: tests/CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o
@@ -1297,7 +1313,7 @@ tests/bloop_test: tests/CMakeFiles/bloop_test.dir/vm/std/native_functions/_nativ
 tests/bloop_test: tests/CMakeFiles/bloop_test.dir/build.make
 tests/bloop_test: tests/CMakeFiles/bloop_test.dir/compiler_depend.ts
 tests/bloop_test: tests/CMakeFiles/bloop_test.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_77) "Linking CXX executable bloop_test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/runner/work/bloop-lang/bloop-lang/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_78) "Linking CXX executable bloop_test"
 	cd /home/runner/work/bloop-lang/bloop-lang/build/tests && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/bloop_test.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

@@ -613,6 +613,12 @@
 },
 {
   "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/algorithms/_algorithms.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/algorithms/_algorithms.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
   "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_functions.cpp",
   "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_functions.cpp",
   "output": "tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o"

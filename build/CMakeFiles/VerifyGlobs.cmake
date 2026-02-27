@@ -129,6 +129,7 @@ endif()
 file(GLOB_RECURSE NEW_GLOB LIST_DIRECTORIES false "/home/runner/work/bloop-lang/bloop-lang/tests/*.cpp")
 set(OLD_GLOB
   "/home/runner/work/bloop-lang/bloop-lang/tests/catch_amalgamated.cpp"
+  "/home/runner/work/bloop-lang/bloop-lang/tests/vm/algorithms/_algorithms.cpp"
   "/home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_functions.cpp"
   "/home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_lambdas.cpp"
   "/home/runner/work/bloop-lang/bloop-lang/tests/vm/coercion/_coercion.cpp"

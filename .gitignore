@@ -1,4 +1,5 @@
 out/
+build/
 .vs/
 .git/
 _codeql_build_dir/

@@ -53,6 +53,7 @@ bloop_test: \
   CMakeFiles/bloop_test.dir/__/src/vm/value.cpp.o \
   CMakeFiles/bloop_test.dir/__/src/vm/vm.cpp.o \
   CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.o \
+  CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o \
   CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o \
   CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o \
   CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o \
@@ -213,6 +214,8 @@ CMakeFiles/bloop_test.dir/__/src/vm/value.cpp.o:
 CMakeFiles/bloop_test.dir/__/src/vm/vm.cpp.o:
 
 CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.o:
+
+CMakeFiles/bloop_test.dir/vm/algorithms/_algorithms.cpp.o:
 
 CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o:
 
