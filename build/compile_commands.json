@@ -1,0 +1,764 @@
+[
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/ast/ast.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/ast/ast.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/ast/ast.cpp",
+  "output": "src/CMakeFiles/bloop.dir/ast/ast.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/ast/function.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/ast/function.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/ast/function.cpp",
+  "output": "src/CMakeFiles/bloop.dir/ast/function.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/ast/unary.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/ast/unary.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/ast/unary.cpp",
+  "output": "src/CMakeFiles/bloop.dir/ast/unary.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/bytecode/build.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/bytecode/build.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/bytecode/build.cpp",
+  "output": "src/CMakeFiles/bloop.dir/bytecode/build.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/bytecode/compile/emit.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/bytecode/compile/emit.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/bytecode/compile/emit.cpp",
+  "output": "src/CMakeFiles/bloop.dir/bytecode/compile/emit.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/bytecode/function/bc_function.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/bytecode/function/bc_function.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/bytecode/function/bc_function.cpp",
+  "output": "src/CMakeFiles/bloop.dir/bytecode/function/bc_function.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/bytecode/global/bc_global.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/bytecode/global/bc_global.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/bytecode/global/bc_global.cpp",
+  "output": "src/CMakeFiles/bloop.dir/bytecode/global/bc_global.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/lexer/lexer.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/lexer/lexer.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/lexer/lexer.cpp",
+  "output": "src/CMakeFiles/bloop.dir/lexer/lexer.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/main.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/main.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/main.cpp",
+  "output": "src/CMakeFiles/bloop.dir/main.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/control/control.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/control.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/control.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/control/control.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/control/control_flow/control_flow.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/control_flow/control_flow.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/control_flow/control_flow.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/control/control_flow/control_flow.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/control/exception/throw.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/exception/throw.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/exception/throw.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/control/exception/throw.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/control/exception/try_catch.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/exception/try_catch.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/exception/try_catch.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/control/exception/try_catch.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/control/for/for.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/for/for.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/for/for.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/control/for/for.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/control/if/if.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/if/if.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/if/if.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/control/if/if.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/control/return/return.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/return/return.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/return/return.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/control/return/return.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/control/while/while.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/while/while.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/while/while.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/control/while/while.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/declaration/declaration.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/declaration/declaration.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/declaration/declaration.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/declaration/declaration.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/expression/expression.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/expression.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/expression.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/expression/expression.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/expression/operator.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/operator.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/operator.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/expression/operator.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/expression/postfix/call.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/call.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/call.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/expression/postfix/call.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/expression/postfix/incr_decr.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/incr_decr.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/incr_decr.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/expression/postfix/incr_decr.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/expression/postfix/postfix.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/postfix.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/postfix.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/expression/postfix/postfix.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/expression/postfix/property.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/property.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/property.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/expression/postfix/property.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/expression/postfix/subscript.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/subscript.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/subscript.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/expression/postfix/subscript.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/expression/prefix/prefix.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/prefix/prefix.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/prefix/prefix.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/expression/prefix/prefix.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/expression/sub_expression.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/sub_expression.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/sub_expression.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/expression/sub_expression.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/function/function.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/function/function.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/function/function.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/function/function.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/operand/array.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/array.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/array.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/operand/array.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/operand/constant.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/constant.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/constant.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/operand/constant.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/operand/identifier.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/identifier.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/identifier.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/operand/identifier.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/operand/lambda.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/lambda.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/lambda.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/operand/lambda.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/operand/object.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/object.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/object.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/operand/object.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/operand/operand.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/operand.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/operand.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/operand/operand.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/operand/parentheses.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/parentheses.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/parentheses.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/operand/parentheses.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/parser.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/parser.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/parser.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/parser.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/parser/scope/scope.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/scope/scope.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/scope/scope.cpp",
+  "output": "src/CMakeFiles/bloop.dir/parser/scope/scope.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/resolver/resolver.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/resolver/resolver.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/resolver/resolver.cpp",
+  "output": "src/CMakeFiles/bloop.dir/resolver/resolver.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/std/lib/console/stdconsole.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/std/lib/console/stdconsole.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/std/lib/console/stdconsole.cpp",
+  "output": "src/CMakeFiles/bloop.dir/std/lib/console/stdconsole.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/std/native.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/std/native.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/std/native.cpp",
+  "output": "src/CMakeFiles/bloop.dir/std/native.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/std/vm/to_vm.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/std/vm/to_vm.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/std/vm/to_vm.cpp",
+  "output": "src/CMakeFiles/bloop.dir/std/vm/to_vm.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/vm/frame.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/frame.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/frame.cpp",
+  "output": "src/CMakeFiles/bloop.dir/vm/frame.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/vm/gc/gc.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/gc/gc.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/gc/gc.cpp",
+  "output": "src/CMakeFiles/bloop.dir/vm/gc/gc.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/vm/heap/dvalue.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/heap/dvalue.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/heap/dvalue.cpp",
+  "output": "src/CMakeFiles/bloop.dir/vm/heap/dvalue.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/vm/heap/heap.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/heap/heap.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/heap/heap.cpp",
+  "output": "src/CMakeFiles/bloop.dir/vm/heap/heap.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/vm/heap/upvalue.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/heap/upvalue.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/heap/upvalue.cpp",
+  "output": "src/CMakeFiles/bloop.dir/vm/heap/upvalue.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/vm/interpreter.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/interpreter.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/interpreter.cpp",
+  "output": "src/CMakeFiles/bloop.dir/vm/interpreter.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/vm/operators.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/operators.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/operators.cpp",
+  "output": "src/CMakeFiles/bloop.dir/vm/operators.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/vm/throw.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/throw.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/throw.cpp",
+  "output": "src/CMakeFiles/bloop.dir/vm/throw.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/vm/value.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/value.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/value.cpp",
+  "output": "src/CMakeFiles/bloop.dir/vm/value.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/src",
+  "command": "/usr/bin/c++ -DDEBUG_MODE=1 -I/home/runner/work/bloop-lang/bloop-lang/src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop.dir/vm/vm.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/vm.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/vm.cpp",
+  "output": "src/CMakeFiles/bloop.dir/vm/vm.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/ast/ast.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/ast/ast.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/ast/ast.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/ast/ast.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/ast/function.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/ast/function.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/ast/function.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/ast/function.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/ast/unary.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/ast/unary.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/ast/unary.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/ast/unary.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/bytecode/build.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/bytecode/build.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/bytecode/build.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/bytecode/build.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/bytecode/compile/emit.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/bytecode/compile/emit.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/bytecode/compile/emit.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/bytecode/compile/emit.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/bytecode/function/bc_function.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/bytecode/function/bc_function.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/bytecode/function/bc_function.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/bytecode/function/bc_function.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/bytecode/global/bc_global.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/bytecode/global/bc_global.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/bytecode/global/bc_global.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/bytecode/global/bc_global.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/lexer/lexer.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/lexer/lexer.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/lexer/lexer.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/lexer/lexer.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/control/control.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/control.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/control.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/control/control.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/control/control_flow/control_flow.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/control_flow/control_flow.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/control_flow/control_flow.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/control/control_flow/control_flow.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/control/exception/throw.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/exception/throw.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/exception/throw.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/control/exception/throw.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/control/exception/try_catch.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/exception/try_catch.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/exception/try_catch.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/control/exception/try_catch.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/control/for/for.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/for/for.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/for/for.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/control/for/for.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/control/if/if.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/if/if.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/if/if.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/control/if/if.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/control/return/return.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/return/return.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/return/return.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/control/return/return.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/control/while/while.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/control/while/while.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/control/while/while.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/control/while/while.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/declaration/declaration.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/declaration/declaration.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/declaration/declaration.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/declaration/declaration.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/expression/expression.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/expression.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/expression.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/expression/expression.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/expression/operator.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/operator.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/operator.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/expression/operator.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/expression/postfix/call.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/call.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/call.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/expression/postfix/call.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/expression/postfix/incr_decr.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/incr_decr.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/incr_decr.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/expression/postfix/incr_decr.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/expression/postfix/postfix.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/postfix.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/postfix.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/expression/postfix/postfix.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/expression/postfix/property.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/property.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/property.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/expression/postfix/property.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/expression/postfix/subscript.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/subscript.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/postfix/subscript.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/expression/postfix/subscript.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/expression/prefix/prefix.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/prefix/prefix.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/prefix/prefix.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/expression/prefix/prefix.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/expression/sub_expression.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/expression/sub_expression.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/expression/sub_expression.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/expression/sub_expression.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/function/function.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/function/function.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/function/function.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/function/function.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/operand/array.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/array.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/array.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/operand/array.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/operand/constant.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/constant.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/constant.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/operand/constant.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/operand/identifier.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/identifier.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/identifier.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/operand/identifier.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/operand/lambda.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/lambda.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/lambda.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/operand/lambda.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/operand/object.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/object.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/object.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/operand/object.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/operand/operand.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/operand.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/operand.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/operand/operand.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/operand/parentheses.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/operand/parentheses.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/operand/parentheses.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/operand/parentheses.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/parser.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/parser.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/parser.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/parser.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/parser/scope/scope.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/parser/scope/scope.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/parser/scope/scope.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/parser/scope/scope.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/resolver/resolver.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/resolver/resolver.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/resolver/resolver.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/resolver/resolver.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/std/lib/console/stdconsole.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/std/lib/console/stdconsole.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/std/lib/console/stdconsole.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/std/lib/console/stdconsole.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/std/native.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/std/native.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/std/native.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/std/native.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/std/vm/to_vm.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/std/vm/to_vm.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/std/vm/to_vm.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/std/vm/to_vm.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/vm/frame.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/frame.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/frame.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/vm/frame.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/vm/gc/gc.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/gc/gc.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/gc/gc.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/vm/gc/gc.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/vm/heap/dvalue.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/heap/dvalue.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/heap/dvalue.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/vm/heap/dvalue.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/vm/heap/heap.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/heap/heap.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/heap/heap.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/vm/heap/heap.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/vm/heap/upvalue.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/heap/upvalue.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/heap/upvalue.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/vm/heap/upvalue.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/vm/interpreter.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/interpreter.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/interpreter.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/vm/interpreter.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/vm/operators.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/operators.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/operators.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/vm/operators.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/vm/throw.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/throw.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/throw.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/vm/throw.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/vm/value.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/value.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/value.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/vm/value.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/__/src/vm/vm.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/src/vm/vm.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/src/vm/vm.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/__/src/vm/vm.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/catch_amalgamated.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/catch_amalgamated.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/catch_amalgamated.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_functions.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_functions.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/closures/_functions.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_lambdas.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/closures/_lambdas.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/closures/_lambdas.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/coercion/_coercion.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/coercion/_coercion.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/coercion/_coercion.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/composite_types/_composite_types.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/composite_types/_composite_types.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/composite_types/_composite_types.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/composite_types/_composite_types.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/composite_types_as_variables/_composite_types_as_variables.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/composite_types_as_variables/_composite_types_as_variables.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/composite_types_as_variables/_composite_types_as_variables.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/composite_types_as_variables/_composite_types_as_variables.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/control_flow/for/_for.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/control_flow/for/_for.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/control_flow/for/_for.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/control_flow/for/_for.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/control_flow/if/_if.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/control_flow/if/_if.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/control_flow/if/_if.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/control_flow/if/_if.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/control_flow/while/_while.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/control_flow/while/_while.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/control_flow/while/_while.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/control_flow/while/_while.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/defs.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/defs.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/defs.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/defs.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/exceptions/_exceptions.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/exceptions/_exceptions.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/exceptions/_exceptions.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/exceptions/_exceptions.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/expressions/_expressions.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/expressions/_expressions.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/expressions/_expressions.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/expressions/_expressions.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/functions/_functions.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/functions/_functions.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/functions/_functions.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/functions/_functions.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/hoisting/_hoisting.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/hoisting/_hoisting.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/hoisting/_hoisting.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/hoisting/_hoisting.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/operators/additive/_additive.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/additive/_additive.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/additive/_additive.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/operators/additive/_additive.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/operators/bitwise/_bitwise.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/bitwise/_bitwise.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/bitwise/_bitwise.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/operators/bitwise/_bitwise.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/operators/equality/_equality.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/equality/_equality.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/equality/_equality.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/operators/equality/_equality.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/operators/logical/_logical.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/logical/_logical.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/logical/_logical.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/operators/logical/_logical.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/operators/multiplicative/_multiplicative.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/multiplicative/_multiplicative.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/multiplicative/_multiplicative.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/operators/multiplicative/_multiplicative.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/operators/relational/_relational.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/relational/_relational.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/relational/_relational.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/operators/relational/_relational.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/operators/shift/_shift.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/shift/_shift.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/operators/shift/_shift.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/operators/shift/_shift.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/primitive_types/_primitive_types.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/primitive_types/_primitive_types.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/primitive_types/_primitive_types.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/primitive_types/_primitive_types.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/primitive_types_as_variables/_primitive_types_as_variables.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/scope/_scope.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/scope/_scope.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/scope/_scope.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/scope/_scope.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/shared_ownership/_shared_ownership.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/shared_ownership/_shared_ownership.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/shared_ownership/_shared_ownership.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/shared_ownership/_shared_ownership.cpp.o"
+},
+{
+  "directory": "/home/runner/work/bloop-lang/bloop-lang/build/tests",
+  "command": "/usr/bin/c++ -DBLOOP_TEST -DDEBUG_MODE=1 -DSOURCE_DIR=\\\"/home/runner/work/bloop-lang/bloop-lang/tests\\\" -I/home/runner/work/bloop-lang/bloop-lang/tests/.. -I/home/runner/work/bloop-lang/bloop-lang/tests/../src -g -std=gnu++20 -Wall -Wextra -Werror -pedantic -O0 -g -o CMakeFiles/bloop_test.dir/vm/std/native_functions/_native_functions.cpp.o -c /home/runner/work/bloop-lang/bloop-lang/tests/vm/std/native_functions/_native_functions.cpp",
+  "file": "/home/runner/work/bloop-lang/bloop-lang/tests/vm/std/native_functions/_native_functions.cpp",
+  "output": "tests/CMakeFiles/bloop_test.dir/vm/std/native_functions/_native_functions.cpp.o"
+}
+]
