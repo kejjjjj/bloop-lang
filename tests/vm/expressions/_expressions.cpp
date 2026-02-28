@@ -51,5 +51,5 @@ TEST_CASE("function expression (lambda)") {
     bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "function_expression"), Value::Type::t_int, std::array{7, 25, 42});
 }
 TEST_CASE("operator precedence") {
-    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "operator_precedence"), Value::Type::t_int, std::array{14, 20, 5, 26, 3});
+    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "operator_precedence"), Value::Type::t_int, std::array{14, 20, 5, 26, 3, 5});
 }

@@ -160,7 +160,11 @@ CParserExpression::Operators::iterator CParserExpression::FindLowestPriorityOper
 	
 	return std::min_element(operators.begin(), operators.end(),
 		[](auto a, auto b) {
-			return a->m_pToken->m_ePriority < b->m_pToken->m_ePriority;
+            if (a->m_pToken->m_ePriority != b->m_pToken->m_ePriority)
+                return a->m_pToken->m_ePriority < b->m_pToken->m_ePriority;
+
+			//prefer left to right associativity
+            return a > b;
 		}
 	);
 }
