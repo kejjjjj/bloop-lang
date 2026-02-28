@@ -34,8 +34,33 @@ void BlockStatement::ResolveStatements(TResolver& resolver) {
 }
 
 void AssignExpression::EmitByteCode(TBCBuilder& builder, bool want_value) {
-	right->EmitByteCode(builder, true);
 
+	//+= -= *= etc...
+	if (m_ePunctuation != bloop::EPunctuation::p_assign) {
+
+		left->EmitByteCode(builder, true);
+		right->EmitByteCode(builder, true);
+
+		constexpr auto PUNCTUATION_OFFSET = std::size_t{ 10 };
+
+		static_assert(
+			static_cast<std::size_t>(bloop::EPunctuation::p_assignment_addition)
+			- static_cast<std::size_t>(bloop::EPunctuation::p_add) == PUNCTUATION_OFFSET, "Punctuation order is not right");
+
+		const auto punct = static_cast<bloop::EPunctuation>(static_cast<std::size_t>(m_ePunctuation) - PUNCTUATION_OFFSET);
+
+		if (!bloop::bytecode::conversionTable.contains(punct))
+			throw bloop::exception::ByteCodeError(BLOOPTEXT("unsupported operation"), m_oApproximatePosition);
+
+		Emit(builder, bloop::bytecode::conversionTable[punct]);
+	} else {
+		right->EmitByteCode(builder, true);
+	}
+
+	Store(builder, want_value);
+}
+void AssignExpression::Store(TBCBuilder& builder, bool want_value)
+{
 	//look for the identifier from the unary/postfix chain
 	if (const auto ptr = left->GetIdentifier()) {
 
@@ -44,15 +69,15 @@ void AssignExpression::EmitByteCode(TBCBuilder& builder, bool want_value) {
 
 		if (auto pf = dynamic_cast<Subscript*>(left.get())) {
 			pf->EmitSet(builder, true);
-			if(want_value)
+			if (want_value)
 				pf->EmitGet(builder, true); // (arr[0] = 2) < 10
-			//pf->left->EmitByteCode(builder, true);
-		} else if (auto pa = dynamic_cast<PropertyAccess*>(left.get())) {
+		}
+		else if (auto pa = dynamic_cast<PropertyAccess*>(left.get())) {
 			pa->EmitSet(builder, true);
 			if (want_value)
 				pa->EmitGet(builder, true); // (obj.prop = 2) < 10
-			//pa->left->EmitByteCode(builder, true);
-		} else {
+		}
+		else {
 			ptr->Store(builder, true);
 		}
 
@@ -63,8 +88,8 @@ void AssignExpression::EmitByteCode(TBCBuilder& builder, bool want_value) {
 	}
 
 	throw bloop::exception::ResolverError(BLOOPTEXT("lhs wasn't an identifier"), left->m_oApproximatePosition);
-
 }
+
 void AssignExpression::Resolve(TResolver& resolver) {
 	BinaryExpression::Resolve(resolver);
 

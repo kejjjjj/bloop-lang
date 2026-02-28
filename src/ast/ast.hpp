@@ -232,11 +232,14 @@ namespace bloop::ast {
 		std::unique_ptr<Expression> right;
 	};
 	struct AssignExpression : BinaryExpression {
-		AssignExpression(const bloop::CodePosition& cp) 
-			: BinaryExpression(bloop::EPunctuation::p_assign, cp) {}
+		AssignExpression(bloop::EPunctuation p, const bloop::CodePosition& cp)
+			: BinaryExpression(p, cp) {}
 
 		void Resolve(TResolver& resolver) override;
 		void EmitByteCode(TBCBuilder& builder, bool want_value) override;
+
+	private:
+		void Store(TBCBuilder& builder, bool want_value);
 	};
 	struct FunctionExpression : Expression {
 

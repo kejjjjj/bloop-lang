@@ -30,11 +30,6 @@ namespace bloop {
 	enum class EPunctuation : char
 	{
 		p_error,
-		p_add,
-		p_sub,
-		p_multiplication,
-		p_division,
-		p_modulo,
 
 		p_less_than,
 		p_less_equal,
@@ -50,6 +45,14 @@ namespace bloop {
 		p_logical_and,
 		p_logical_or,
 
+		p_assign,
+
+		p_add,
+		p_sub,
+		p_multiplication,
+		p_division,
+		p_modulo,
+
 		p_left_shift,
 		p_right_shift,
 
@@ -57,7 +60,6 @@ namespace bloop {
 		p_bitwise_xor,
 		p_bitwise_and,
 
-		p_assign,
 		p_assignment_addition,
 		p_assignment_subtraction,
 		p_assignment_multiplication,

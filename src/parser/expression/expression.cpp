@@ -125,12 +125,12 @@ bool CParserExpression::EndOfExpression(const std::optional<PairMatcher>& eoe) c
 }
 
 /* EXPRESSION GENERATION */
-std::unique_ptr<bloop::ast::AssignExpression> CParserExpression::MakeAssignment(bloop::CodePosition pos) {
-	return std::make_unique<bloop::ast::AssignExpression>(pos);
+std::unique_ptr<bloop::ast::AssignExpression> CParserExpression::MakeAssignment(bloop::EPunctuation p, bloop::CodePosition pos) {
+	return std::make_unique<bloop::ast::AssignExpression>(p, pos);
 }
 void CParserExpression::SetBranch(UniqueExpression& getter, const bloop::CPunctuationToken* t) {
-	if (t->m_ePunctuation == bloop::EPunctuation::p_assign)
-		getter = MakeAssignment(t->GetCodePosition());
+	if (t->m_ePriority == bloop::EOperatorPriority::op_assignment)
+		getter = MakeAssignment(t->m_ePunctuation, t->GetCodePosition());
 	else
 		getter = MakeBinary(t->m_ePunctuation, t->GetCodePosition());
 }
