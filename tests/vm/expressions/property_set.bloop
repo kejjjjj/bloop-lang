@@ -1,0 +1,5 @@
+let obj = { x: 1, y: 2, z: 3 };
+obj.x = 10;
+obj.y = 20;
+obj.z = 30;
+return [obj.x, obj.y, obj.z];

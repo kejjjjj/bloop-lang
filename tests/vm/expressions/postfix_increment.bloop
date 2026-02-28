@@ -1,0 +1,4 @@
+let x = 5;
+const a = x++;
+const b = x++;
+return [a, b, x];

@@ -1,0 +1,5 @@
+const obj = { x: 1, y: 2, z: 3 };
+const a = obj.x;
+const b = obj.y;
+const c = obj.z;
+return [a, b, c];
