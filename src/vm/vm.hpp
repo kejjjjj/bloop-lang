@@ -9,7 +9,6 @@
 #include "metadata/metadata.hpp"
 #include "vm/gc/gc.hpp"
 #include "vm/heap/heap.hpp"
-#include "vm/heap/arena.hpp"
 
 namespace bloop::bytecode {
 	enum class EOpCode : unsigned char;
@@ -28,7 +27,8 @@ namespace bloop::vm {
 
 		[[maybe_unused]] Value Run();
 
-		void RunGC() { m_oGC.Collect(); }
+		void MajorGC() { m_oGC.MajorGC(); }
+		void MinorGC() { m_oGC.MinorGC(); }
 
 	private:
 		enum class ExecutionReturnCode : bloop::BloopByte {
@@ -65,13 +65,19 @@ namespace bloop::vm {
 		std::vector<Value> m_oGlobals;
 		CallFrame* m_pCurrentFrame{};
 
-		//Arena m_oArena;
 		Heap m_oHeap;
 		GC m_oGC;
 		Chunk m_oGlobalChunk; //executed in the beginning
 
 		//debugging
 		bloop::metadata::Metadata& m_refMetaData;
+
+		template <typename F>
+		inline void BinaryOp(F&& fn) {
+			Value b = Pop();
+			Value a = Pop();
+			Push(fn(a, b));
+		}
 
 	};
 

@@ -1,6 +1,8 @@
 R"(
+let v;
 
-let t = 2;
+for(let i = 0; i < 10_000_000; i++)
+    v = i;
 
-return (t += 3), t;
+return v;
 )"

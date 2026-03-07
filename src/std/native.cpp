@@ -9,7 +9,8 @@ using namespace bloop::standard;
 using namespace bloop::vm;
 
 FWD_DECLARE_NATIVE(Length);
-FWD_DECLARE_NATIVE(RunGC);
+FWD_DECLARE_NATIVE(MajorGC);
+FWD_DECLARE_NATIVE(MinorGC);
 
 NativeObject::~NativeObject() = default;
 
@@ -26,16 +27,20 @@ NativeDef bloop::standard::IncludeStandardLibrary() {
 		.m_oFields = {
 			NativeField(BLOOPTEXT("console"), bloop::standard::GetConsoleDefinitions()),
 			NativeField(BLOOPTEXT("length"), { 1u, Length }),
-			NativeField(BLOOPTEXT("gc_run"), { 0u, RunGC })
+			NativeField(BLOOPTEXT("gc_major"), { 0u, MajorGC }),
+			NativeField(BLOOPTEXT("gc_minor"), { 0u, MinorGC })
 		}
 	});
 }
 
-DEFINE_NATIVE(RunGC, vm, args) {
-	vm.RunGC();
+DEFINE_NATIVE(MajorGC, vm, args) {
+	vm.MajorGC();
 	return {};
 }
-
+DEFINE_NATIVE(MinorGC, vm, args) {
+	vm.MinorGC();
+	return {};
+}
 DEFINE_NATIVE(Length, vm, args) {
 
 	const auto& val = args[0];

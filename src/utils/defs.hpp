@@ -103,5 +103,6 @@ namespace bloop {
 	using CodePosition = std::tuple<BloopUInt, BloopUInt>;
 	static constexpr BloopIndex INVALID_SLOT = std::numeric_limits<BloopIndex>::max();
 	static constexpr auto VARIADIC_PARAMETER_COUNT = bloop::INVALID_SLOT;
+	constexpr auto MB = 1024 * 1024;
 
 }

@@ -2,13 +2,15 @@
 
 #include "utils/defs.hpp"
 
+#include "vm/gc/gc.hpp"
+
 namespace bloop::vm
 {
 
 	class Arena {
 
 	public:
-		Arena(bloop::BloopUInt size) {
+		Arena(GC& gc, bloop::BloopUInt size) : m_oGC(gc) {
 			m_pBegin = reinterpret_cast<bloop::BloopByte*>(::operator new(size));
 			m_pEnd = m_pBegin + size;
 			m_pPtr = m_pBegin;
@@ -23,7 +25,7 @@ namespace bloop::vm
 			const auto next = reinterpret_cast<bloop::BloopByte*>(aligned + size);
 
 			if (next > m_pEnd)
-				return nullptr;
+				m_oGC.Collect();
 
 			m_pPtr = next;
 			return reinterpret_cast<T*>(aligned);
@@ -31,7 +33,7 @@ namespace bloop::vm
 
 		template<typename T>
 		inline T* Alloc() {
-			return Alloc<T*>(static_cast<bloop::BloopUInt>(sizeof(T)), static_cast<bloop::BloopUInt>(alignof(T)));
+			return Alloc<T*>(static_cast<bloop::BloopUInt>(sizeof(T)));
 		}
 
 		inline void Reset() { m_pPtr = m_pBegin; }
@@ -40,6 +42,7 @@ namespace bloop::vm
 		bloop::BloopByte* m_pBegin{};
 		bloop::BloopByte* m_pEnd{};
 		bloop::BloopByte* m_pPtr{};
+		GC& m_oGC;
 	};
 
 }

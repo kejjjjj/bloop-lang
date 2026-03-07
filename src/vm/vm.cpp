@@ -64,7 +64,7 @@ VM::~VM() {
 		m_oGlobals.clear(); // let the gc get rid of these
 		m_oGlobalChunk.m_oConstants.clear();
 		m_oFunctions.clear();
-		m_oGC.Collect(); //clear everything
+		m_oGC.MajorGC(); //clear everything
 
 	}
 
@@ -110,7 +110,7 @@ Value VM::Run() {
 			//	RunFunction(func);
 			//	assert(m_oStack.size() == 1u);
 			//}
-			m_oGC.Collect();
+			m_oGC.MajorGC();
 		});
 		#endif
 

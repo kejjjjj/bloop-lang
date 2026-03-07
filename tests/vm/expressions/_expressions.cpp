@@ -14,14 +14,10 @@ TEST_CASE("integer literals") {
     bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "integer_literal"), Value::Type::t_int, std::array{1000000, -500, 1000 - 500});
 }
 TEST_CASE("integer negation expression") {
-    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "negation_int"), Value::Type::t_int, std::array{
-        -5, -10, -15
-    });
+    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "negation_int"), Value::Type::t_int, std::array{-5, -10, -15});
 }
 TEST_CASE("double negation expression") {
-    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "negation_double"), Value::Type::t_double, std::array{
-        -2.5, -1.0, -3.5
-    });
+    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "negation_double"), Value::Type::t_double, std::array{ -2.5, -1.0, -3.5 });
 }
 TEST_CASE("prefix increment returns new value") {
     bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "prefix_increment"), Value::Type::t_int, std::array{6, 7, 7});

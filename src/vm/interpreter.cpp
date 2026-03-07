@@ -18,12 +18,6 @@ using TOpCode = bloop::bytecode::EOpCode;
 
 VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
-	const auto BinaryOp = [this]<typename F>(F&& fn) -> void {
-		Value b = Pop();
-		Value a = Pop();
-		Push(fn(a, b));
-	};
-
 	switch (op) {
 		case TOpCode::POP: {
 			assert(!m_oStack.empty());
