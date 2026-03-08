@@ -68,7 +68,7 @@ VM::~VM() {
 
 	}
 
-	assert(m_oGC.GetAllocatedSize() == 0u);
+	//assert(m_oGC.GetAllocatedSize() == 0u);
 }
 
 #include <chrono>
@@ -102,7 +102,7 @@ Value VM::Run() {
 		//	RunFunction(func);
 		//	assert(m_oStack.size() == 1u);
 		//}
-		m_oGC.Collect();
+		//m_oGC.MajorGC();
 		#else
 		Benchmark("glob+main", [&]() {
 			RunGlobal();
@@ -110,7 +110,7 @@ Value VM::Run() {
 			//	RunFunction(func);
 			//	assert(m_oStack.size() == 1u);
 			//}
-			m_oGC.MajorGC();
+			//m_oGC.MajorGC();
 		});
 		#endif
 

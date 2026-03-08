@@ -105,4 +105,8 @@ namespace bloop {
 	static constexpr auto VARIADIC_PARAMETER_COUNT = bloop::INVALID_SLOT;
 	constexpr auto MB = 1024 * 1024;
 
+	inline constexpr bloop::BloopUInt Align(bloop::BloopUInt n, bloop::BloopUInt A = alignof(std::max_align_t)) {
+		return (n + (A - 1)) & ~(A - 1);
+	}
+
 }

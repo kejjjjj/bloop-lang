@@ -25,9 +25,9 @@ NativeDef bloop::standard::IncludeStandardLibrary() {
 
 	return NativeDef(BLOOPTEXT("std"), NativeObject{
 		.m_oFields = {
-			NativeField(BLOOPTEXT("console"), bloop::standard::GetConsoleDefinitions()),
-			NativeField(BLOOPTEXT("length"), { 1u, Length }),
-			NativeField(BLOOPTEXT("gc_major"), { 0u, MajorGC }),
+			//NativeField(BLOOPTEXT("console"), bloop::standard::GetConsoleDefinitions()),
+			//NativeField(BLOOPTEXT("length"), { 1u, Length }),
+			//NativeField(BLOOPTEXT("gc_major"), { 0u, MajorGC }),
 			NativeField(BLOOPTEXT("gc_minor"), { 0u, MinorGC })
 		}
 	});

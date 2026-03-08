@@ -11,44 +11,65 @@
 using namespace bloop::vm;
 
 Object* Heap::AllocString(bloop::BloopUInt len) {
-	auto newBuf = new bloop::BloopChar[len];
-	auto str = Allocate<Object>(newBuf, len);
-	m_pGC->AddExternalBytes(len);
-	return str;
+	auto obj = AllocateRaw<Object>(sizeof(Object) + len);
+
+	obj->type = Object::Type::ot_string;
+	obj->string.len = len;
+	obj->string.data = reinterpret_cast<bloop::BloopChar*>(obj + 1);
+
+	return obj;
 }
 Object* Heap::AllocString(const bloop::BloopChar* data, bloop::BloopUInt len) {
-	auto newBuf = new bloop::BloopChar[len];
-	std::memcpy(newBuf, data, len);
-	auto ptr = Allocate<Object>(newBuf, len);
-	ptr->string.hash = bloop::hash::FNV1a(newBuf, len);
-	m_pGC->AddExternalBytes(len);
-	return ptr;
+	auto obj = AllocateRaw<Object>(sizeof(Object) + len);
+
+	obj->type = Object::Type::ot_string;
+	obj->string.len = len;
+	obj->string.data = reinterpret_cast<bloop::BloopChar*>(obj + 1);
+	obj->string.hash = bloop::hash::FNV1a(data, len);
+
+	std::memcpy(obj->string.data, data, len);
+	return obj;
 }
 Object* Heap::AllocCallable(Function* callable) {
 	return Allocate<Object>(callable);
 }
 Object* Heap::AllocArray(bloop::BloopIndex numValues) {
+	auto* obj = AllocateRaw<Object>(sizeof(Object) + sizeof(Value) * numValues);
 
-	auto vals = new Value[numValues];
-	auto arr = Allocate<Object>(vals, numValues);
-	m_pGC->AddExternalBytes(sizeof(Value) * numValues);
-	return arr;
+	obj->type = Object::Type::ot_array;
+	obj->array.count = numValues;
+	obj->array.values = reinterpret_cast<Value*>(obj + 1);
+
+	return obj;
 }
 Object* Heap::AllocObject(bloop::BloopIndex numValues) {
 
 	auto capacity = 4;
 	while (capacity < numValues) capacity <<= 1;
-	auto entries = new ObjectEntry[capacity];
-	auto obj = Allocate<Object>(entries, 0, capacity);
 
-	m_pGC->AddExternalBytes(sizeof(ObjectEntry) * capacity);
+	auto* obj = AllocateRaw<Object>(sizeof(Object) + sizeof(ObjectEntry) * capacity);
+
+	obj->type = Object::Type::ot_object;
+	obj->object.capacity = capacity;
+	obj->object.count = 0;
+	obj->object.entries = reinterpret_cast<ObjectEntry*>(obj + 1);
+
+	for (const auto i : std::views::iota(0, capacity)) {
+		obj->object.entries[i] = ObjectEntry{};
+	}
+
 	return obj;
 }
 Object* Heap::AllocClosure(Function* function, bloop::BloopIndex numVals) {
-	auto vals = new UpValue*[numVals] {};
-	auto closure = Allocate<Object>(function, vals, numVals);
-	m_pGC->AddExternalBytes(sizeof(UpValue*) * numVals);
-	return closure;
+
+	auto* obj = AllocateRaw<Object>(sizeof(Object) + sizeof(UpValue*) * numVals);
+
+	obj->type = Object::Type::ot_closure;
+	obj->closure.function = function;
+	obj->closure.numValues = numVals;
+	obj->closure.upvalues = reinterpret_cast<UpValue**>(obj + 1);
+
+	return obj;
 }
 Object* Heap::AllocNativeFunction(const bloop::standard::NativeFunction* function) {
 	return Allocate<Object>(function);

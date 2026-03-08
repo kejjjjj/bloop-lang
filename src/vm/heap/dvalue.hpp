@@ -1,6 +1,8 @@
 #pragma once
 
 #include "utils/defs.hpp"
+#include "vm/gc/gc.hpp"
+
 #include <unordered_set>
 
 namespace bloop::standard {
@@ -80,6 +82,9 @@ namespace bloop::vm
 
 		[[nodiscard]] Value& ObjectGet(Value key) const;
 		[[maybe_unused]] Value& ObjectSet(Value key, Value value);
+
+		[[nodiscard]] inline auto IsOld() const noexcept { return GCHeader::GetHeader(this)->age >= PROMOTION_THRESHOLD; }
+		[[nodiscard]] inline auto IsYoung() const noexcept { return GCHeader::GetHeader(this)->age < PROMOTION_THRESHOLD; }
 
 	private:
 		[[nodiscard]] bloop::BloopString ValueToStringInternal(std::unordered_set<const Object*>& seen, bloop::BloopUInt depth=0u) const;

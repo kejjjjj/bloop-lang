@@ -1,12 +1,12 @@
 #pragma once
 
 #include "utils/defs.hpp"
-#include "vm/heap/dvalue.hpp"
 #include "vm/gc/minor.hpp"
 #include "vm/gc/major.hpp"
 
 #include <vector>
 #include <cassert>
+#include <iostream>
 
 namespace bloop::vm
 {
@@ -16,16 +16,20 @@ namespace bloop::vm
 	class Heap;
 	class VM;
 	struct Value;
+	struct UpValue;
 
 	struct alignas(std::max_align_t) GCHeader {
 		bloop::BloopUInt size{};
-		GCHeader* next; // linked list for old space
+		GCHeader* next{}; // linked list for old space
 		GCHeader* forwarding{};
 		bloop::BloopUInt8 age{};
 		bloop::BloopBool marked{};
 
 		[[nodiscard]] static inline GCHeader* GetHeader(void* p) noexcept {
 			return reinterpret_cast<GCHeader*>(p) - 1u;
+		}
+		[[nodiscard]] static inline const GCHeader* GetHeader(const void* p) noexcept {
+			return reinterpret_cast<const GCHeader*>(p) - 1u;
 		}
 		template<typename T>
 		[[nodiscard]] inline T* GetValue() noexcept {
@@ -38,6 +42,7 @@ namespace bloop::vm
 	class GC {
 		BLOOP_NONCOPYABLE(GC);
 		friend class VM;
+		friend class Heap;
 		friend struct MinorSpace;
 	public:
 
@@ -46,55 +51,65 @@ namespace bloop::vm
 		~GC();
 
 		template<typename T, typename ... Args>
-		T* Allocate(Args&&... args) {
+		[[nodiscard]] T* Allocate(Args&&... args) {
 			constexpr auto header_size = sizeof(GCHeader);
 			constexpr auto payload_size = sizeof(T);
 
-			auto mem = static_cast<GCHeader*>(m_oMinorSpace.AllocFromSpace(header_size + payload_size));
-			//auto mem = static_cast<GCHeader*>(::operator new(header_size + payload_size));
+			auto mem = static_cast<GCHeader*>(m_oMinorSpace.AllocSpace(header_size + payload_size));
 
 			mem->size = payload_size;
-			mem->marked = false;
+			mem->next = nullptr;
 			mem->forwarding = nullptr;
 			mem->age = 0;
+			mem->marked = false;
+
+			std::cout << "size: " << mem->size << '\n';
 
 			auto obj = reinterpret_cast<T*>(mem + 1u); //skip header
 			auto result = new (obj) T(std::forward<Args>(args)...);
-
-			AddExternalBytes(header_size + payload_size);
 			return result;
+		}
+
+		template<typename T>
+		[[nodiscard]] T* AllocateRaw(bloop::BloopUInt payload_size) {
+			constexpr auto header_size = sizeof(GCHeader);
+
+			auto total = bloop::Align(header_size + payload_size);
+
+			auto mem = static_cast<GCHeader*>(m_oMinorSpace.AllocSpace(total));
+
+
+			mem->size = total - header_size;
+			mem->next = nullptr;
+			mem->forwarding = nullptr;
+			mem->age = 0;
+			mem->marked = false;
+
+			std::cout << "size: " << mem->size << '\n';
+
+			auto obj = reinterpret_cast<T*>(mem + 1u); //skip header
+			return obj;
 		}
 
 		void MinorGC();
 		void MinorCopyRoots(VM* vm);
+		void MinorScanRememberedSet();
 
 		void MajorGC();
 		void PushTempRoot(Object* obj);
 		void PopTempRoot(bloop::BloopUInt count=1u);
-		[[nodiscard]] constexpr auto GetAllocatedSize() const noexcept { return m_uBytesAllocated; }
-
-		inline void AddExternalBytes(bloop::BloopUInt bytes) {
-			m_uBytesAllocated += bytes;
-		}
-		inline void SubtractExternalBytes(bloop::BloopUInt bytes) {
-			assert(m_uBytesAllocated >= bytes);
-			m_uBytesAllocated -= bytes;
-		}
 
 	private:
-		// don't call me directly, unless for globals
-		void FreeObject(Object* obj);
-		void FreeOther(GCHeader* header);
 
 		void MarkRoots(VM* vm);
-		[[maybe_unused]] void* Mark(Object* obj);
-		void MarkUpValue(UpValue* obj);
+		[[maybe_unused]] Object* Mark(Object* obj);
+		void TraceUpValue(UpValue* obj, Object* (GC::* cb)(Object* ptr));
 
 		void Sweep();
-		void Trace(Object* obj, void*(GC::* cb)(Object* ptr));
-		[[nodiscard]] void* TraceMinor(Object* obj);
+		void Trace(Object** slot, Object*(GC::* cb)(Object* ptr));
+		[[nodiscard]] Object* TraceMinor(Object* obj);
 
-		UpValue* CaptureUpValue(Value* slot);
+		[[maybe_unused]] UpValue* CaptureUpValue(Value* slot);
 		void CloseUpValues(Value* lastSlot);
 
 #if (DEBUG || _DEBUG)
@@ -105,8 +120,6 @@ namespace bloop::vm
 		//GCHeader* m_pObjects{};
 		VM* m_pVM{};
 		std::vector<Object*> m_oTempRoots;
-
-		bloop::BloopUInt m_uBytesAllocated{};
 
 		MinorSpace m_oMinorSpace;
 		MajorSpace m_oMajorSpace;

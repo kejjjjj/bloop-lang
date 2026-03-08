@@ -19,8 +19,8 @@ namespace bloop::vm
 			Grow(size);
 		}
 
-		GCHeader* objects;
-		FreeBlock* free_list;
+		GCHeader* objects{};
+		FreeBlock* free_list{};
 
 		[[nodiscard]] GCHeader* Alloc(bloop::BloopUInt payloadSize);
 		[[nodiscard]] FreeBlock* FindFree(bloop::BloopUInt totalSize);

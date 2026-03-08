@@ -177,7 +177,13 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			if (!operand.IsIndexable())
 				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not indexable"), operand.TypeToString()));
 
-			operand.obj->Index(index) = value;
+			//returns Value&
+			auto& idx = operand.obj->Index(index);
+
+			if (value.type == Value::Type::t_object && idx.type == Value::Type::t_object)
+				m_oGC.m_oMinorSpace.WriteBarrier(operand.obj, &idx.obj, value.obj);
+
+			idx = value;
 			Push(value);
 			break;
 		} case TOpCode::PROPERTY_GET: {
@@ -197,6 +203,9 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 			if (!operand.IsAggregate())
 				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not an aggregate type"), operand.TypeToString()));
+
+			if (value.type == Value::Type::t_object)
+				m_oGC.m_oMinorSpace.WriteBarrier(operand.obj, &key.obj, value.obj);
 
 			operand.obj->ObjectSet(key, value);
 			Push(value);

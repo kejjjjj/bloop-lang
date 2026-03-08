@@ -54,7 +54,14 @@ void MajorSpace::Grow(bloop::BloopUInt minSize)
 
 	auto* block = reinterpret_cast<FreeBlock*>(mem);
 	block->size = growSize;
-	block->next = free_list;
+
+
+	if (!free_list) {
+		free_list = block;
+		block->next = nullptr;
+	}else {
+		block->next = free_list;
+	}
 
 	m_uHeapSize += growSize;
 }
@@ -78,8 +85,7 @@ GCHeader* MajorSpace::UseBlock(FreeBlock* block, bloop::BloopUInt needed)
 	header->marked = false;
 	header->age = PROMOTION_THRESHOLD; // it's old gen now
 	header->forwarding = nullptr;
-
-	header->next = objects;
+	header->next = objects ? objects : nullptr;
 	objects = header;
 
 	return header;

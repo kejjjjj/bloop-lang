@@ -30,7 +30,10 @@ namespace bloop::vm
 		[[nodiscard]] inline T* Allocate(Args&&... args) {
 			return m_pGC->Allocate<T>(std::forward<Args>(args)...);
 		}
-
+		template<typename T>
+		[[nodiscard]] inline T* AllocateRaw(bloop::BloopUInt payload_size) {
+			return m_pGC->AllocateRaw<T>(payload_size);
+		}
 		//[[nodiscard]] Object* Allocate(Object* newObj);
 		[[nodiscard]] Object* AllocString(const bloop::BloopChar* data, bloop::BloopUInt len);
 		[[nodiscard]] Object* AllocString(bloop::BloopUInt len);

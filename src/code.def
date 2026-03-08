@@ -1,8 +1,9 @@
 R"(
-let v;
 
-for(let i = 0; i < 10_000_000; i++)
-    v = i;
+let a = ["ass"];
 
-return v;
+a[0] = "hello!";
+
+return a;
+
 )"
