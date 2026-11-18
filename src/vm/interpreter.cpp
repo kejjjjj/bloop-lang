@@ -6,6 +6,7 @@
 #include "std/native.hpp"
 #include "utils/fmt.hpp"
 #include "vm/frame.hpp"
+#include "vm/gc/handles.hpp"
 
 #include <ranges>
 #include <cstring>
@@ -228,8 +229,9 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 			[[maybe_unused]] const auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
 
-			// capturing allocates upvalues, which can move the closure, so keep it in a temp root
-			m_oGC.PushTempRoot(m_oHeap.AllocClosure(&func, numCaptures));
+			// capturing allocates upvalues, which can move the closure
+			RootScope scope(m_oGC);
+			const auto closure = scope.Keep(m_oHeap.AllocClosure(&func, numCaptures));
 
 			for (const auto i : std::views::iota(0u, static_cast<bloop::BloopUInt>(numCaptures))) {
 				assert(m_pCurrentFrame->m_pIp < chunk.m_oByteCode.data() + chunk.m_oByteCode.size() && "IP out of bounds before reading opcode");
@@ -253,11 +255,10 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 				}
 
 				// re-read: the closure may have moved. Upvalues are always old, so no write barrier is needed
-				m_oGC.TempRoot()->closure.upvalues[i] = uv;
+				closure->closure.upvalues[i] = uv;
 			}
 
-			Push(m_oGC.TempRoot());
-			m_oGC.PopTempRoot();
+			Push(closure.Get());
 			break;
 		} case TOpCode::TRY: {
 			//ip, catchvar

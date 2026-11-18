@@ -24,7 +24,7 @@ std::unique_ptr<BinaryExpression> CPrefixOperation::ToExpression()
 }
 
 CParserPrefix::CParserPrefix(const CParserContext& ctx)
-	: CParserSingle(ctx.m_iterPos, ctx.m_iterEnd), m_oCtx(ctx) {
+	: CParserSingle(ctx.m_iterPos, ctx.m_iterEnd) {
 	assert(!IsEndOfBuffer());
 }
 CParserPrefix::~CParserPrefix() = default;

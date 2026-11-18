@@ -45,6 +45,9 @@ CLexer::~CLexer() = default;
 void CLexer::Parse() {
 	while (auto&& token = ReadToken())
 		m_oTokens.emplace_back(std::forward<decltype(token)>(token));
+
+	// lines are recorded when their '\n' is reached, so the last line still needs to be added
+	m_refMetadata.m_oLineMap.push_back(bloop::BloopStringView(m_oLineStart, m_oScriptEnd));
 }
 
 bool CLexer::IsToken(bloop::BloopStringView t) noexcept

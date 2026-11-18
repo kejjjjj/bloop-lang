@@ -125,10 +125,22 @@ namespace bloop::vm
 		void MinorGC();
 		void MajorGC();
 
+		// Low level rooting, prefer RootScope / Local (vm/gc/handles.hpp).
+		// Temp roots get updated when objects move, so always re-read pointers after an allocation.
+		// A null temp root is allowed (it reserves a slot)
 		void PushTempRoot(Object* obj);
 		void PopTempRoot(bloop::BloopUInt count = 1u);
-		// temp roots get updated when objects move, so always re-read pointers after an allocation
 		[[nodiscard]] Object* TempRoot(bloop::BloopUInt fromTop = 0u) const;
+
+		[[nodiscard]] inline bloop::BloopUInt TempRootCount() const noexcept { return m_oTempRoots.size(); }
+		[[nodiscard]] inline Object*& TempRootAt(bloop::BloopUInt index) noexcept {
+			assert(index < m_oTempRoots.size());
+			return m_oTempRoots[index];
+		}
+		inline void TruncateTempRoots(bloop::BloopUInt count) noexcept {
+			assert(count <= m_oTempRoots.size() && "temp roots were popped past a RootScope");
+			m_oTempRoots.resize(count);
+		}
 
 		// call after storing `value` into a heap object (or a closed upvalue) `owner`
 		inline void WriteBarrier(const void* owner, const Object* value) noexcept;

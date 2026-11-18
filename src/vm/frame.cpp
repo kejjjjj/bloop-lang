@@ -95,10 +95,16 @@ bloop::BloopString VM::FormatStackTraceMessage(const bc::InstrDebugRef& ref)
 		return start != bloop::BloopString::npos ? str.substr(start, 1 + end - start) : bloop::BloopString();
 	};
 
-	auto& lineData = m_refMetaData.m_oLineMap[std::get<0>(ref.m_oPosition) - 1u];
+	const auto line = std::get<0>(ref.m_oPosition);
 	auto offset = std::get<1>(ref.m_oPosition);
 
-	bloop::BloopString msg = bloop::fmt::format(BLOOPTEXT("at [{}, {}]\n"), std::get<0>(ref.m_oPosition), offset);
+	bloop::BloopString msg = bloop::fmt::format(BLOOPTEXT("at [{}, {}]\n"), line, offset);
+
+	// never crash while reporting an error
+	if (line == 0u || line > m_refMetaData.m_oLineMap.size())
+		return msg;
+
+	const auto& lineData = m_refMetaData.m_oLineMap[line - 1u];
 	
 	const auto trimmed = trim(bloop::BloopString(lineData));
 	msg += trimmed + '\n';

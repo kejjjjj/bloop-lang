@@ -1,4 +1,5 @@
 #include "std/native.hpp"
+#include "std/bind.hpp"
 #include "vm/vm.hpp"
 #include "vm/exception.hpp"
 #include "utils/fmt.hpp"
@@ -9,9 +10,16 @@
 using namespace bloop::standard;
 using namespace bloop::vm;
 
-FWD_DECLARE_NATIVE(Length);
-FWD_DECLARE_NATIVE(MajorGC);
-FWD_DECLARE_NATIVE(MinorGC);
+namespace {
+	void MajorGC(VM& vm) { vm.MajorGC(); }
+	void MinorGC(VM& vm) { vm.MinorGC(); }
+
+	bloop::BloopInt Length(std::variant<StringArg, ArrayArg> value) {
+		if (const auto* str = std::get_if<StringArg>(&value))
+			return str->Length();
+		return std::get<ArrayArg>(value).Count();
+	}
+}
 
 NativeObject::~NativeObject() = default;
 
@@ -27,28 +35,9 @@ NativeDef bloop::standard::IncludeStandardLibrary() {
 	return NativeDef(BLOOPTEXT("std"), NativeObject{
 		.m_oFields = {
 			NativeField(BLOOPTEXT("console"), bloop::standard::GetConsoleDefinitions()),
-			NativeField(BLOOPTEXT("length"), { 1u, Length }),
-			NativeField(BLOOPTEXT("gc_major"), { 0u, MajorGC }),
-			NativeField(BLOOPTEXT("gc_minor"), { 0u, MinorGC })
+			NativeField(BLOOPTEXT("length"), Bind<&Length>()),
+			NativeField(BLOOPTEXT("gc_major"), Bind<&MajorGC>()),
+			NativeField(BLOOPTEXT("gc_minor"), Bind<&MinorGC>())
 		}
 	});
-}
-
-DEFINE_NATIVE(MajorGC, vm, args) {
-	vm.MajorGC();
-	return {};
-}
-DEFINE_NATIVE(MinorGC, vm, args) {
-	vm.MinorGC();
-	return {};
-}
-DEFINE_NATIVE(Length, vm, args) {
-
-	const auto& val = args[0];
-	if (val.IsArray())
-		return Value(val.obj->array.count);
-	if (val.IsString())
-		return Value(val.obj->string.len);
-	
-	throw bloop::exception::VMError(bloop::fmt::format("length() expects \"array\" or \"string\", but got \"{}\"", val.TypeToString()));
 }

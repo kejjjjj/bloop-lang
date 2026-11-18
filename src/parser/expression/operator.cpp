@@ -7,7 +7,7 @@
 using namespace bloop::parser;
 
 COperatorParser::COperatorParser(const CParserContext& ctx)
-	: CParserSingle(ctx.m_iterPos, ctx.m_iterEnd), m_oCtx(ctx) {
+	: CParserSingle(ctx.m_iterPos, ctx.m_iterEnd) {
 	assert(!IsEndOfBuffer());
 }
 

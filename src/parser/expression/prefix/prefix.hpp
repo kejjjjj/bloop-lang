@@ -39,7 +39,6 @@ namespace bloop::parser {
 
 		[[nodiscard]] std::unique_ptr<IPrefix> ParseNegation();
 
-		const CParserContext& m_oCtx;
 		std::vector<std::unique_ptr<IPrefix>> m_oPrefixes;
 	};
 

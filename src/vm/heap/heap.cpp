@@ -1,5 +1,6 @@
 #include "vm/heap/heap.hpp"
 #include "vm/heap/dvalue.hpp"
+#include "vm/gc/handles.hpp"
 #include "vm/vm.hpp"
 #include "std/native.hpp"
 #include "utils/hash.hpp"
@@ -90,12 +91,12 @@ Object* Heap::StringConcat(Object* a, Object* b)
 	const auto len = a->string.len + b->string.len;
 
 	// the allocation may move a and b
-	m_pGC->PushTempRoot(a);
-	m_pGC->PushTempRoot(b);
+	RootScope scope(*m_pGC);
+	const auto ra = scope.Keep(a);
+	const auto rb = scope.Keep(b);
 	auto r = AllocString(len);
-	b = m_pGC->TempRoot(0u);
-	a = m_pGC->TempRoot(1u);
-	m_pGC->PopTempRoot(2u);
+	a = ra.Obj();
+	b = rb.Obj();
 
 	memcpy(r->string.data, a->string.data, a->string.len);
 	memcpy(r->string.data + a->string.len, b->string.data, b->string.len);
@@ -109,19 +110,17 @@ void Heap::ObjectSet(Object* obj, Value key, Value value) {
 	if (obj->ObjectFind(key) == nullptr && obj->ObjectNeedsToGrow()) {
 
 		// the allocation can move obj, key and value
-		const auto rootOf = [](const Value& v) { return v.type == Value::Type::t_object ? v.obj : nullptr; };
-		m_pGC->PushTempRoot(obj);
-		m_pGC->PushTempRoot(key.obj);
-		m_pGC->PushTempRoot(rootOf(value));
+		RootScope scope(*m_pGC);
+		const auto robj = scope.Keep(obj);
+		const auto rkey = scope.Keep(key);
+		const auto rvalue = scope.Keep(value);
 
 		const auto newCapacity = obj->object.capacity * 2;
 		auto* entries = m_pGC->AllocateBuffer<ObjectEntry>(static_cast<bloop::BloopUInt>(newCapacity));
 
-		if (value.type == Value::Type::t_object)
-			value.obj = m_pGC->TempRoot(0u);
-		key.obj = m_pGC->TempRoot(1u);
-		obj = m_pGC->TempRoot(2u);
-		m_pGC->PopTempRoot(3u);
+		obj = robj.Obj();
+		key = rkey.Get();
+		value = rvalue.Get();
 
 		for (const auto i : std::views::iota(0, newCapacity))
 			new (&entries[i]) ObjectEntry{};

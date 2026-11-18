@@ -29,7 +29,6 @@ namespace bloop::parser {
 		[[nodiscard]] bool IsOperator(const CPunctuationToken* token) const noexcept;
 		[[nodiscard]] bool EndOfExpression(const std::optional<PairMatcher>& eoe) const noexcept;
 
-		const CParserContext& m_oCtx;
 		bool m_bSequenceFollows{};
 	};
 

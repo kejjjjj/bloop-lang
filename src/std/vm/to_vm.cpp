@@ -2,19 +2,17 @@
 #include "vm/heap/heap.hpp"
 #include "vm/value.hpp"
 #include "vm/heap/dvalue.hpp"
+#include "vm/gc/handles.hpp"
 
 #include <cassert>
 
 using namespace bloop::vm;
 
-// Every allocation can move young objects, so the receiver and the key are kept in temp roots
-// and re-read after the allocations are done.
-void bloop::standard::AssignField(Heap& heap, const NativeField& field) {
+// every allocation can move young objects, so the receiver and the key stay rooted
+void bloop::standard::AssignField(Heap& heap, const NativeField& field, const Local& receiver) {
 
-	auto& gc = heap.GetGC();
-
-	// receiver is TempRoot(0) on entry
-	gc.PushTempRoot(heap.AllocString(field.m_sName.data(), field.m_sName.size()));
+	RootScope scope(heap.GetGC());
+	const auto key = scope.Keep(heap.AllocString(field.m_sName.data(), field.m_sName.size()));
 
 	Value value;
 
@@ -40,14 +38,8 @@ void bloop::standard::AssignField(Heap& heap, const NativeField& field) {
 		break;
 	}
 
-	// no allocations below this line
-	auto* key = gc.TempRoot(0u);
-	auto* receiver = gc.TempRoot(1u);
-	gc.PopTempRoot();
-
-	receiver->ObjectSet(Value{ key }, value);
-	gc.WriteBarrier(receiver, key);
-	gc.WriteBarrier(receiver, value);
+	// value is the newest allocation, nothing can move it before it's stored
+	heap.ObjectSet(receiver.Obj(), key.Get(), value);
 }
 
 Object* bloop::standard::FromDefinitionToObject(Heap& heap, const NativeDef& def) {
@@ -59,16 +51,13 @@ Object* bloop::standard::FromDefinitionToObject(Heap& heap, const NativeDef& def
 		const auto& defObj = std::get<1>(def.m_oData);
 		assert(defObj);
 
-		auto& gc = heap.GetGC();
-		gc.PushTempRoot(heap.AllocObject(static_cast<bloop::BloopIndex>(defObj->m_oFields.size())));
+		RootScope scope(heap.GetGC());
+		const auto obj = scope.Keep(heap.AllocObject(static_cast<bloop::BloopIndex>(defObj->m_oFields.size())));
 		
-		for (const auto& field : defObj->m_oFields) {
-			AssignField(heap, field);
-		}
+		for (const auto& field : defObj->m_oFields)
+			AssignField(heap, field, obj);
 
-		auto* obj = gc.TempRoot();
-		gc.PopTempRoot();
-		return obj;
+		return obj.Obj();
 	}
 	default:
 		return nullptr;
