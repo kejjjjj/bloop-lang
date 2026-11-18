@@ -4,6 +4,7 @@
 #include <tuple>
 #include <numeric>
 #include <cstdint>
+#include <cstddef>
 
 #ifndef BLOOP_NONCOPYABLE
 #define BLOOP_NONCOPYABLE(className) \

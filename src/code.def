@@ -1,9 +1,9 @@
 R"(
 
-let a = ["ass"];
+let i = 0;
 
-a[0] = "hello!";
+while(i < 10_000_000)
+	i = i + 1;
 
-return a;
-
+return i;
 )"

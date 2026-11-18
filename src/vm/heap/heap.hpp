@@ -45,6 +45,12 @@ namespace bloop::vm
 
 		[[nodiscard]] Object* StringConcat(Object* a, Object* b);
 
+		// inserts or overwrites a property, growing the object when it gets too full.
+		// Growing allocates, so pointers to young objects held by the caller may be stale afterwards
+		void ObjectSet(Object* obj, Value key, Value value);
+
+		[[nodiscard]] inline GC& GetGC() noexcept { return *m_pGC; }
+
 	private:
 
 		GC* m_pGC{};

@@ -17,6 +17,12 @@ namespace bloop::test {
 	[[nodiscard]] std::optional<Value> TEST_ExecuteFile(const bloop::BloopString& relative_path);
 	[[nodiscard]] std::optional<Value> TEST_ExecuteBuffer(bloop::BloopStringView buffer);
 
+	// lexes, parses, resolves and compiles a script without running it. Errors are thrown (not reported as failures)
+	void TEST_CompileFile(const bloop::BloopString& relative_path);
+
+	// the VM that executed the last script (kept alive so that the returned value stays valid)
+	[[nodiscard]] bloop::vm::VM* TEST_GetLastVM();
+
 	template<typename T>
 	struct ExpectedValue {
 		Value::Type expectedType;

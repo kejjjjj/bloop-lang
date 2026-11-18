@@ -1,0 +1,18 @@
+// keeps a long linked list alive (forces promotions and major collections)
+// while throwing away just as much garbage
+let head = 0;
+
+for (let i = 1; i <= 150000; i++) {
+    head = [head, i % 1000]; // keeps the sum within 32 bits (BloopInt is 32-bit on x86)
+    let garbage = [i, [i], "g" + "c"];
+}
+
+let sum = 0;
+let length = 0;
+while (head !== 0) {
+    sum = sum + head[1];
+    length = length + 1;
+    head = head[0];
+}
+
+return [length, sum];

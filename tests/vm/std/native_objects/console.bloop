@@ -1,0 +1,2 @@
+std.console.log("hello", " ", 42, " ", "world");
+return [std.console.prop, std.console.prop === 1];

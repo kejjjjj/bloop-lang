@@ -21,13 +21,16 @@ namespace bloop::parser {
 		[[nodiscard]] bloop::EStatus Parse(std::optional<PairMatcher>& eoe, CExpressionChain* expression, EEvaluationType evalType);
 		[[nodiscard]] auto GetToken() const { return m_pToken; }
 
+		// a comma operator was consumed and another element of the sequence follows
+		[[nodiscard]] bool SequenceFollows() const noexcept { return m_bSequenceFollows; }
+
 	private:
 		[[nodiscard]] bool CheckOperator() const;
 		[[nodiscard]] bool IsOperator(const CPunctuationToken* token) const noexcept;
 		[[nodiscard]] bool EndOfExpression(const std::optional<PairMatcher>& eoe) const noexcept;
-		[[nodiscard]] bloop::EStatus ParseSequence(std::optional<PairMatcher>& m_oEndOfExpression, CExpressionChain* expression);
 
 		const CParserContext& m_oCtx;
+		bool m_bSequenceFollows{};
 	};
 
 }

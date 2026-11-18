@@ -13,6 +13,11 @@
 using namespace bloop::vm;
 
 std::vector<Value> VM::BuildConstants(const std::vector<bloop::ConstantData>& constants) {
+
+	// constants live as long as the VM, so they go straight to the old generation.
+	// `vals` isn't a GC root yet, so nothing may get collected while it's being built
+	GC::PretenureScope pretenure(m_oGC);
+
 	std::vector<Value> vals;
 	vals.reserve(constants.size());
 
@@ -55,21 +60,8 @@ VM::VM(bloop::metadata::Metadata& metadata)
 	m_oStack.reserve(BLOOP_MAX_STACK);
 	m_oFrames.reserve(BLOOP_MAX_FRAMES);
 }
-VM::~VM() {
-	
-	// if the user never called "Run", then nothing needs to be cleared
-	if (!m_oStack.empty()) {
-		//assert(m_oStack.size() == 1); //something leaked if not true
-		m_oStack.clear(); //free everything for the GC
-		m_oGlobals.clear(); // let the gc get rid of these
-		m_oGlobalChunk.m_oConstants.clear();
-		m_oFunctions.clear();
-		m_oGC.MajorGC(); //clear everything
-
-	}
-
-	//assert(m_oGC.GetAllocatedSize() == 0u);
-}
+// the GC owns all of the memory (nursery + old generation chunks) and releases it wholesale
+VM::~VM() = default;
 
 #include <chrono>
 #include <iostream>
@@ -180,7 +172,7 @@ void VM::RunFunction(Function* fn) {
 	PopFrame();
 	Push(ret);
 }
-void VM::RunClosure(Closure* closure)
+void VM::RunClosure(Object* closure)
 {
 	PushFrame(closure);
 	const auto returnCode = RunFrame();

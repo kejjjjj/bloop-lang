@@ -1,0 +1,13 @@
+// the closure being called is not on the stack anymore, the call frame has to keep it alive
+fn make(s) {
+    let captured = s + "!";
+    return () => {
+        std.gc_minor();
+        std.gc_major();
+        let garbage = [1, 2, 3, "x" + "y"];
+        std.gc_minor();
+        return captured + "?";
+    };
+}
+
+return make("hi")();

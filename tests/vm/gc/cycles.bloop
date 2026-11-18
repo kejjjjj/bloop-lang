@@ -1,0 +1,13 @@
+let a = [0];
+let b = [a];
+a[0] = b;
+
+let self = { me: 0 };
+self.me = self;
+
+std.gc_minor();
+std.gc_minor();
+std.gc_major();
+std.gc_minor();
+
+return [a[0][0] === a, b[0][0] === b, self.me.me === self];

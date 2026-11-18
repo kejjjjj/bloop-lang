@@ -1,0 +1,9 @@
+// lots of short lived garbage: only the nursery should be busy
+let total = 0;
+
+for (let i = 0; i < 100000; i++) {
+    let tmp = [i, "garbage" + "!", { a: i, b: [i, i] }];
+    total = total + tmp[2].b[1] % 1000; // stays within 32 bits (BloopInt is 32-bit on x86)
+}
+
+return total;

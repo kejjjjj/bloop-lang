@@ -9,6 +9,7 @@
 
 #include <ranges>
 #include <cstring>
+#include <span>
 
 using namespace bloop::vm;
 
@@ -46,6 +47,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			for (const auto i : std::views::iota(0u, numInitializers) | std::views::reverse)
 				arr->array.values[i] = Pop();
 
+			m_oGC.WriteBarrierAll(arr); // big arrays are allocated straight into the old generation
 			Push(arr);
 			break;
 		} case TOpCode::CREATE_OBJECT: {
@@ -58,6 +60,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 				obj->ObjectSet(k, v);
 			}
 
+			m_oGC.WriteBarrierAll(obj);
 			Push(obj);
 			break;
 		} case TOpCode::STORE_LOCAL: {
@@ -73,7 +76,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 		} case TOpCode::STORE_UPVALUE: {
 			const auto idx = FetchOperand();
 			assert(idx <= static_cast<bloop::BloopIndex>(m_pCurrentFrame->m_pClosure->numValues));
-			*m_pCurrentFrame->m_pClosure->upvalues[idx]->location = Pop();
+			m_oGC.WriteUpValue(m_pCurrentFrame->m_pClosure->upvalues[idx], Pop());
 			break;
 		} case TOpCode::MAKE_FUNCTION: {
 			const auto idx = FetchOperand();
@@ -127,27 +130,32 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 			switch (callee.obj->type) {
 			case Object::Type::ot_function:
-				if (callee.obj->nativeFunction->m_uParamCount != bloop::VARIADIC_PARAMETER_COUNT && callee.obj->function->m_uParamCount != argc)
+				if (callee.obj->function->m_uParamCount != argc)
 					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->function->m_uParamCount));
 
 				RunFunction(callee.obj->function);
 				break;
 				
 			case Object::Type::ot_closure:
-				if (callee.obj->nativeFunction->m_uParamCount != bloop::VARIADIC_PARAMETER_COUNT && callee.obj->closure.function->m_uParamCount != argc)
+				if (callee.obj->closure.function->m_uParamCount != argc)
 					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->closure.function->m_uParamCount));
 
-				RunClosure(&callee.obj->closure);
+				// the frame roots the closure object for the duration of the call
+				RunClosure(callee.obj);
 				break;
 			case Object::Type::ot_nativefunction: {
-					if (callee.obj->nativeFunction->m_uParamCount != bloop::VARIADIC_PARAMETER_COUNT && callee.obj->nativeFunction->m_uParamCount != argc)
-						throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->nativeFunction->m_uParamCount));
+					const auto* native = callee.obj->nativeFunction;
+					if (native->m_uParamCount != bloop::VARIADIC_PARAMETER_COUNT && native->m_uParamCount != argc)
+						throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, native->m_uParamCount));
 
-					std::vector<Value> args(argc);
-					for (auto i = argc; i-- > 0; )
-						args[i] = Pop();
+					// the arguments stay on the stack during the call, so they remain GC roots
+					// (and get updated in place if the native allocates). The stack never reallocates.
+					assert(m_oStack.size() >= argc);
+					const auto base = m_oStack.size() - argc;
+					const auto result = native->m_pFunction(*this, std::span<const Value>(m_oStack.data() + base, argc));
 
-					Push(callee.obj->nativeFunction->m_pFunction(*this, args));
+					m_oStack.resize(base);
+					Push(result);
 					break;
 				}
 			default:
@@ -180,10 +188,8 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			//returns Value&
 			auto& idx = operand.obj->Index(index);
 
-			if (value.type == Value::Type::t_object && idx.type == Value::Type::t_object)
-				m_oGC.m_oMinorSpace.WriteBarrier(operand.obj, &idx.obj, value.obj);
-
 			idx = value;
+			m_oGC.WriteBarrier(operand.obj, value);
 			Push(value);
 			break;
 		} case TOpCode::PROPERTY_GET: {
@@ -204,10 +210,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			if (!operand.IsAggregate())
 				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not an aggregate type"), operand.TypeToString()));
 
-			if (value.type == Value::Type::t_object)
-				m_oGC.m_oMinorSpace.WriteBarrier(operand.obj, &key.obj, value.obj);
-
-			operand.obj->ObjectSet(key, value);
+			m_oHeap.ObjectSet(operand.obj, key, value);
 			Push(value);
 			break;
 
@@ -219,59 +222,41 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			const auto funcIdx = FetchOperand();
 
 			assert(funcIdx < static_cast<bloop::BloopIndex>(m_oFunctions.size()) && "Function index out of bounds");
-			assert(funcIdx < 10000 && "Suspiciously large function index - possible bytecode corruption");
 
 			auto& func = m_oFunctions[funcIdx];
+			const auto numCaptures = static_cast<bloop::BloopIndex>(func.m_oCaptures.size());
 
-			assert(func.m_oCaptures.size() <= 1024 && "Unreasonably large number of captures in function");
-			assert(!func.m_oCaptures.empty() || (func.m_oCaptures.size() == 0 && "Function capture metadata inconsistent"));
+			[[maybe_unused]] const auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
 
-			auto obj = m_oHeap.AllocClosure(&func, static_cast<bloop::BloopIndex>(func.m_oCaptures.size()));
+			// capturing allocates upvalues, which can move the closure, so keep it in a temp root
+			m_oGC.PushTempRoot(m_oHeap.AllocClosure(&func, numCaptures));
 
-			assert(obj != nullptr && "AllocClosure returned null");
-			assert(obj->type == Object::Type::ot_closure && "Allocated object is not a closure");
-			assert(GCHeader::GetHeader(obj) != nullptr && "Allocated closure has no GC header");
-			assert(obj->closure.numValues == func.m_oCaptures.size() && "Closure upvalue count doesn't match function captures");
-			assert(obj->closure.upvalues != nullptr || (obj->closure.numValues == 0 && "Closure has null upvalues array but numValues > 0"));
-
-			m_oGC.PushTempRoot(obj);
-
-			for (const auto i : std::views::iota(0u, obj->closure.numValues)) {
-				[[maybe_unused]] const auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
-
-				assert(m_pCurrentFrame->m_pChunk->m_uMetadata < m_refMetaData.m_oVMData.m_oChunks.size() && "Current chunk metadata index out of bounds");
-
+			for (const auto i : std::views::iota(0u, static_cast<bloop::BloopUInt>(numCaptures))) {
 				assert(m_pCurrentFrame->m_pIp < chunk.m_oByteCode.data() + chunk.m_oByteCode.size() && "IP out of bounds before reading opcode");
 				const auto opcode = static_cast<TOpCode>(*m_pCurrentFrame->m_pIp++);
-				assert(m_pCurrentFrame->m_pIp < chunk.m_oByteCode.data() + chunk.m_oByteCode.size() && "IP advanced past end after opcode read");
-
 				const auto slot = FetchOperand();
 
-				if (opcode == TOpCode::CAPTURE_LOCAL) {
+				UpValue* uv{};
 
+				if (opcode == TOpCode::CAPTURE_LOCAL) {
 					const auto stack_idx = m_pCurrentFrame->m_uBase + slot;
 					assert(stack_idx < m_oStack.size() && "Capture local: stack index out of bounds");
-					assert(&m_oStack[stack_idx] >= m_oStack.data() && &m_oStack[stack_idx] < m_oStack.data() + m_oStack.size()
-						&& "Capture local: computed pointer outside stack");
 
-					auto* slot_ptr = &m_oStack[stack_idx];
-					obj->closure.upvalues[i] = m_oGC.CaptureUpValue(slot_ptr);
-
-					assert(obj->closure.upvalues[i] != nullptr && "CaptureUpValue returned null upvalue");
-					assert(obj->closure.upvalues[i]->location == slot_ptr
-						&& "Captured upvalue location doesn't match requested stack slot");
-
-					obj->closure.upvalues[i] = m_oGC.CaptureUpValue(&m_oStack[m_pCurrentFrame->m_uBase + slot]);
+					uv = m_oGC.CaptureUpValue(&m_oStack[stack_idx]);
+					assert(uv && uv->location == &m_oStack[stack_idx] && "Captured upvalue location doesn't match requested stack slot");
 				} else {
-
+					assert(opcode == TOpCode::CAPTURE_UPVALUE);
 					assert(m_pCurrentFrame->m_pClosure != nullptr && "CAPTURE_UPVALUE but current frame has no closure");
 					assert(slot < m_pCurrentFrame->m_pClosure->numValues && "Parent upvalue index out of bounds");
-					assert(m_pCurrentFrame->m_pClosure->upvalues != nullptr && "Parent closure has null upvalues array");
 
-					obj->closure.upvalues[i] = m_pCurrentFrame->m_pClosure->upvalues[slot];
+					uv = m_pCurrentFrame->m_pClosure->upvalues[slot];
 				}
+
+				// re-read: the closure may have moved. Upvalues are always old, so no write barrier is needed
+				m_oGC.TempRoot()->closure.upvalues[i] = uv;
 			}
-			Push(obj);
+
+			Push(m_oGC.TempRoot());
 			m_oGC.PopTempRoot();
 			break;
 		} case TOpCode::TRY: {

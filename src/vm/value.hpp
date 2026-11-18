@@ -93,4 +93,9 @@ namespace bloop::vm {
         Value value;
     };
 
+    inline void GC::WriteBarrier(const void* owner, const Value& value) noexcept {
+        if (value.type == Value::Type::t_object)
+            WriteBarrier(owner, value.obj);
+    }
+
 }

@@ -14,7 +14,7 @@ bloop::standard::NativeDef bloop::standard::GetConsoleDefinitions() {
 		NativeObject{
 			.m_oFields = {
 				NativeField(BLOOPTEXT("log"), { VARIADIC_PARAMETER_COUNT, Log }),
-				NativeField(BLOOPTEXT("prop"), ConstantData{"\x01", EValueType::t_int})
+				NativeField(BLOOPTEXT("prop"), MakeConstant(bloop::BloopInt{ 1 }))
 			}
 		}
 	);

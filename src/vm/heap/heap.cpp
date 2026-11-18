@@ -7,6 +7,7 @@
 #include <cassert>
 #include <ranges>
 #include <cstring>
+#include <new>
 
 using namespace bloop::vm;
 
@@ -16,6 +17,7 @@ Object* Heap::AllocString(bloop::BloopUInt len) {
 	obj->type = Object::Type::ot_string;
 	obj->string.len = len;
 	obj->string.data = reinterpret_cast<bloop::BloopChar*>(obj + 1);
+	obj->string.hash = {};
 
 	return obj;
 }
@@ -40,12 +42,17 @@ Object* Heap::AllocArray(bloop::BloopIndex numValues) {
 	obj->array.count = numValues;
 	obj->array.values = reinterpret_cast<Value*>(obj + 1);
 
+	// the GC may scan the array before the caller fills it
+	for (const auto i : std::views::iota(0, static_cast<bloop::BloopInt>(numValues)))
+		new (&obj->array.values[i]) Value();
+
 	return obj;
 }
 Object* Heap::AllocObject(bloop::BloopIndex numValues) {
 
-	auto capacity = 4;
-	while (capacity < numValues) capacity <<= 1;
+	// keep the table at most 75% full, so that lookups always find an empty slot
+	bloop::BloopInt capacity = 4;
+	while (static_cast<bloop::BloopInt>(numValues) * 4 > capacity * 3) capacity <<= 1;
 
 	auto* obj = AllocateRaw<Object>(sizeof(Object) + sizeof(ObjectEntry) * capacity);
 
@@ -69,6 +76,10 @@ Object* Heap::AllocClosure(Function* function, bloop::BloopIndex numVals) {
 	obj->closure.numValues = numVals;
 	obj->closure.upvalues = reinterpret_cast<UpValue**>(obj + 1);
 
+	// the GC may scan the closure before all of the upvalues have been captured
+	for (const auto i : std::views::iota(0u, static_cast<bloop::BloopUInt>(numVals)))
+		obj->closure.upvalues[i] = nullptr;
+
 	return obj;
 }
 Object* Heap::AllocNativeFunction(const bloop::standard::NativeFunction* function) {
@@ -77,9 +88,62 @@ Object* Heap::AllocNativeFunction(const bloop::standard::NativeFunction* functio
 Object* Heap::StringConcat(Object* a, Object* b)
 {
 	const auto len = a->string.len + b->string.len;
+
+	// the allocation may move a and b
+	m_pGC->PushTempRoot(a);
+	m_pGC->PushTempRoot(b);
 	auto r = AllocString(len);
+	b = m_pGC->TempRoot(0u);
+	a = m_pGC->TempRoot(1u);
+	m_pGC->PopTempRoot(2u);
+
 	memcpy(r->string.data, a->string.data, a->string.len);
 	memcpy(r->string.data + a->string.len, b->string.data, b->string.len);
 	r->string.hash = bloop::hash::FNV1a(r->string.data, r->string.len);
 	return r;
+}
+void Heap::ObjectSet(Object* obj, Value key, Value value) {
+
+	assert(obj->IsObject() && key.IsString());
+
+	if (obj->ObjectFind(key) == nullptr && obj->ObjectNeedsToGrow()) {
+
+		// the allocation can move obj, key and value
+		const auto rootOf = [](const Value& v) { return v.type == Value::Type::t_object ? v.obj : nullptr; };
+		m_pGC->PushTempRoot(obj);
+		m_pGC->PushTempRoot(key.obj);
+		m_pGC->PushTempRoot(rootOf(value));
+
+		const auto newCapacity = obj->object.capacity * 2;
+		auto* entries = m_pGC->AllocateBuffer<ObjectEntry>(static_cast<bloop::BloopUInt>(newCapacity));
+
+		if (value.type == Value::Type::t_object)
+			value.obj = m_pGC->TempRoot(0u);
+		key.obj = m_pGC->TempRoot(1u);
+		obj = m_pGC->TempRoot(2u);
+		m_pGC->PopTempRoot(3u);
+
+		for (const auto i : std::views::iota(0, newCapacity))
+			new (&entries[i]) ObjectEntry{};
+
+		// rehash into the new table (no allocations from here on)
+		const auto* oldEntries = obj->object.entries;
+		const auto oldCapacity = obj->object.capacity;
+
+		obj->object.entries = entries;
+		obj->object.capacity = newCapacity;
+		obj->object.count = 0;
+
+		for (const auto i : std::views::iota(0, oldCapacity)) {
+			if (oldEntries[i].key.type != Value::Type::t_undefined)
+				obj->ObjectSet(oldEntries[i].key, oldEntries[i].value);
+		}
+
+		// an old object now owns a (possibly young) buffer full of values
+		m_pGC->WriteBarrierAll(obj);
+	}
+
+	obj->ObjectSet(key, value);
+	m_pGC->WriteBarrier(obj, key);
+	m_pGC->WriteBarrier(obj, value);
 }

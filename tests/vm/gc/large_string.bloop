@@ -1,0 +1,10 @@
+// grows past the large object threshold, so the big strings skip the nursery
+let s = "ab";
+let i = 0;
+while (i < 17) {
+    s = s + s;
+    i = i + 1;
+}
+std.gc_minor();
+std.gc_major();
+return [std.length(s), s[262143] === "b", s[0] === "a"];

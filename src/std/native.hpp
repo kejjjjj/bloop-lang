@@ -5,9 +5,14 @@
 #include <vector>
 #include <variant>
 #include <memory>
+#include <span>
+#include <cstring>
+#include <type_traits>
 
-#define FWD_DECLARE_NATIVE(Name) [[nodiscard]] bloop::vm::Value Name(bloop::vm::VM& vm, const std::vector<bloop::vm::Value>& args)
-#define DEFINE_NATIVE(Name, vm, args) bloop::vm::Value Name([[maybe_unused]]bloop::vm::VM& vm, [[maybe_unused]]const std::vector<bloop::vm::Value>& args)
+// args is a view into the VM stack: the arguments stay GC roots during the call and get updated if they move.
+// Values read from args are only valid until the next allocation
+#define FWD_DECLARE_NATIVE(Name) [[nodiscard]] bloop::vm::Value Name(bloop::vm::VM& vm, bloop::standard::NativeArgs args)
+#define DEFINE_NATIVE(Name, vm, args) bloop::vm::Value Name([[maybe_unused]]bloop::vm::VM& vm, [[maybe_unused]]bloop::standard::NativeArgs args)
 
 namespace bloop::vm {
 	struct Value;
@@ -16,7 +21,8 @@ namespace bloop::vm {
 
 namespace bloop::standard {
 
-	using NativeFn = bloop::vm::Value(*)(bloop::vm::VM&, const std::vector<bloop::vm::Value>&);
+	using NativeArgs = std::span<const bloop::vm::Value>;
+	using NativeFn = bloop::vm::Value(*)(bloop::vm::VM&, NativeArgs);
 
 	enum class NativeType : bloop::BloopByte { function, object };
 	enum class NativeObjectPropertyType : bloop::BloopByte { method, property, native_object };
@@ -57,6 +63,26 @@ namespace bloop::standard {
 		NativeObjectPropertyType m_eType{ NativeObjectPropertyType::method };
 		std::variant<NativeFunction, bloop::ConstantData, NativeDef> m_oData;
 	};
+
+	// encodes a native constant the same way the parser encodes literals
+	template<typename T>
+	[[nodiscard]] inline bloop::ConstantData MakeConstant(T value) {
+		if constexpr (std::is_same_v<T, bloop::BloopBool>) {
+			return { bloop::BloopString(1, value ? '\x01' : '\x00'), bloop::EValueType::t_boolean };
+		} else if constexpr (std::is_convertible_v<T, bloop::BloopStringView>) {
+			return { bloop::BloopString(bloop::BloopStringView(value)), bloop::EValueType::t_string };
+		} else {
+			static_assert(std::is_same_v<T, bloop::BloopInt> || std::is_same_v<T, bloop::BloopUInt> || std::is_same_v<T, bloop::BloopDouble>,
+				"use BloopBool, BloopInt, BloopUInt, BloopDouble or a string");
+
+			constexpr auto type = std::is_same_v<T, bloop::BloopInt> ? bloop::EValueType::t_int
+				: std::is_same_v<T, bloop::BloopUInt> ? bloop::EValueType::t_uint : bloop::EValueType::t_double;
+
+			bloop::BloopString data(sizeof(T), '\0');
+			std::memcpy(data.data(), &value, sizeof(T));
+			return { data, type };
+		}
+	}
 
 	[[nodiscard]] NativeDef IncludeStandardLibrary();
 	extern std::vector<NativeDef> g_Natives;

@@ -36,8 +36,10 @@ bloop::EStatus CParserSubExpression::Parse(std::optional<PairMatcher>& eoe, CExp
 		throw exception::ParserError(BLOOPTEXT("unexpected end of buffer"), GetIteratorSafe()->GetCodePosition());
 
 	COperatorParser p(m_oCtx);
-	if (p.Parse(eoe, expression, evalType) != EStatus::success)
+	if (p.Parse(eoe, expression, evalType) != EStatus::success) {
+		m_bSequenceFollows = p.SequenceFollows();
 		return EStatus::failure;
+	}
 
 	m_oOperator = std::make_unique<COperator>(COperator{ .m_pToken = p.GetToken() });
 	return EStatus::success;

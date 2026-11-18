@@ -16,7 +16,12 @@ using namespace bloop::parser;
 }
 
 CExpressionChain::CExpressionChain() = default;
-CExpressionChain::~CExpressionChain() = default;
+CExpressionChain::~CExpressionChain() {
+	// unlink iteratively, a recursive destruction could overflow the stack on long lists
+	auto next = std::move(m_pNext);
+	while (next)
+		next = std::move(next->m_pNext);
+}
 
 std::vector<UniqueExpression> CExpressionChain::ToList() {
 	
@@ -63,6 +68,25 @@ bloop::EStatus CParserExpression::ParseInternal(std::optional<PairMatcher>& eoe,
 	}
 
 	auto actualExpression = expression ? expression : m_pEvaluatedExpressions.get();
+
+	// comma separated elements are parsed iteratively, each one with its own CParserExpression
+	auto sequenceFollows = ParseElement(eoe, actualExpression, evalType);
+
+	while (sequenceFollows) {
+		actualExpression->m_pNext = std::make_unique<CExpressionChain>();
+		actualExpression = actualExpression->m_pNext.get();
+
+		CParserExpression next(m_oCtx);
+		if (next.EndOfExpression(eoe))
+			throw exception::ParserError(BLOOPTEXT("expected an expression"), next.GetIteratorSafe()->GetCodePosition());
+
+		sequenceFollows = next.ParseElement(eoe, actualExpression, EEvaluationType::evaluate_everything);
+	}
+
+	return EStatus::success;
+}
+bool CParserExpression::ParseElement(std::optional<PairMatcher>& eoe, CExpressionChain* actualExpression, EEvaluationType evalType) {
+
 	auto status = EStatus::failure;
 
 	do {
@@ -83,8 +107,9 @@ bloop::EStatus CParserExpression::ParseInternal(std::optional<PairMatcher>& eoe,
 		eoe = std::nullopt;
 	}
 
+	const auto sequenceFollows = m_oSubExpressions.back()->m_bSequenceFollows;
 	actualExpression->m_pExpression = ToExpression_Internal();
-	return EStatus::success;
+	return sequenceFollows;
 
 }
 
@@ -157,16 +182,20 @@ UniqueExpression CParserExpression::GetLeaf(Operands& operands) {
 CParserExpression::Operators::iterator CParserExpression::FindLowestPriorityOperator(Operators& operators) {
 
 	assert(!operators.empty());
-	
-	return std::min_element(operators.begin(), operators.end(),
-		[](auto a, auto b) {
-            if (a->m_pToken->m_ePriority != b->m_pToken->m_ePriority)
-                return a->m_pToken->m_ePriority < b->m_pToken->m_ePriority;
 
-			//prefer left to right associativity
-            return a > b;
-		}
-	);
+	// among operators with the same priority:
+	//  - assignments are right associative (a = b = c -> a = (b = c)), so the leftmost one becomes the root
+	//  - everything else is left associative (a - b - c -> (a - b) - c), so the rightmost one becomes the root
+	// (this has to go by the position in the expression, comparing the operator pointers depends on the heap layout)
+	auto lowest = operators.begin();
+	for (auto it = std::next(lowest); it != operators.end(); ++it) {
+		const auto priority = (*it)->m_pToken->m_ePriority;
+		const auto lowestPriority = (*lowest)->m_pToken->m_ePriority;
+
+		if (priority < lowestPriority || (priority == lowestPriority && priority != bloop::EOperatorPriority::op_assignment))
+			lowest = it;
+	}
+	return lowest;
 }
 
 void CParserExpression::CreateExpressionRecursively(bloop::ast::BinaryExpression* _this, Operands& operands, Operators& operators) {

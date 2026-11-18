@@ -12,8 +12,10 @@ CallFrame::CallFrame(Chunk* chunk, bloop::BloopUInt stackBase)
 	: m_pChunk(chunk), m_uBase(stackBase), m_eChunkType(ChunkType::ct_chunk){}
 CallFrame::CallFrame(Function* fn, bloop::BloopUInt stackBase)
 	: m_pFunction(fn), m_pChunk(&fn->chunk), m_uBase(stackBase), m_eChunkType(ChunkType::ct_function) {}
-CallFrame::CallFrame(Closure* closure, bloop::BloopUInt stackBase)
-	: m_pClosure(closure), m_pChunk(&closure->function->chunk), m_uBase(stackBase), m_eChunkType(ChunkType::ct_closure) {}
+CallFrame::CallFrame(Object* closure, bloop::BloopUInt stackBase)
+	: m_pClosure(&closure->closure), m_pCallee(closure), m_pChunk(&closure->closure.function->chunk), m_uBase(stackBase), m_eChunkType(ChunkType::ct_closure) {
+	assert(closure->IsClosure());
+}
 
 const bloop::bc::InstrDebugRef& CallFrame::GetCurrentPosition(VM& vm) const {
 	const auto& data = vm.m_refMetaData.m_oVMData.m_oChunks[m_pChunk->m_uMetadata];
@@ -38,7 +40,8 @@ void VM::PushFrame(Function* fn) {
 	m_oStack.resize(frameBase + fn->m_uLocalCount);
 	m_pCurrentFrame = &m_oFrames.emplace_back(fn, frameBase);
 }
-void VM::PushFrame(Closure* closure) {
+void VM::PushFrame(Object* closureObject) {
+	auto* closure = &closureObject->closure;
 	const auto frameBase = m_oStack.size() - closure->function->m_uParamCount;
 	const auto needed = closure->function->m_uParamCount + closure->function->m_uLocalCount;
 
@@ -49,7 +52,7 @@ void VM::PushFrame(Closure* closure) {
 		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} call frames"), BLOOP_MAX_FRAMES));
 
 	m_oStack.resize(frameBase + closure->function->m_uLocalCount);
-	m_pCurrentFrame = &m_oFrames.emplace_back(closure, frameBase);
+	m_pCurrentFrame = &m_oFrames.emplace_back(closureObject, frameBase);
 }
 
 void VM::PopFrame() {

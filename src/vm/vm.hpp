@@ -30,6 +30,9 @@ namespace bloop::vm {
 		void MajorGC() { m_oGC.MajorGC(); }
 		void MinorGC() { m_oGC.MinorGC(); }
 
+		[[nodiscard]] GC& GetGC() noexcept { return m_oGC; }
+		[[nodiscard]] Heap& GetHeap() noexcept { return m_oHeap; }
+
 	private:
 		enum class ExecutionReturnCode : bloop::BloopByte {
 			rc_continue,
@@ -41,10 +44,10 @@ namespace bloop::vm {
 		[[nodiscard]] ExecutionReturnCode RunFrame();
 		void RunGlobal();
 		void RunFunction(Function* fn);
-		void RunClosure(Closure* closure);
+		void RunClosure(Object* closure);
 
 		void PushFrame(Function* fn);
-		void PushFrame(Closure* fn);
+		void PushFrame(Object* closure);
 		void PopFrame();
 		void Push(const Value& v);
 		[[nodiscard]] Value Pop();

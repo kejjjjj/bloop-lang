@@ -1,0 +1,3 @@
+// looking up a missing key in a full table used to loop forever
+let o = { a: 1, b: 2, c: 3, d: 4 };
+return o.missing;

@@ -1,0 +1,8 @@
+// growing keeps the object's identity: every reference sees the new properties
+let o = { a: 1 };
+let alias = o;
+let holder = [o];
+
+o.b = 2; o.c = 3; o.d = 4; o.e = 5; o.f = 6; o.g = 7;
+
+return [alias.g, holder[0].f, alias === o, holder[0] === o];

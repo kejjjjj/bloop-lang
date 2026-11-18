@@ -67,15 +67,13 @@ void AssignExpression::Store(TBCBuilder& builder, bool want_value)
 		if (dynamic_cast<FunctionCall*>(left.get()))
 			throw exception::ResolverError(BLOOPTEXT("invalid lhs operand"), m_oApproximatePosition);
 
+		// SUBSCRIPT_SET / PROPERTY_SET leave the assigned value on the stack, which is the value
+		// of the expression: (arr[0] = 2) < 10. (Loading it again would evaluate arr and 0 twice)
 		if (auto pf = dynamic_cast<Subscript*>(left.get())) {
 			pf->EmitSet(builder, true);
-			if (want_value)
-				pf->EmitGet(builder, true); // (arr[0] = 2) < 10
 		}
 		else if (auto pa = dynamic_cast<PropertyAccess*>(left.get())) {
 			pa->EmitSet(builder, true);
-			if (want_value)
-				pa->EmitGet(builder, true); // (obj.prop = 2) < 10
 		}
 		else {
 			ptr->Store(builder, true);

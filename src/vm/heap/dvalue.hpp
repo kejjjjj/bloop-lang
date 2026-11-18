@@ -66,9 +66,6 @@ namespace bloop::vm
 		[[nodiscard]] constexpr bool IsFunction() const noexcept { return type == Type::ot_function; }
 		[[nodiscard]] constexpr bool IsClosure() const noexcept { return type == Type::ot_closure; }
 
-		void Free();
-		[[nodiscard]] bloop::BloopUInt GetExternalBytes() const;
-
 		[[nodiscard]] bool IsIndexable() const;
 		[[nodiscard]] bool IsAggregate() const;
 		[[nodiscard]] bool IsEqual(Object* obj);
@@ -80,11 +77,16 @@ namespace bloop::vm
 		[[nodiscard]] bloop::BloopString ValueToString(bloop::BloopUInt objectIndent=0u) const;
 		[[nodiscard]] bloop::BloopString TypeToString() const;
 
-		[[nodiscard]] Value& ObjectGet(Value key) const;
+		[[nodiscard]] Value& ObjectGet(Value key) const;   // throws if the key doesn't exist
+		[[nodiscard]] Value* ObjectFind(Value key) const;  // nullptr if the key doesn't exist
+		// inserts without growing: the object must have room (use Heap::ObjectSet to insert new keys)
 		[[maybe_unused]] Value& ObjectSet(Value key, Value value);
+		[[nodiscard]] inline bool ObjectNeedsToGrow() const noexcept { return (object.count + 1) * 4 > object.capacity * 3; } // > 75% full
+		// entries live right after the object until it grows, then in a separate GC buffer
+		[[nodiscard]] inline bool ObjectHasInlineEntries() const noexcept { return reinterpret_cast<const void*>(object.entries) == reinterpret_cast<const void*>(this + 1); }
 
-		[[nodiscard]] inline auto IsOld() const noexcept { return GCHeader::GetHeader(this)->age >= PROMOTION_THRESHOLD; }
-		[[nodiscard]] inline auto IsYoung() const noexcept { return GCHeader::GetHeader(this)->age < PROMOTION_THRESHOLD; }
+		[[nodiscard]] inline bool IsOld() const noexcept { return GCHeader::GetHeader(this)->IsOld(); }
+		[[nodiscard]] inline bool IsYoung() const noexcept { return GCHeader::GetHeader(this)->IsYoung(); }
 
 	private:
 		[[nodiscard]] bloop::BloopString ValueToStringInternal(std::unordered_set<const Object*>& seen, bloop::BloopUInt depth=0u) const;
