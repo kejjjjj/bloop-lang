@@ -81,4 +81,4 @@ jobs:
         run: >
           ./bloop_test
           "~gc | long lived*" "~gc | the old generation*" "~gc | short lived*" "~gc | closures created*"
-          "~long array literal (20000 elements)"
+          "~long array literal (20000 elements)" "~std.json survives garbage collections"

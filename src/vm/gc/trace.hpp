@@ -22,7 +22,7 @@ namespace bloop::vm::detail
 		};
 
 		if (h->kind == GCKind::upvalue) {
-			auto* uv = h->GetValue<UpValue>();
+			auto* uv = h->template GetValue<UpValue>();
 			// an open upvalue points into the stack, which is a root anyway
 			if (uv->IsClosed())
 				visit(uv->closed);
@@ -33,7 +33,7 @@ namespace bloop::vm::detail
 		if (h->kind == GCKind::buffer)
 			return;
 
-		auto* obj = h->GetValue<Object>();
+		auto* obj = h->template GetValue<Object>();
 
 		switch (obj->type) {
 		case Object::Type::ot_array:
@@ -76,22 +76,22 @@ namespace bloop::vm::detail
 			return; // plain data
 
 		if (to->kind == GCKind::upvalue) {
-			const auto* o = from->GetValue<UpValue>();
-			auto* n = to->GetValue<UpValue>();
+			const auto* o = from->template GetValue<UpValue>();
+			auto* n = to->template GetValue<UpValue>();
 			if (o->location == &o->closed)
 				n->location = &n->closed;
 			return;
 		}
 
-		const auto* oldTail = reinterpret_cast<const bloop::BloopByte*>(from->GetValue<Object>() + 1);
-		auto* newTail = reinterpret_cast<bloop::BloopByte*>(to->GetValue<Object>() + 1);
+		const auto* oldTail = reinterpret_cast<const bloop::BloopByte*>(from->template GetValue<Object>() + 1);
+		auto* newTail = reinterpret_cast<bloop::BloopByte*>(to->template GetValue<Object>() + 1);
 
 		const auto fix = [&]<typename T>(T*& p) {
 			if (reinterpret_cast<const bloop::BloopByte*>(p) == oldTail)
 				p = reinterpret_cast<T*>(newTail);
 		};
 
-		auto* obj = to->GetValue<Object>();
+		auto* obj = to->template GetValue<Object>();
 		switch (obj->type) {
 		case Object::Type::ot_string:  fix(obj->string.data); break;
 		case Object::Type::ot_array:   fix(obj->array.values); break;

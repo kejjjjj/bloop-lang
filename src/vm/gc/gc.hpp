@@ -107,19 +107,19 @@ namespace bloop::vm
 		template<typename T, typename ... Args>
 		[[nodiscard]] T* Allocate(Args&&... args) {
 			auto* h = AllocHeader(sizeof(T), GCKind::object);
-			return new (h->GetValue<void>()) T(std::forward<Args>(args)...);
+			return new (h->template GetValue<void>()) T(std::forward<Args>(args)...);
 		}
 
 		// the payload is left uninitialized, the caller has to initialize it before the next allocation
 		template<typename T>
 		[[nodiscard]] T* AllocateRaw(bloop::BloopSize payloadSize) {
-			return AllocHeader(payloadSize, GCKind::object)->GetValue<T>();
+			return AllocHeader(payloadSize, GCKind::object)->template GetValue<T>();
 		}
 
 		// uninitialized storage for `count` Ts, owned by a single object (see GCKind::buffer)
 		template<typename T>
 		[[nodiscard]] T* AllocateBuffer(bloop::BloopSize count) {
-			return AllocHeader(sizeof(T) * count, GCKind::buffer)->GetValue<T>();
+			return AllocHeader(sizeof(T) * count, GCKind::buffer)->template GetValue<T>();
 		}
 
 		void MinorGC();
