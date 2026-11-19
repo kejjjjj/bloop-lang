@@ -1,0 +1,3 @@
+import out_of_bounds from "exceptions_module.bloop";
+
+return out_of_bounds();

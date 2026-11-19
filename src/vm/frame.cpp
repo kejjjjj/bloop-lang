@@ -8,11 +8,11 @@
 #include <algorithm>
 
 using namespace bloop::vm;
-CallFrame::CallFrame(Chunk* chunk, bloop::BloopUInt stackBase) 
+CallFrame::CallFrame(Chunk* chunk, bloop::BloopSize stackBase) 
 	: m_pChunk(chunk), m_uBase(stackBase), m_eChunkType(ChunkType::ct_chunk){}
-CallFrame::CallFrame(Function* fn, bloop::BloopUInt stackBase)
+CallFrame::CallFrame(Function* fn, bloop::BloopSize stackBase)
 	: m_pFunction(fn), m_pChunk(&fn->chunk), m_uBase(stackBase), m_eChunkType(ChunkType::ct_function) {}
-CallFrame::CallFrame(Object* closure, bloop::BloopUInt stackBase)
+CallFrame::CallFrame(Object* closure, bloop::BloopSize stackBase)
 	: m_pClosure(&closure->closure), m_pCallee(closure), m_pChunk(&closure->closure.function->chunk), m_uBase(stackBase), m_eChunkType(ChunkType::ct_closure) {
 	assert(closure->IsClosure());
 }
@@ -100,6 +100,12 @@ bloop::BloopString VM::FormatStackTraceMessage(const bc::InstrDebugRef& ref)
 
 	bloop::BloopString msg = bloop::fmt::format(BLOOPTEXT("at [{}, {}]\n"), line, offset);
 
+	// with modules, lines are numbered across all files, so name the file and its own line instead
+	if (m_refMetaData.m_oSourceFiles.size() > 1u) {
+		if (const auto* file = m_refMetaData.FindSourceFile(line))
+			msg = bloop::fmt::format(BLOOPTEXT("at [{}:{}, {}]\n"), file->m_sName, line - file->m_uFirstLine + 1u, offset);
+	}
+
 	// never crash while reporting an error
 	if (line == 0u || line > m_refMetaData.m_oLineMap.size())
 		return msg;
@@ -109,7 +115,7 @@ bloop::BloopString VM::FormatStackTraceMessage(const bc::InstrDebugRef& ref)
 	const auto trimmed = trim(bloop::BloopString(lineData));
 	msg += trimmed + '\n';
 
-	bloop::BloopUInt visualCol{};
+	bloop::BloopSize visualCol{};
 	for (const auto i : std::views::iota(0u, offset - (lineData.length() - trimmed.length()))) {
 		const auto c = lineData[i];
 		visualCol += c == '\t' ? 8u - (visualCol % 8u) : 1u;

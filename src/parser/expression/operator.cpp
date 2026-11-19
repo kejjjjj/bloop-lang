@@ -3,11 +3,14 @@
 #include "parser/exception.hpp"
 #include "parser/parser.hpp"
 #include "parser/expression/expression.hpp"
+#include "ast/ast.hpp"
 
 using namespace bloop::parser;
 
+COperator::~COperator() = default;
+
 COperatorParser::COperatorParser(const CParserContext& ctx)
-	: CParserSingle(ctx.m_iterPos, ctx.m_iterEnd) {
+	: CParserSingle(ctx.m_iterPos, ctx.m_iterEnd), m_oCtx(ctx) {
 	assert(!IsEndOfBuffer());
 }
 
@@ -42,8 +45,40 @@ bloop::EStatus COperatorParser::Parse(std::optional<PairMatcher>& eoe, [[maybe_u
 		throw exception::ParserError(BLOOPTEXT("unexpected end of expression: ") + GetIteratorSafe()->Source(), GetIteratorSafe()->GetCodePosition());
 	}
 
+	// a ":" that isn't the end of an expression (object literals, ranged for) belongs to a "?"
+	if (m_pToken->IsOperator(EPunctuation::p_colon))
+		throw exception::ParserError(BLOOPTEXT("\":\" without a \"?\""), m_pToken->GetCodePosition());
+
 	Advance(1); //skip the operator
+
+	// condition ? then : otherwise
+	// the middle part is parsed here as a whole expression, so the operator list only sees
+	// condition [?: then] otherwise, and the "?:" operator splits it like any other binary operator
+	if (m_pToken->IsOperator(EPunctuation::p_question_mark))
+		m_pThen = ParseThen();
+
 	return bloop::EStatus::success;
+}
+UniqueExpression COperatorParser::ParseThen() {
+	if (IsEndOfBuffer())
+		throw exception::ParserError(BLOOPTEXT("expected an expression after \"?\""), m_pToken->GetCodePosition());
+
+	// up to (and including) the matching ":". A nested "?" consumes its own ":" first
+	CParserExpression then(m_oCtx);
+	try {
+		if (then.Parse(PairMatcher(EPunctuation::p_colon)) != bloop::EStatus::success)
+			throw exception::ParserError(BLOOPTEXT("expected an expression after \"?\""), m_pToken->GetCodePosition());
+	} catch (exception::ParserError&) {
+		// the statement ended before the ":"
+		if (!IsEndOfBuffer() && GetIteratorSafe()->IsOperator(EPunctuation::p_semicolon))
+			throw exception::ParserError(BLOOPTEXT("expected a \":\" for this \"?\""), m_pToken->GetCodePosition());
+		throw;
+	}
+
+	if (IsEndOfBuffer())
+		throw exception::ParserError(BLOOPTEXT("expected an expression after \":\""), m_pToken->GetCodePosition());
+
+	return then.ToExpression();
 }
 bool COperatorParser::CheckOperator() const {
 	return (*m_iterPos)->IsOperator();

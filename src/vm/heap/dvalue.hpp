@@ -4,6 +4,7 @@
 #include "vm/gc/gc.hpp"
 
 #include <unordered_set>
+#include <vector>
 
 namespace bloop::standard {
 	struct NativeFunction;
@@ -29,15 +30,21 @@ namespace bloop::vm
 		bloop::BloopUInt32 hash;
 	};
 	
+	// a hash table with linear probing, at most 75% full.
+	// The entries live right after the object until it grows, then in a separate GC buffer
 	struct ObjectData {
 		ObjectEntry* entries;
 		bloop::BloopInt count;
 		bloop::BloopInt capacity;
+		bloop::BloopInt nextOrder; // ObjectEntry::order of the next new key
 	};
-	
+
+	// the values live right after the array until it grows, then in a separate GC buffer.
+	// Slots in [count, capacity) are always undefined
 	struct ArrayData {
 		Value* values;
 		bloop::BloopInt count;
+		bloop::BloopInt capacity;
 	};
 
 	struct Object {
@@ -79,11 +86,20 @@ namespace bloop::vm
 
 		[[nodiscard]] Value& ObjectGet(Value key) const;   // throws if the key doesn't exist
 		[[nodiscard]] Value* ObjectFind(Value key) const;  // nullptr if the key doesn't exist
+		[[nodiscard]] bloop::BloopInt ObjectFindSlot(Value key) const; // index into object.entries, -1 if the key doesn't exist
 		// inserts without growing: the object must have room (use Heap::ObjectSet to insert new keys)
 		[[maybe_unused]] Value& ObjectSet(Value key, Value value);
 		[[nodiscard]] inline bool ObjectNeedsToGrow() const noexcept { return (object.count + 1) * 4 > object.capacity * 3; } // > 75% full
 		// entries live right after the object until it grows, then in a separate GC buffer
 		[[nodiscard]] inline bool ObjectHasInlineEntries() const noexcept { return reinterpret_cast<const void*>(object.entries) == reinterpret_cast<const void*>(this + 1); }
+		// removes a key (backward shift deletion, no tombstones). Returns false if it didn't exist
+		[[maybe_unused]] bool ObjectRemove(Value key);
+		// the indices of the used entries, in insertion order
+		[[nodiscard]] std::vector<bloop::BloopInt> ObjectSlotsInOrder() const;
+		// inserts a key that doesn't exist yet into a table that has room, returns its entry
+		[[nodiscard]] ObjectEntry& ObjectInsertNew(Value key);
+
+		[[nodiscard]] inline bool ArrayHasInlineValues() const noexcept { return reinterpret_cast<const void*>(array.values) == reinterpret_cast<const void*>(this + 1); }
 
 		[[nodiscard]] inline bool IsOld() const noexcept { return GCHeader::GetHeader(this)->IsOld(); }
 		[[nodiscard]] inline bool IsYoung() const noexcept { return GCHeader::GetHeader(this)->IsYoung(); }

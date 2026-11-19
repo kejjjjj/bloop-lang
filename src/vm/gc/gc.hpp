@@ -17,10 +17,10 @@ namespace bloop::vm
 	// every object in the old generation has this age
 	constexpr bloop::BloopUInt8 OLD_AGE = PROMOTION_THRESHOLD;
 
-	constexpr bloop::BloopUInt NURSERY_SIZE = 1u * bloop::MB;              // per semispace
-	constexpr bloop::BloopUInt LARGE_OBJECT_SIZE = NURSERY_SIZE / 8u;      // bigger payloads skip the nursery
-	constexpr bloop::BloopUInt MAJOR_CHUNK_SIZE = 1u * bloop::MB;          // first old generation chunk
-	constexpr bloop::BloopUInt MAJOR_MIN_THRESHOLD = 4u * bloop::MB;       // don't run major GCs on tiny heaps
+	constexpr bloop::BloopSize NURSERY_SIZE = 1u * bloop::MB;              // per semispace
+	constexpr bloop::BloopSize LARGE_OBJECT_SIZE = NURSERY_SIZE / 8u;      // bigger payloads skip the nursery
+	constexpr bloop::BloopSize MAJOR_CHUNK_SIZE = 1u * bloop::MB;          // first old generation chunk
+	constexpr bloop::BloopSize MAJOR_MIN_THRESHOLD = 4u * bloop::MB;       // don't run major GCs on tiny heaps
 
 	// BLOOP_GC_STRESS: run a minor GC on every allocation, and a major GC on every Nth allocation
 #if defined(BLOOP_GC_STRESS) && !defined(BLOOP_GC_STRESS_MAJOR_INTERVAL)
@@ -40,7 +40,7 @@ namespace bloop::vm
 	enum class GCKind : bloop::BloopUInt8 { object, upvalue, buffer };
 
 	struct alignas(std::max_align_t) GCHeader {
-		bloop::BloopUInt size{};        // payload size in bytes (always aligned), the header is not included
+		bloop::BloopSize size{};        // payload size in bytes (always aligned), the header is not included
 		GCHeader* forwarding{};         // minor GC: where this object was evacuated to
 		GCHeader* nextFree{};           // old generation: free list link of a free block
 		bloop::BloopUInt8 age{};        // < OLD_AGE while in the nursery
@@ -63,7 +63,7 @@ namespace bloop::vm
 		[[nodiscard]] inline const T* GetValue() const noexcept {
 			return reinterpret_cast<const T*>(this + 1u);
 		}
-		[[nodiscard]] inline bloop::BloopUInt TotalSize() const noexcept { return sizeof(GCHeader) + size; }
+		[[nodiscard]] inline bloop::BloopSize TotalSize() const noexcept { return sizeof(GCHeader) + size; }
 		[[nodiscard]] inline bool IsOld() const noexcept { return age >= OLD_AGE; }
 		[[nodiscard]] inline bool IsYoung() const noexcept { return age < OLD_AGE; }
 	};
@@ -73,10 +73,10 @@ namespace bloop::vm
 
 	struct GCStats {
 		bloop::BloopUInt minorCollections{};
-		bloop::BloopUInt majorCollections{};
-		bloop::BloopUInt bytesPromoted{};   // nursery -> old generation
-		bloop::BloopUInt bytesPretenured{}; // allocated directly into the old generation
-		bloop::BloopUInt bytesSurvived{};   // nursery -> nursery
+		bloop::BloopSize majorCollections{};
+		bloop::BloopSize bytesPromoted{};   // nursery -> old generation
+		bloop::BloopSize bytesPretenured{}; // allocated directly into the old generation
+		bloop::BloopSize bytesSurvived{};   // nursery -> nursery
 	};
 
 	// Generational garbage collector
@@ -112,13 +112,13 @@ namespace bloop::vm
 
 		// the payload is left uninitialized, the caller has to initialize it before the next allocation
 		template<typename T>
-		[[nodiscard]] T* AllocateRaw(bloop::BloopUInt payloadSize) {
+		[[nodiscard]] T* AllocateRaw(bloop::BloopSize payloadSize) {
 			return AllocHeader(payloadSize, GCKind::object)->GetValue<T>();
 		}
 
 		// uninitialized storage for `count` Ts, owned by a single object (see GCKind::buffer)
 		template<typename T>
-		[[nodiscard]] T* AllocateBuffer(bloop::BloopUInt count) {
+		[[nodiscard]] T* AllocateBuffer(bloop::BloopSize count) {
 			return AllocHeader(sizeof(T) * count, GCKind::buffer)->GetValue<T>();
 		}
 
@@ -129,15 +129,15 @@ namespace bloop::vm
 		// Temp roots get updated when objects move, so always re-read pointers after an allocation.
 		// A null temp root is allowed (it reserves a slot)
 		void PushTempRoot(Object* obj);
-		void PopTempRoot(bloop::BloopUInt count = 1u);
-		[[nodiscard]] Object* TempRoot(bloop::BloopUInt fromTop = 0u) const;
+		void PopTempRoot(bloop::BloopSize count = 1u);
+		[[nodiscard]] Object* TempRoot(bloop::BloopSize fromTop = 0u) const;
 
-		[[nodiscard]] inline bloop::BloopUInt TempRootCount() const noexcept { return m_oTempRoots.size(); }
-		[[nodiscard]] inline Object*& TempRootAt(bloop::BloopUInt index) noexcept {
+		[[nodiscard]] inline bloop::BloopSize TempRootCount() const noexcept { return m_oTempRoots.size(); }
+		[[nodiscard]] inline Object*& TempRootAt(bloop::BloopSize index) noexcept {
 			assert(index < m_oTempRoots.size());
 			return m_oTempRoots[index];
 		}
-		inline void TruncateTempRoots(bloop::BloopUInt count) noexcept {
+		inline void TruncateTempRoots(bloop::BloopSize count) noexcept {
 			assert(count <= m_oTempRoots.size() && "temp roots were popped past a RootScope");
 			m_oTempRoots.resize(count);
 		}
@@ -150,8 +150,8 @@ namespace bloop::vm
 
 		[[nodiscard]] inline const GCStats& Stats() const noexcept { return m_oStats; }
 		[[nodiscard]] inline const MajorSpace& OldSpace() const noexcept { return m_oMajorSpace; }
-		[[nodiscard]] inline bloop::BloopUInt NurseryUsed() const noexcept { return m_oMinorSpace.Used(); }
-		[[nodiscard]] inline bloop::BloopUInt RememberedSetSize() const noexcept { return m_oRememberedSet.size(); }
+		[[nodiscard]] inline bloop::BloopSize NurseryUsed() const noexcept { return m_oMinorSpace.Used(); }
+		[[nodiscard]] inline bloop::BloopSize RememberedSetSize() const noexcept { return m_oRememberedSet.size(); }
 
 		// while one of these is alive, everything gets allocated into the old generation
 		// and nothing gets collected (used while the VM builds its constants)
@@ -164,8 +164,8 @@ namespace bloop::vm
 		};
 
 	private:
-		[[nodiscard]] GCHeader* AllocHeader(bloop::BloopUInt payloadSize, GCKind kind);
-		[[nodiscard]] GCHeader* AllocOld(bloop::BloopUInt payloadSize, GCKind kind);
+		[[nodiscard]] GCHeader* AllocHeader(bloop::BloopSize payloadSize, GCKind kind);
+		[[nodiscard]] GCHeader* AllocOld(bloop::BloopSize payloadSize, GCKind kind);
 		[[nodiscard]] inline bool CanCollect() const noexcept { return !m_bCollecting && !m_uPretenure; }
 		void MaybeMajorGC();
 
@@ -214,12 +214,12 @@ namespace bloop::vm
 		MinorSpace m_oMinorSpace;
 		MajorSpace m_oMajorSpace;
 
-		bloop::BloopUInt m_uNextMajorAt{ MAJOR_MIN_THRESHOLD };
-		bloop::BloopUInt m_uPretenure{};
+		bloop::BloopSize m_uNextMajorAt{ MAJOR_MIN_THRESHOLD };
+		bloop::BloopSize m_uPretenure{};
 		bloop::BloopBool m_bCollecting{};
 		bloop::BloopBool m_bTenureAll{};
 #ifdef BLOOP_GC_STRESS
-		bloop::BloopUInt m_uStressCounter{};
+		bloop::BloopSize m_uStressCounter{};
 #endif
 		GCStats m_oStats;
 	};

@@ -14,7 +14,7 @@ namespace {
 	}
 	std::string Text(const Value& v) {
 		REQUIRE(v.IsString());
-		return std::string(v.obj->string.data, v.obj->string.len);
+		return std::string(v.obj->string.data, static_cast<std::size_t>(v.obj->string.len));
 	}
 }
 

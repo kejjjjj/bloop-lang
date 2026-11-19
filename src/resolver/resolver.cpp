@@ -5,6 +5,8 @@
 #include <cassert>
 #include <ranges>
 #include <list>
+#include <iterator>
+#include <algorithm>
 
 #define NOMINMAX
 
@@ -12,17 +14,51 @@ using namespace bloop::resolver;
 
 void bloop::resolver::Resolve(bloop::ast::Program* code, bloop::metadata::Metadata& metadata) {
 	internal::Resolver resolver(metadata);
+	resolver.BeginProgram();
+	resolver.ResolveModule(code, false, nullptr);
+	resolver.EndProgram(code);
+}
 
-	if (resolver.m_oAllFunctions.size() >= bloop::INVALID_SLOT)
-		throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the code has more than {} functions"), bloop::INVALID_SLOT));
+using namespace bloop::resolver::internal;
 
-	resolver.m_oDeclaredIdentifiers.push_back({});
+void Resolver::BeginProgram() {
+	m_oDeclaredIdentifiers.push_back({});
+	BeginScope(); // the natives live in the outermost scope, which every module can see
+	InjectNatives();
+}
 
-	resolver.BeginScope();
-	resolver.InjectNatives();
-	code->ResolveNoScopeManagement(resolver);
-	resolver.EndScope();
+void Resolver::ResolveModule(bloop::ast::Program* code, bool isImported, ExportTable* exports) {
+	assert(m_oScopes.size() == 1u && m_oFunctions.empty());
 
+	m_bInImportedModule = isImported;
+
+	// the module's own global scope: modules can't see each other's globals unless they're imported,
+	// so two modules can both have a global with the same name (each still gets its own slot)
+	m_oDeclaredIdentifiers.push_back({});
+	BeginScope();
+
+	code->ResolveNoScopeManagement(*this);
+
+	if (exports) {
+		for (const auto& stmt : code->m_oStatements) {
+			if (!stmt->m_bExported)
+				continue;
+
+			const auto* name = stmt->GetDeclaredName();
+			assert(name && m_oScopes.back().symbols.contains(*name));
+			(*exports)[*name] = m_oScopes.back().symbols.at(*name);
+		}
+	}
+
+	EndScope();
+	m_oDeclaredIdentifiers.pop_back();
+	m_bInImportedModule = false;
+}
+
+void Resolver::EndProgram(bloop::ast::Program* code) {
+	EndScope();
+
+	auto& metadata = m_refMetadata;
 	for (auto& func : metadata.m_oFunctionDebugInfo) {
 
 		bloop::BloopString funcName = func.m_sName;
@@ -43,22 +79,20 @@ void bloop::resolver::Resolve(bloop::ast::Program* code, bloop::metadata::Metada
 		metadata.m_oFunctionTable[funcName] = &func;
 	}
 
-	//std::cout << "global variables:\n";
+	code->m_uNumFunctions = static_cast<bloop::BloopIndex>(m_oAllFunctions.size());
+	code->m_uNumGlobals = m_uNextGlobalSlot;
+	code->m_oAllFunctions = std::move(m_oAllFunctions);
 
-	//for (const auto& [v, k] : resolver.m_oDeclaredIdentifiers.front()) {
-	//	std::cout << bloop::fmt::format(BLOOPTEXT("[{}] - {}\n"), k, v);
-	//}
-
-	
-	code->m_uNumFunctions = static_cast<bloop::BloopIndex>(resolver.m_oAllFunctions.size());
-	code->m_uNumGlobals = static_cast<bloop::BloopIndex>(resolver.m_oDeclaredIdentifiers.front().size());
-	code->m_oAllFunctions = std::move(resolver.m_oAllFunctions);
-
-	resolver.m_oDeclaredIdentifiers.pop_back();
-
+	m_oDeclaredIdentifiers.pop_back();
 }
 
-using namespace bloop::resolver::internal;
+void Resolver::ImportSymbol(const bloop::BloopString& name, const Symbol& exported) {
+	assert(m_oFunctions.empty());
+	// same slot as the exporter's variable, so the importer sees its current value. Imports can't be assigned to
+	m_oScopes.back().symbols[name] = std::make_shared<Symbol>(name, m_iScopeDepth, bloop::BloopInt{}, exported.m_uSlot, true, exported.m_bIsFunction);
+}
+
+
 
 void Resolver::InjectNatives() {
 	for (const auto& stdObj : bloop::standard::g_Natives) {
@@ -91,10 +125,12 @@ Symbol* Resolver::DeclareSymbol(const bloop::BloopString& name, bool isConst, bo
 		slot = m_oDeclaredIdentifiers.back().at(name); //give it the same slot
 	} else if (m_oFunctions.empty()) {
 
-		slot = CountLocals(); //counts globals
-
-		if (slot >= bloop::INVALID_SLOT)
+		// every distinct global name gets its own slot. (Counting the symbols that are currently in scope
+		// isn't enough: that count drops when a block ends, while names seen before keep their old slots,
+		// so two different variables could end up sharing a slot). The counter is shared by all modules
+		if (m_uNextGlobalSlot >= bloop::INVALID_SLOT)
 			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the code has more than {} globals"), bloop::INVALID_SLOT));
+		slot = m_uNextGlobalSlot++;
 
 		//slot = static_cast<bloop::BloopIndex>(scope.size());
 		m_oDeclaredIdentifiers.back()[name] = slot; //to avoid redeclarations
@@ -132,7 +168,11 @@ ResolvedIdentifier Resolver::ResolveIdentifier(const bloop::BloopString& name) {
 
 	if (auto* sym = ResolveOuter(name)) {
 
-		auto funcs = m_oFunctions | std::views::drop(sym->m_iFunctionDepth);
+		// the functions nested inside the one that owns the symbol (m_iFunctionDepth is the scope depth of that function)
+		const auto owner = std::ranges::find_if(m_oFunctions, [sym](const FunctionContext& f) {
+			return f.m_pCurrentFunction->m_iScopeDepth == sym->m_iFunctionDepth; });
+		assert(owner != m_oFunctions.end());
+		auto funcs = m_oFunctions | std::views::drop(std::distance(m_oFunctions.begin(), owner) + 1);
 		auto t = std::list<FunctionContext>(funcs.begin(), funcs.end());
 
 		assert(!t.empty());
@@ -156,7 +196,7 @@ Symbol* Resolver::ResolveLocal(const bloop::BloopString& name) {
 		return nullptr;
 
 	auto& func = m_oFunctions.back().m_pCurrentFunction;
-	auto range = std::vector<Scope>(m_oScopes.begin() + func->m_iScopeDepth, m_oScopes.end());
+	auto range = std::vector<Scope>(m_oScopes.begin() + static_cast<std::ptrdiff_t>(func->m_iScopeDepth), m_oScopes.end());
 
 	if (const auto itr = std::ranges::find_if(range.rbegin(), range.rend(), [&name](Scope& s) {
 		return s.symbols.contains(name); }); itr != range.rend()) {
@@ -179,7 +219,7 @@ Symbol* Resolver::ResolveGlobal(const bloop::BloopString& name) {
 	}
 
 	auto& func = m_oFunctions.front().m_pCurrentFunction;
-	auto range = std::vector<Scope>(m_oScopes.begin(), m_oScopes.begin() + func->m_iScopeDepth);
+	auto range = std::vector<Scope>(m_oScopes.begin(), m_oScopes.begin() + static_cast<std::ptrdiff_t>(func->m_iScopeDepth));
 
 	if (const auto itr = std::ranges::find_if(range.rbegin(), range.rend(), [&name](Scope& s) {
 		return s.symbols.contains(name); }); itr != range.rend()) {

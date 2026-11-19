@@ -16,13 +16,14 @@ namespace bloop::ast {
 			m_pBody(std::forward<decltype(body)>(body)), m_oEndPosition(end_cp) {
 		}
 		[[nodiscard]] constexpr bool IsFunction() const noexcept override { return true; }
+		[[nodiscard]] const bloop::BloopString* GetDeclaredName() const noexcept override { return &m_sName; }
 
 		void Resolve(TResolver& resolver) override {
 
 
 			if (const auto sym = resolver.ResolveSymbol(m_sName)) {
 				if(!sym->m_bIsFunction)
-					throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + m_sName, m_oApproximatePosition);
+					throw bloop::exception::ResolverError(bloop::fmt::format(BLOOPTEXT("identifier \"{}\" already declared"), m_sName), m_oApproximatePosition);
 			} else {
 				resolver.DeclareSymbol(m_sName, true, true);
 			}
@@ -43,7 +44,7 @@ namespace bloop::ast {
 
 			std::ranges::for_each(m_oParams, [this, &resolver](const bloop::BloopString& param) {
 				if (resolver.ResolveSymbol(param))
-					throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + param, m_oApproximatePosition);
+					throw bloop::exception::ResolverError(bloop::fmt::format(BLOOPTEXT("identifier \"{}\" already declared"), param), m_oApproximatePosition);
 				resolver.DeclareSymbol(param);
 			});
 

@@ -5,6 +5,8 @@
 #include <numeric>
 #include <cstdint>
 #include <cstddef>
+#include <string_view>
+#include <limits>
 
 #ifndef BLOOP_NONCOPYABLE
 #define BLOOP_NONCOPYABLE(className) \
@@ -45,38 +47,13 @@ namespace bloop {
 #define BLOOP_MAX_STACK 0xffffu
 #define BLOOP_MAX_FRAMES 0x400u
 
-#if defined(_WIN32)
-#if defined(_WIN64)
-	// 64-bit Windows
+	// the language's integers: 64 bits on every platform, so scripts behave the same everywhere
 	using BloopInt = long long;
 	using BloopUInt = unsigned long long;
-#else
-	// 32-bit Windows
-	using BloopInt = int;
-	using BloopUInt = unsigned int;
-#endif
-#elif defined(__APPLE__) && defined(__MACH__)
-#include <TargetConditionals.h>
-#if defined(__x86_64__) || defined(__aarch64__)
-	// 64-bit macOS
-	using BloopInt = long long;
-	using BloopUInt = unsigned long long;
-#else
-	// 32-bit macOS
-	using BloopInt = int;
-	using BloopUInt = unsigned int;
-#endif
-#else
-#if defined(__x86_64__) || defined(__ppc64__)
-	// 64-bit non-Windows, non-macOS
-	using BloopInt = long long;
-	using BloopUInt = unsigned long long;
-#else
-	// 32-bit non-Windows, non-macOS
-	using BloopInt = int;
-	using BloopUInt = unsigned int;
-#endif
-#endif
+	static_assert(sizeof(BloopInt) == 8 && sizeof(BloopUInt) == 8);
+
+	// sizes and indices of host memory (pointer sized)
+	using BloopSize = std::size_t;
 
 	using BloopDouble = double;
 
@@ -101,12 +78,12 @@ namespace bloop {
 
 	using ConstantData = std::tuple<bloop::BloopString, EValueType>;
 
-	using CodePosition = std::tuple<BloopUInt, BloopUInt>;
+	using CodePosition = std::tuple<BloopSize, BloopSize>;
 	static constexpr BloopIndex INVALID_SLOT = std::numeric_limits<BloopIndex>::max();
 	static constexpr auto VARIADIC_PARAMETER_COUNT = bloop::INVALID_SLOT;
 	constexpr auto MB = 1024 * 1024;
 
-	inline constexpr bloop::BloopUInt Align(bloop::BloopUInt n, bloop::BloopUInt A = alignof(std::max_align_t)) {
+	inline constexpr bloop::BloopSize Align(bloop::BloopSize n, bloop::BloopSize A = alignof(std::max_align_t)) {
 		return (n + (A - 1)) & ~(A - 1);
 	}
 

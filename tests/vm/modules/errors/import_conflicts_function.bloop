@@ -1,0 +1,3 @@
+import greet from "../basic/my_module.bloop";
+fn greet() { return 1; }
+return greet();

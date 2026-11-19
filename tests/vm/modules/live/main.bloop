@@ -1,0 +1,10 @@
+import count, items, increment from "counter.bloop";
+
+const before = count;
+increment();
+increment();
+
+// imports see the current value of the exported variable,
+// and objects/arrays are shared
+std.array.push(items, 99);
+return [before, count, std.length(items), items[2]];

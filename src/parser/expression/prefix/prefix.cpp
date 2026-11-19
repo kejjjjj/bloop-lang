@@ -14,6 +14,8 @@ std::unique_ptr<BinaryExpression> CPrefixOperation::ToExpression()
 	switch (m_eType) {
 	case Type::o_negation:
 		return std::make_unique<bloop::ast::Negation>(m_oDeclPos);
+	case Type::o_logical_not:
+		return std::make_unique<bloop::ast::LogicalNot>(m_oDeclPos);
 	case Type::o_increment:
 		return std::make_unique<bloop::ast::PrefixIncrement>(m_oDeclPos);
 	case Type::o_decrement:
@@ -42,6 +44,9 @@ bloop::EStatus CParserPrefix::Parse() {
 		case EPunctuation::p_sub: 
 			m_oPrefixes.emplace_back(std::make_unique<CPrefixOperation>(CPrefixOperation::Type::o_negation));
 			break;
+		case EPunctuation::p_exclamation:
+			m_oPrefixes.emplace_back(std::make_unique<CPrefixOperation>(CPrefixOperation::Type::o_logical_not));
+			break;
 		case EPunctuation::p_increment: 
 			m_oPrefixes.emplace_back(std::make_unique<CPrefixOperation>(CPrefixOperation::Type::o_increment));
 			break;
@@ -49,7 +54,7 @@ bloop::EStatus CParserPrefix::Parse() {
 			m_oPrefixes.emplace_back(std::make_unique<CPrefixOperation>(CPrefixOperation::Type::o_decrement));
 			break;
 		default:
-			throw exception::ParserError(BLOOPTEXT("unsupported postfix operator"), GetIteratorSafe()->GetCodePosition());
+			throw exception::ParserError(BLOOPTEXT("unsupported prefix operator: ") + GetIteratorSafe()->Source(), GetIteratorSafe()->GetCodePosition());
 		}
 
 		Advance(1);

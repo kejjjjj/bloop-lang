@@ -13,21 +13,21 @@ namespace bloop::vm
 	class Arena {
 		BLOOP_NONCOPYABLE(Arena);
 	public:
-		explicit Arena(bloop::BloopUInt size) {
+		explicit Arena(bloop::BloopSize size) {
 			m_pBegin = static_cast<bloop::BloopByte*>(::operator new(size));
 			m_pEnd = m_pBegin + size;
 			m_pPtr = m_pBegin;
 		}
 		~Arena() { ::operator delete(m_pBegin); }
 
-		[[nodiscard]] inline void* TryAlloc(bloop::BloopUInt size, bloop::BloopUInt align = alignof(std::max_align_t)) noexcept {
+		[[nodiscard]] inline void* TryAlloc(bloop::BloopSize size, bloop::BloopSize align = alignof(std::max_align_t)) noexcept {
 			assert((align & (align - 1)) == 0 && "alignment must be a power of 2");
 
-			const auto ptr = reinterpret_cast<bloop::BloopUInt>(m_pPtr);
+			const auto ptr = reinterpret_cast<bloop::BloopSize>(m_pPtr);
 			const auto aligned = (ptr + (align - 1)) & ~(align - 1);
 
 			// compare sizes rather than pointers so that we never form an out of bounds pointer
-			const auto end = reinterpret_cast<bloop::BloopUInt>(m_pEnd);
+			const auto end = reinterpret_cast<bloop::BloopSize>(m_pEnd);
 			if (aligned > end || size > end - aligned)
 				return nullptr;
 
@@ -44,8 +44,8 @@ namespace bloop::vm
 
 		[[nodiscard]] inline bloop::BloopByte* Begin() const noexcept { return m_pBegin; }
 		[[nodiscard]] inline bloop::BloopByte* Top() const noexcept { return m_pPtr; }
-		[[nodiscard]] inline bloop::BloopUInt Used() const noexcept { return static_cast<bloop::BloopUInt>(m_pPtr - m_pBegin); }
-		[[nodiscard]] inline bloop::BloopUInt Capacity() const noexcept { return static_cast<bloop::BloopUInt>(m_pEnd - m_pBegin); }
+		[[nodiscard]] inline bloop::BloopSize Used() const noexcept { return static_cast<bloop::BloopSize>(m_pPtr - m_pBegin); }
+		[[nodiscard]] inline bloop::BloopSize Capacity() const noexcept { return static_cast<bloop::BloopSize>(m_pEnd - m_pBegin); }
 
 	private:
 		bloop::BloopByte* m_pBegin{};

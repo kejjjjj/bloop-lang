@@ -25,6 +25,8 @@ namespace bloop::parser {
 
 	private:
 
+		[[nodiscard]] bool IsRangedFor();
+		[[nodiscard]] bloop::EStatus ParseRangedFor();
 		[[nodiscard]] bloop::EStatus ParseInitializer();
 		[[nodiscard]] bloop::EStatus ParseCondition();
 		[[nodiscard]] bloop::EStatus ParseEndExpression();
@@ -32,5 +34,11 @@ namespace bloop::parser {
 		UniqueStatement m_pInitializer;
 		UniqueExpression m_pCondition;
 		std::unique_ptr<bloop::ast::ExpressionStatement> m_pOnEnd;
+
+		// for (const x : iterable)
+		bool m_bRanged{};
+		bool m_bIsConst{};
+		const bloop::CToken* m_pElementName{};
+		UniqueExpression m_pIterable;
 	};
 }

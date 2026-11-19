@@ -8,12 +8,10 @@
 TEST_CASE("std console log and property") {
 
     // capture what console.log prints
-    std::ostringstream captured;
-    auto* old = std::cout.rdbuf(captured.rdbuf());
     const auto ret = bloop::test::TEST_ExecuteFile(MAKE_RELATIVE_PATH(PREFIX, "console"));
-    std::cout.rdbuf(old);
+    const auto& output = bloop::test::TEST_LastOutput();
 
-    REQUIRE(captured.str().find("hello 42 world\n") != std::string::npos);
+    REQUIRE(output.find("hello 42 world\n") != std::string::npos);
 
     REQUIRE(ret.has_value());
     REQUIRE(ret->IsArray());

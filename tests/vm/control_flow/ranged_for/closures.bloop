@@ -1,0 +1,14 @@
+// every iteration has its own binding, so each closure sees its own element (like js)
+fn make() {
+    let fns = [0, 0, 0];
+    let i = 0;
+    for (const x : [10, 20, 30]) {
+        let doubled = x * 2;
+        fns[i] = () => x + doubled;
+        i = i + 1;
+    }
+    return fns;
+}
+
+const fns = make();
+return [fns[0](), fns[1](), fns[2]()];

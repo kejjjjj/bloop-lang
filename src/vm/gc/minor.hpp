@@ -14,9 +14,9 @@ namespace bloop::vm
 	struct MinorSpace {
 		BLOOP_NONCOPYABLE(MinorSpace);
 
-		explicit MinorSpace(bloop::BloopUInt size) : m_oSpaceA(size), m_oSpaceB(size) {}
+		explicit MinorSpace(bloop::BloopSize size) : m_oSpaceA(size), m_oSpaceB(size) {}
 
-		[[nodiscard]] inline void* TryAlloc(bloop::BloopUInt size) noexcept { return m_pActive->TryAlloc(size); }
+		[[nodiscard]] inline void* TryAlloc(bloop::BloopSize size) noexcept { return m_pActive->TryAlloc(size); }
 
 		// start of a minor GC: the active arena becomes from-space, the reserve becomes the empty to-space
 		inline void Flip() noexcept {
@@ -27,8 +27,8 @@ namespace bloop::vm
 		[[nodiscard]] inline bool InToSpace(const void* p) const noexcept { return m_pActive->Contains(p); }
 		[[nodiscard]] inline bool InFromSpace(const void* p) const noexcept { return m_pReserve->Contains(p); }
 
-		[[nodiscard]] inline bloop::BloopUInt Capacity() const noexcept { return m_pActive->Capacity(); }
-		[[nodiscard]] inline bloop::BloopUInt Used() const noexcept { return m_pActive->Used(); }
+		[[nodiscard]] inline bloop::BloopSize Capacity() const noexcept { return m_pActive->Capacity(); }
+		[[nodiscard]] inline bloop::BloopSize Used() const noexcept { return m_pActive->Used(); }
 
 		[[nodiscard]] inline Arena& Active() noexcept { return *m_pActive; }
 		[[nodiscard]] inline Arena& Reserve() noexcept { return *m_pReserve; }

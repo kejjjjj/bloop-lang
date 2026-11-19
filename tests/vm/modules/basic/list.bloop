@@ -1,0 +1,3 @@
+import value, greet from "my_module.bloop";
+
+return [value, greet()];

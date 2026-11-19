@@ -1,0 +1,10 @@
+// the elements are read on every iteration, so changes to later elements are seen
+let arr = [1, 2, 3];
+let seen = [0, 0, 0];
+let i = 0;
+for (const x : arr) {
+    arr[2] = 100;
+    seen[i] = x;
+    i = i + 1;
+}
+return seen;

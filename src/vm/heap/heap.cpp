@@ -8,11 +8,12 @@
 #include <cassert>
 #include <ranges>
 #include <cstring>
+#include <algorithm>
 #include <new>
 
 using namespace bloop::vm;
 
-Object* Heap::AllocString(bloop::BloopUInt len) {
+Object* Heap::AllocString(bloop::BloopSize len) {
 	auto obj = AllocateRaw<Object>(sizeof(Object) + len);
 
 	obj->type = Object::Type::ot_string;
@@ -22,7 +23,7 @@ Object* Heap::AllocString(bloop::BloopUInt len) {
 
 	return obj;
 }
-Object* Heap::AllocString(const bloop::BloopChar* data, bloop::BloopUInt len) {
+Object* Heap::AllocString(const bloop::BloopChar* data, bloop::BloopSize len) {
 	auto obj = AllocateRaw<Object>(sizeof(Object) + len);
 
 	obj->type = Object::Type::ot_string;
@@ -36,18 +37,57 @@ Object* Heap::AllocString(const bloop::BloopChar* data, bloop::BloopUInt len) {
 Object* Heap::AllocCallable(Function* callable) {
 	return Allocate<Object>(callable);
 }
-Object* Heap::AllocArray(bloop::BloopIndex numValues) {
+Object* Heap::AllocArray(bloop::BloopSize numValues) {
 	auto* obj = AllocateRaw<Object>(sizeof(Object) + sizeof(Value) * numValues);
 
 	obj->type = Object::Type::ot_array;
-	obj->array.count = numValues;
+	obj->array.count = static_cast<bloop::BloopInt>(numValues);
+	obj->array.capacity = static_cast<bloop::BloopInt>(numValues);
 	obj->array.values = reinterpret_cast<Value*>(obj + 1);
 
 	// the GC may scan the array before the caller fills it
-	for (const auto i : std::views::iota(0, static_cast<bloop::BloopInt>(numValues)))
+	for (bloop::BloopSize i = 0; i < numValues; i++)
 		new (&obj->array.values[i]) Value();
 
 	return obj;
+}
+Object* Heap::ArrayReserve(Object* arr, bloop::BloopInt capacity) {
+	assert(arr->IsArray());
+
+	if (capacity <= arr->array.capacity)
+		return arr;
+
+	auto newCapacity = std::max<bloop::BloopInt>(arr->array.capacity * 2, 4);
+	while (newCapacity < capacity)
+		newCapacity *= 2;
+
+	RootScope scope(*m_pGC);
+	const auto rarr = scope.Keep(arr);
+	auto* values = m_pGC->AllocateBuffer<Value>(static_cast<bloop::BloopSize>(newCapacity));
+	arr = rarr.Obj();
+
+	for (bloop::BloopInt i = 0; i < newCapacity; i++)
+		new (&values[i]) Value(i < arr->array.count ? arr->array.values[i] : Value{});
+
+	arr->array.values = values;
+	arr->array.capacity = newCapacity;
+
+	// an old array now owns a (possibly young) buffer full of values
+	m_pGC->WriteBarrierAll(arr);
+	return arr;
+}
+Object* Heap::ArrayPush(Object* arr, Value value) {
+
+	if (arr->array.count == arr->array.capacity) {
+		RootScope scope(*m_pGC);
+		const auto rvalue = scope.Keep(value);
+		arr = ArrayReserve(arr, arr->array.count + 1);
+		value = rvalue.Get();
+	}
+
+	arr->array.values[arr->array.count++] = value;
+	m_pGC->WriteBarrier(arr, value);
+	return arr;
 }
 Object* Heap::AllocObject(bloop::BloopIndex numValues) {
 
@@ -55,11 +95,12 @@ Object* Heap::AllocObject(bloop::BloopIndex numValues) {
 	bloop::BloopInt capacity = 4;
 	while (static_cast<bloop::BloopInt>(numValues) * 4 > capacity * 3) capacity <<= 1;
 
-	auto* obj = AllocateRaw<Object>(sizeof(Object) + sizeof(ObjectEntry) * capacity);
+	auto* obj = AllocateRaw<Object>(sizeof(Object) + sizeof(ObjectEntry) * static_cast<bloop::BloopSize>(capacity));
 
 	obj->type = Object::Type::ot_object;
 	obj->object.capacity = capacity;
 	obj->object.count = 0;
+	obj->object.nextOrder = 0;
 	obj->object.entries = reinterpret_cast<ObjectEntry*>(obj + 1);
 
 	for (const auto i : std::views::iota(0, capacity)) {
@@ -94,12 +135,12 @@ Object* Heap::StringConcat(Object* a, Object* b)
 	RootScope scope(*m_pGC);
 	const auto ra = scope.Keep(a);
 	const auto rb = scope.Keep(b);
-	auto r = AllocString(len);
+	auto r = AllocString(static_cast<bloop::BloopSize>(len));
 	a = ra.Obj();
 	b = rb.Obj();
 
-	memcpy(r->string.data, a->string.data, a->string.len);
-	memcpy(r->string.data + a->string.len, b->string.data, b->string.len);
+	memcpy(r->string.data, a->string.data, static_cast<std::size_t>(a->string.len));
+	memcpy(r->string.data + a->string.len, b->string.data, static_cast<std::size_t>(b->string.len));
 	r->string.hash = bloop::hash::FNV1a(r->string.data, r->string.len);
 	return r;
 }
@@ -116,7 +157,7 @@ void Heap::ObjectSet(Object* obj, Value key, Value value) {
 		const auto rvalue = scope.Keep(value);
 
 		const auto newCapacity = obj->object.capacity * 2;
-		auto* entries = m_pGC->AllocateBuffer<ObjectEntry>(static_cast<bloop::BloopUInt>(newCapacity));
+		auto* entries = m_pGC->AllocateBuffer<ObjectEntry>(static_cast<bloop::BloopSize>(newCapacity));
 
 		obj = robj.Obj();
 		key = rkey.Get();
@@ -134,8 +175,11 @@ void Heap::ObjectSet(Object* obj, Value key, Value value) {
 		obj->object.count = 0;
 
 		for (const auto i : std::views::iota(0, oldCapacity)) {
-			if (oldEntries[i].key.type != Value::Type::t_undefined)
-				obj->ObjectSet(oldEntries[i].key, oldEntries[i].value);
+			if (oldEntries[i].key.type != Value::Type::t_undefined) {
+				auto& entry = obj->ObjectInsertNew(oldEntries[i].key);
+				entry.value = oldEntries[i].value;
+				entry.order = oldEntries[i].order; // keeps the insertion order
+			}
 		}
 
 		// an old object now owns a (possibly young) buffer full of values

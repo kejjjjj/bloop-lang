@@ -1,0 +1,2 @@
+import a from "a.bloop";
+export const b = 20;

@@ -1,0 +1,2 @@
+export const log = [];
+std.array.push(log, "log");

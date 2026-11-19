@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <memory>
+#include <cstddef>
+#include <iterator>
 
 namespace bloop {
 	class CPunctuationToken;

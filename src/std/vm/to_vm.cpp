@@ -9,7 +9,10 @@
 using namespace bloop::vm;
 
 // every allocation can move young objects, so the receiver and the key stay rooted
-void bloop::standard::AssignField(Heap& heap, const NativeField& field, const Local& receiver) {
+void bloop::standard::AssignField(Heap& heap, const NativeField& field, const Local& receiver, const Environment& environment) {
+
+	if (!environment.Allows(field.m_ePermission))
+		return;
 
 	RootScope scope(heap.GetGC());
 	const auto key = scope.Keep(heap.AllocString(field.m_sName.data(), field.m_sName.size()));
@@ -32,7 +35,7 @@ void bloop::standard::AssignField(Heap& heap, const NativeField& field, const Lo
 		break;
 	} 
 	case NativeObjectPropertyType::native_object: 
-		value = Value{ FromDefinitionToObject(heap, std::get<2>(field.m_oData)) };
+		value = Value{ FromDefinitionToObject(heap, std::get<2>(field.m_oData), environment) };
 		break;
 	default:
 		break;
@@ -42,7 +45,7 @@ void bloop::standard::AssignField(Heap& heap, const NativeField& field, const Lo
 	heap.ObjectSet(receiver.Obj(), key.Get(), value);
 }
 
-Object* bloop::standard::FromDefinitionToObject(Heap& heap, const NativeDef& def) {
+Object* bloop::standard::FromDefinitionToObject(Heap& heap, const NativeDef& def, const Environment& environment) {
 
 	switch (def.m_eType) {
 	case NativeType::function:
@@ -55,7 +58,7 @@ Object* bloop::standard::FromDefinitionToObject(Heap& heap, const NativeDef& def
 		const auto obj = scope.Keep(heap.AllocObject(static_cast<bloop::BloopIndex>(defObj->m_oFields.size())));
 		
 		for (const auto& field : defObj->m_oFields)
-			AssignField(heap, field, obj);
+			AssignField(heap, field, obj, environment);
 
 		return obj.Obj();
 	}

@@ -61,7 +61,13 @@ BLOOP_OP(DUP)
 BLOOP_OP(INCR)
 BLOOP_OP(DECR)
 BLOOP_OP(NEG)
+BLOOP_OP(NOT) // [value] -> [!value] (a boolean)
 
 BLOOP_OP(TRY) //catch_ip, base, catch_var
 BLOOP_OP(TRY_END)
 BLOOP_OP(THROW)
+
+// ranged for: for (const x : iterable)
+BLOOP_OP(ITER_PREPARE) // [iterable] -> [iterable, index]: checks that the value is iterable
+BLOOP_OP(ITER_NEXT) // target: [iterable, index] -> [iterable, index + 1, element], or jumps to target when done
+BLOOP_OP(CLOSE_UPVALUES) // slot: closes the upvalues of this frame's locals from slot upwards

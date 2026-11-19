@@ -97,13 +97,9 @@ namespace {
 	std::pair<Value, std::string> Run(const std::string& src) {
 		RegisterTestNatives();
 
-		std::ostringstream captured;
-		auto* old = std::cout.rdbuf(captured.rdbuf());
-		auto ret = bloop::test::TEST_ExecuteBuffer(src);
-		std::cout.rdbuf(old);
-
+		const auto ret = bloop::test::TEST_ExecuteBuffer(src);
 		REQUIRE(ret.has_value());
-		return { *ret, captured.str() };
+		return { *ret, bloop::test::TEST_LastOutput() };
 	}
 	void RequireError(const std::string& src, const std::string& message) {
 		const auto [ret, output] = Run(src);
@@ -113,7 +109,7 @@ namespace {
 	}
 	void RequireString(const Value& v, const std::string& expected) {
 		REQUIRE(v.IsString());
-		REQUIRE(std::string(v.obj->string.data, v.obj->string.len) == expected);
+		REQUIRE(std::string(v.obj->string.data, static_cast<std::size_t>(v.obj->string.len)) == expected);
 	}
 }
 
@@ -167,7 +163,7 @@ TEST_CASE("bindings | variadic natives") {
 	RequireString(v[3], "");
 }
 TEST_CASE("bindings | std.length uses the bindings") {
-	RequireError("return std.length(5);", "argument 1 must be \"string\" or \"array\", but got \"int\"");
+	RequireError("return std.length(5);", "argument 1 must be \"string\" or \"array\" or \"object\", but got \"int\"");
 }
 TEST_CASE("bindings | argument views survive allocations and collections") {
 	auto [ret, out] = Run(

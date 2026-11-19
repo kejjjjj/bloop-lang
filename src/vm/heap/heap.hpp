@@ -31,14 +31,14 @@ namespace bloop::vm
 			return m_pGC->Allocate<T>(std::forward<Args>(args)...);
 		}
 		template<typename T>
-		[[nodiscard]] inline T* AllocateRaw(bloop::BloopUInt payload_size) {
+		[[nodiscard]] inline T* AllocateRaw(bloop::BloopSize payload_size) {
 			return m_pGC->AllocateRaw<T>(payload_size);
 		}
 		//[[nodiscard]] Object* Allocate(Object* newObj);
-		[[nodiscard]] Object* AllocString(const bloop::BloopChar* data, bloop::BloopUInt len);
-		[[nodiscard]] Object* AllocString(bloop::BloopUInt len);
+		[[nodiscard]] Object* AllocString(const bloop::BloopChar* data, bloop::BloopSize len);
+		[[nodiscard]] Object* AllocString(bloop::BloopSize len);
 		[[nodiscard]] Object* AllocCallable(Function* callable);
-		[[nodiscard]] Object* AllocArray(bloop::BloopIndex numValues);
+		[[nodiscard]] Object* AllocArray(bloop::BloopSize numValues);
 		[[nodiscard]] Object* AllocObject(bloop::BloopIndex numValues);
 		[[nodiscard]] Object* AllocClosure(Function* function, bloop::BloopIndex numVals);
 		[[nodiscard]] Object* AllocNativeFunction(const bloop::standard::NativeFunction* function);
@@ -48,6 +48,11 @@ namespace bloop::vm
 		// inserts or overwrites a property, growing the object when it gets too full.
 		// Growing allocates, so pointers to young objects held by the caller may be stale afterwards
 		void ObjectSet(Object* obj, Value key, Value value);
+
+		// makes room for at least `capacity` values. Returns the array (it may have moved)
+		[[nodiscard]] Object* ArrayReserve(Object* arr, bloop::BloopInt capacity);
+		// appends a value. Returns the array (it may have moved)
+		[[maybe_unused]] Object* ArrayPush(Object* arr, Value value);
 
 		[[nodiscard]] inline GC& GetGC() noexcept { return *m_pGC; }
 

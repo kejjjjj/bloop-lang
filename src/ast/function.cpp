@@ -12,9 +12,8 @@ void FunctionDeclarationStatement::EmitByteCode(TBCBuilder& parent) {
 	m_pBody->EmitByteCode(fnBuilder);
 	fnBuilder.EnsureReturn(this);
 
-	#ifndef BLOOP_TEST
-	PrintInstructions(fnBuilder);
-	#endif
+	if (parent.m_refMetadata.m_bDebugOutput)
+		PrintInstructions(fnBuilder);
 
 	bloop::bc::Function f;
 	f.m_oCaptures = m_oCaptures;

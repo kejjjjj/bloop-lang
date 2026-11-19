@@ -16,8 +16,8 @@ namespace bloop::vm
 	};
 
 	struct ExceptionHandler {
-		bloop::BloopUInt m_uIp{};
-		bloop::BloopUInt m_uBase{};
+		bloop::BloopSize m_uIp{};
+		bloop::BloopSize m_uBase{};
 		bloop::BloopIndex m_uCatchVar{};
 	};
 }

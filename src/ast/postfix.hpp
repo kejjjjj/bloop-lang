@@ -108,28 +108,10 @@ namespace bloop::ast {
 		Increment(const bloop::CodePosition& cp) : Postfix(EPunctuation::p_increment, cp) {}
 
 		void Resolve(TResolver& resolver) override {
-			left->Resolve(resolver);
-			if (const auto identifier = GetIdentifier()) {
-				if (identifier->IsConst())
-					throw exception::ResolverError(BLOOPTEXT("can't increment a const value"), m_oApproximatePosition);
-				return;
-			}
-			throw exception::ResolverError(BLOOPTEXT("increment operand is not an identifier"), m_oApproximatePosition);
+			ResolveStep(resolver, *left, BLOOPTEXT("increment"), m_oApproximatePosition);
 		}
 		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
-			left->EmitByteCode(builder, true); // load operand
-
-			if(want_value)
-				Emit(builder, TOpCode::DUP); //duplicate
-
-			Emit(builder, TOpCode::INCR);
-
-			auto identifier = GetIdentifier();
-			assert(identifier);
-			identifier->Store(builder, !want_value); //invert it
-
-			if (!want_value)
-				Emit(builder, TOpCode::POP);
+			EmitStep(builder, *this, *left, TOpCode::INCR, false, want_value);
 		}
 	};
 
@@ -138,29 +120,10 @@ namespace bloop::ast {
 		Decrement(const bloop::CodePosition& cp) : Postfix(EPunctuation::p_decrement, cp) {}
 
 		void Resolve(TResolver& resolver) override {
-			left->Resolve(resolver);
-
-			if (const auto identifier = GetIdentifier()) {
-				if (identifier->IsConst())
-					throw exception::ResolverError(BLOOPTEXT("can't decrement a const value"), m_oApproximatePosition);
-				return;
-			}
-			throw exception::ResolverError(BLOOPTEXT("decrement operand is not an identifier"), m_oApproximatePosition);
+			ResolveStep(resolver, *left, BLOOPTEXT("decrement"), m_oApproximatePosition);
 		}
 		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
-			left->EmitByteCode(builder, true); // load operand
-
-			if (want_value)
-				Emit(builder, TOpCode::DUP); //duplicate
-
-			Emit(builder, TOpCode::DECR);
-
-			auto identifier = GetIdentifier();
-			assert(identifier);
-			identifier->Store(builder, !want_value); //invert it
-
-			if (!want_value)
-				Emit(builder, TOpCode::POP);
+			EmitStep(builder, *this, *left, TOpCode::DECR, false, want_value);
 		}
 	};
 

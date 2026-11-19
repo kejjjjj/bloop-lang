@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <variant>
+#include <type_traits>
 
 namespace bloop::ast {
 	struct AbstractSyntaxTree;

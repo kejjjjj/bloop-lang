@@ -9,6 +9,8 @@
 #include "ast/control.hpp"
 #include "ast/function.hpp"
 
+#include <limits>
+
 using namespace bloop::parser;
 
 CLambdaOperand::CLambdaOperand(UniqueExpression&& expr)

@@ -41,3 +41,8 @@ TEST_CASE("lambda | mutual recursion via closures") {
 TEST_CASE("lambda | closure escapes during recursion") {
     bloop::test::CheckConstant(MAKE_RELATIVE_PATH(PREFIX, "recursive_closure_escape"), Value::Type::t_int, 3);
 }
+// the resolver found the functions between a captured variable and its user by scope depth,
+// which was wrong when a block sat between them (assert/out of range)
+TEST_CASE("lambda | captures a variable of a lambda that's inside a block") {
+    bloop::test::CheckConstant(MAKE_RELATIVE_PATH(PREFIX, "capture_inside_block"), Value::Type::t_int, 10);
+}

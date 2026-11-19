@@ -12,9 +12,9 @@ namespace {
 	constexpr auto HEADER = sizeof(GCHeader);
 	// don't leave behind free fragments that can't hold anything useful
 	constexpr auto MIN_SPLIT = HEADER + alignof(std::max_align_t);
-	constexpr bloop::BloopUInt MAX_CHUNK_SIZE = 64u * bloop::MB;
+	constexpr bloop::BloopSize MAX_CHUNK_SIZE = 64u * bloop::MB;
 
-	inline void InitFreeBlock(GCHeader* h, bloop::BloopUInt totalSize) noexcept {
+	inline void InitFreeBlock(GCHeader* h, bloop::BloopSize totalSize) noexcept {
 		h->size = totalSize - HEADER;
 		h->forwarding = nullptr;
 		h->nextFree = nullptr;
@@ -26,14 +26,14 @@ namespace {
 	}
 }
 
-MajorSpace::MajorSpace(bloop::BloopUInt initialChunkSize) : m_uNextChunkSize(bloop::Align(initialChunkSize)) {
+MajorSpace::MajorSpace(bloop::BloopSize initialChunkSize) : m_uNextChunkSize(bloop::Align(initialChunkSize)) {
 	Grow(m_uNextChunkSize);
 }
 MajorSpace::~MajorSpace() {
 	for (auto& chunk : m_oChunks)
 		::operator delete(chunk.begin);
 }
-GCHeader* MajorSpace::Alloc(bloop::BloopUInt payloadSize) {
+GCHeader* MajorSpace::Alloc(bloop::BloopSize payloadSize) {
 
 	payloadSize = bloop::Align(payloadSize);
 
@@ -46,7 +46,7 @@ GCHeader* MajorSpace::Alloc(bloop::BloopUInt payloadSize) {
 	assert(h && "a freshly grown chunk must fit the allocation");
 	return h;
 }
-GCHeader* MajorSpace::TakeFromFreeList(bloop::BloopUInt payloadSize) {
+GCHeader* MajorSpace::TakeFromFreeList(bloop::BloopSize payloadSize) {
 
 	const auto needed = HEADER + payloadSize;
 
@@ -82,7 +82,7 @@ GCHeader* MajorSpace::TakeFromFreeList(bloop::BloopUInt payloadSize) {
 
 	return nullptr;
 }
-void MajorSpace::Grow(bloop::BloopUInt minBlockSize)
+void MajorSpace::Grow(bloop::BloopSize minBlockSize)
 {
 	const auto size = bloop::Align(std::max(minBlockSize, m_uNextChunkSize));
 	m_uNextChunkSize = std::min(m_uNextChunkSize * 2u, MAX_CHUNK_SIZE);
@@ -94,7 +94,7 @@ void MajorSpace::Grow(bloop::BloopUInt minBlockSize)
 
 	PushFree(reinterpret_cast<GCHeader*>(mem), size);
 }
-void MajorSpace::PushFree(GCHeader* block, bloop::BloopUInt totalSize) {
+void MajorSpace::PushFree(GCHeader* block, bloop::BloopSize totalSize) {
 	assert(totalSize >= HEADER);
 	InitFreeBlock(block, totalSize);
 	block->nextFree = m_pFreeList;
@@ -115,7 +115,7 @@ void MajorSpace::Sweep() {
 		auto* const end = chunk.begin + chunk.size;
 
 		GCHeader* run = nullptr;   // start of the current run of dead/free blocks
-		bloop::BloopUInt runSize{};
+		bloop::BloopSize runSize{};
 
 		auto flush = [&]() {
 			if (!run)
@@ -172,8 +172,8 @@ bool MajorSpace::Contains(const void* p) const noexcept {
 }
 bool MajorSpace::Verify() const {
 
-	bloop::BloopUInt allocated{};
-	bloop::BloopUInt heap{};
+	bloop::BloopSize allocated{};
+	bloop::BloopSize heap{};
 
 	for (const auto& chunk : m_oChunks) {
 		const auto* p = chunk.begin;
@@ -184,7 +184,7 @@ bool MajorSpace::Verify() const {
 			const auto* h = reinterpret_cast<const GCHeader*>(p);
 			if (h->size % alignof(std::max_align_t))
 				return false;
-			if (h->TotalSize() > static_cast<bloop::BloopUInt>(end - p))
+			if (h->TotalSize() > static_cast<bloop::BloopSize>(end - p))
 				return false;
 			if (h->age != OLD_AGE || h->forwarding)
 				return false;

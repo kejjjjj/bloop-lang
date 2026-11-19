@@ -10,4 +10,9 @@ namespace bloop::exception {
         VMError(const bloop::BloopString& msg, bloop::CodePosition pos)
             : std::runtime_error(std::format("{}\nat: {}:{}", msg, std::get<0>(pos), std::get<1>(pos))) {}
     };
+
+    // thrown by std.process.exit: ends the script (it's not an error, and scripts can't catch it)
+    struct ExitRequest {
+        bloop::BloopInt m_iCode{};
+    };
 }

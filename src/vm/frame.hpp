@@ -5,9 +5,9 @@
 namespace bloop::vm
 {
 	struct CallFrame {
-		CallFrame(Chunk* chunk, bloop::BloopUInt stackBase);
-		CallFrame(Function* fn, bloop::BloopUInt stackBase);
-		CallFrame(Object* closure, bloop::BloopUInt stackBase);
+		CallFrame(Chunk* chunk, bloop::BloopSize stackBase);
+		CallFrame(Function* fn, bloop::BloopSize stackBase);
+		CallFrame(Object* closure, bloop::BloopSize stackBase);
 
 		[[nodiscard]] const bc::InstrDebugRef& GetCurrentPosition(class VM& vm) const;
 
@@ -23,7 +23,7 @@ namespace bloop::vm
 		Chunk* m_pChunk{};
 		bloop::BloopByte* m_pIp{};
 		bloop::BloopByte* m_pIpBase{};
-		bloop::BloopUInt m_uBase{};
+		bloop::BloopSize m_uBase{};
 		std::vector<ExceptionHandler> m_oExceptionHandlers;
 
 		enum class ChunkType : bloop::BloopByte { ct_chunk, ct_function, ct_closure };

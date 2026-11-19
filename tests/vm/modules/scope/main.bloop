@@ -1,0 +1,11 @@
+import first_name from "first.bloop";
+import second_name from "second.bloop";
+
+// main has its own "name" too
+const name = "main";
+let calls = 100;
+
+const a = first_name();
+const b = second_name();
+const c = first_name();
+return [a, b, c, name + std.string.from(calls)];

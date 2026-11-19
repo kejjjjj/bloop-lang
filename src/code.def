@@ -1,9 +1,12 @@
 R"(
 
-let i = 0;
+const names = std.object.keys(std.array);
 
-while(i < 10_000_000)
-	i = i + 1;
+const newNames = [];
+for(const name : names){
+	if(std.string.starts_with(name, 't'))
+		std.array.push(newNames, name);
+}
 
-return i;
+return newNames;
 )"

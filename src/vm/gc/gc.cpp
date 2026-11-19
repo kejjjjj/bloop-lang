@@ -12,7 +12,7 @@ GC::GC(VM* vm) : m_pVM(vm), m_oMinorSpace(NURSERY_SIZE), m_oMajorSpace(MAJOR_CHU
 }
 GC::~GC() = default;
 
-GCHeader* GC::AllocHeader(bloop::BloopUInt payloadSize, GCKind kind) {
+GCHeader* GC::AllocHeader(bloop::BloopSize payloadSize, GCKind kind) {
 
 	payloadSize = bloop::Align(payloadSize);
 
@@ -53,7 +53,7 @@ GCHeader* GC::AllocHeader(bloop::BloopUInt payloadSize, GCKind kind) {
 	h->free = false;
 	return h;
 }
-GCHeader* GC::AllocOld(bloop::BloopUInt payloadSize, GCKind kind) {
+GCHeader* GC::AllocOld(bloop::BloopSize payloadSize, GCKind kind) {
 
 	// collect *before* allocating, the new object isn't initialized yet
 	if (CanCollect())
@@ -81,12 +81,12 @@ void GC::Remember(GCHeader* h) {
 void GC::PushTempRoot(Object* obj) {
 	m_oTempRoots.push_back(obj);
 }
-void GC::PopTempRoot(bloop::BloopUInt count) {
+void GC::PopTempRoot(bloop::BloopSize count) {
 	assert(count <= m_oTempRoots.size());
 	while (count-- && !m_oTempRoots.empty())
 		m_oTempRoots.pop_back();
 }
-Object* GC::TempRoot(bloop::BloopUInt fromTop) const {
+Object* GC::TempRoot(bloop::BloopSize fromTop) const {
 	assert(fromTop < m_oTempRoots.size());
 	return m_oTempRoots[m_oTempRoots.size() - 1u - fromTop];
 }

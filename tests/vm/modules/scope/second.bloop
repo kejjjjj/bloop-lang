@@ -1,0 +1,7 @@
+const name = "second";
+let calls = 10;
+
+export fn second_name() {
+	calls = calls + 1;
+	return name + std.string.from(calls);
+}

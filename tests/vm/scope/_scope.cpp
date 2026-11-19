@@ -20,3 +20,6 @@ TEST_CASE("closure references 'deleted' variables") {
 TEST_CASE("f gets redeclared in scopes") {
     bloop::test::CheckConstant(MAKE_RELATIVE_PATH(PREFIX, "redeclaration"), Value::Type::t_int, 1);
 }
+TEST_CASE("globals declared after blocks don't share slots with the block's variables") {
+    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "global_slots"), Value::Type::t_int, std::array{ 5, 6 });
+}

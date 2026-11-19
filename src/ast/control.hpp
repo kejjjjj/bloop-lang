@@ -111,8 +111,6 @@ namespace bloop::ast {
 	};
 
 	struct ForStatement : BlockStatement {
-		[[nodiscard]] constexpr bool IsReturn() const noexcept override { return true; }
-
 		ForStatement(const bloop::CodePosition& cp) : BlockStatement(cp) {}
 
 		void Resolve(TResolver& resolver) override {
@@ -171,6 +169,83 @@ namespace bloop::ast {
 		std::unique_ptr<ExpressionStatement> m_pOnEnd;
 	};
 
+	// for (const element : iterable) { ... }
+	// Like js' for...of: the iterable is evaluated once, every iteration gets its own (const) binding of the element,
+	// and the element is a copy of the array element (objects are still shared). Arrays and strings are iterable.
+	struct RangedForStatement : BlockStatement {
+		RangedForStatement(const bloop::CodePosition& cp) : BlockStatement(cp) {}
+
+		void Resolve(TResolver& resolver) override {
+
+			resolver.BeginScope();
+
+			// before the element is declared: for (const x : x) refers to an outer x
+			m_pIterable->Resolve(resolver);
+
+			if (resolver.ResolveSymbol(m_sName))
+				throw bloop::exception::ResolverError(bloop::fmt::format(BLOOPTEXT("identifier \"{}\" already declared"), m_sName), m_oApproximatePosition);
+
+			auto* symbol = resolver.DeclareSymbol(m_sName, false);
+			symbol->m_bIsConst = m_bIsConst;
+			m_oElement = resolver.ResolveIdentifier(m_sName);
+			assert(m_oElement.m_eKind == ResolvedIdentifier::Kind::Local || m_oElement.m_eKind == ResolvedIdentifier::Kind::Global);
+
+			resolver.m_iLoopDepth++;
+			BlockStatement::ResolveNoScopeManagement(resolver);
+			resolver.m_iLoopDepth--;
+
+			resolver.EndScope();
+		}
+
+		void EmitByteCode(TBCBuilder& builder) override {
+
+			// the iterable and the index stay on the stack for the whole loop
+			m_pIterable->EmitByteCode(builder, true);
+			Emit(builder, TOpCode::ITER_PREPARE);
+
+			const auto loopStart = builder.m_uOffset;
+			const auto jumpExit = EmitJump(builder, TOpCode::ITER_NEXT);
+
+			const auto isLocal = m_oElement.m_eKind == ResolvedIdentifier::Kind::Local;
+			Emit(builder, isLocal ? TOpCode::STORE_LOCAL : TOpCode::STORE_GLOBAL, m_oElement.m_uSlot);
+
+			builder.m_oLoops.push_back({});
+			BlockStatement::EmitByteCode(builder);
+
+			const auto continueTarget = builder.m_uOffset;
+
+			// a fresh binding for every iteration: closures created in the body keep this iteration's values
+			if (isLocal)
+				Emit(builder, TOpCode::CLOSE_UPVALUES, m_oElement.m_uSlot);
+
+			EmitJump(builder, TOpCode::JMP, loopStart);
+
+			const auto exit = builder.m_uOffset;
+			PatchJump(builder, jumpExit, exit);
+
+			if (isLocal)
+				Emit(builder, TOpCode::CLOSE_UPVALUES, m_oElement.m_uSlot); // after a break
+
+			Emit(builder, TOpCode::POP); // index
+			Emit(builder, TOpCode::POP); // iterable
+
+			for (const auto& _break : builder.m_oLoops.back().m_oBreakStatements)
+				PatchJump(builder, _break, exit);
+
+			for (const auto& _continue : builder.m_oLoops.back().m_oContinueStatements)
+				PatchJump(builder, _continue, continueTarget);
+
+			builder.m_oLoops.pop_back();
+		}
+
+		using ResolvedIdentifier = bloop::resolver::internal::ResolvedIdentifier;
+
+		bloop::BloopString m_sName;
+		bloop::BloopBool m_bIsConst{};
+		std::unique_ptr<Expression> m_pIterable;
+		ResolvedIdentifier m_oElement{};
+	};
+
 	struct ReturnStatement : ExpressionStatement {
 		[[nodiscard]] constexpr bool IsReturn() const noexcept override { return true; }
 
@@ -180,8 +255,10 @@ namespace bloop::ast {
 
 		void Resolve(TResolver& resolver) override {
 
-			//if (resolver.m_oFunctions.empty())
-			//	throw bloop::exception::ResolverError(BLOOPTEXT("don't return in the global scope"), m_oApproximatePosition);
+			// all modules run as one piece of code, so returning from the top level of an imported
+			// module would end the whole program
+			if (resolver.m_oFunctions.empty() && resolver.m_bInImportedModule)
+				throw bloop::exception::ResolverError(BLOOPTEXT("an imported module can't return from its global scope"), m_oApproximatePosition);
 
 			if (m_pExpression)
 				ExpressionStatement::Resolve(resolver);

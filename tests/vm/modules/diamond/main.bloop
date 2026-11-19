@@ -1,0 +1,7 @@
+import left from "left.bloop";
+import right from "right.bloop";
+import log from "log.bloop";
+import runs from "shared.bloop";
+
+std.array.push(log, "main");
+return [std.array.join(log, ","), left, right, runs];

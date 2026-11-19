@@ -15,11 +15,11 @@ namespace bloop::vm
 	struct MajorSpace {
 		BLOOP_NONCOPYABLE(MajorSpace);
 
-		explicit MajorSpace(bloop::BloopUInt initialChunkSize);
+		explicit MajorSpace(bloop::BloopSize initialChunkSize);
 		~MajorSpace();
 
 		// never triggers a collection: if no free block fits, the heap grows
-		[[nodiscard]] GCHeader* Alloc(bloop::BloopUInt payloadSize);
+		[[nodiscard]] GCHeader* Alloc(bloop::BloopSize payloadSize);
 
 		// frees every unmarked block, clears the marks of the survivors and rebuilds the free list
 		void Sweep();
@@ -27,9 +27,9 @@ namespace bloop::vm
 		[[nodiscard]] bool Contains(const void* p) const noexcept;
 
 		// bytes held by live (or not yet swept) blocks, headers included
-		[[nodiscard]] inline bloop::BloopUInt AllocatedBytes() const noexcept { return m_uAllocatedBytes; }
-		[[nodiscard]] inline bloop::BloopUInt HeapBytes() const noexcept { return m_uHeapBytes; }
-		[[nodiscard]] inline bloop::BloopUInt ChunkCount() const noexcept { return m_oChunks.size(); }
+		[[nodiscard]] inline bloop::BloopSize AllocatedBytes() const noexcept { return m_uAllocatedBytes; }
+		[[nodiscard]] inline bloop::BloopSize HeapBytes() const noexcept { return m_uHeapBytes; }
+		[[nodiscard]] inline bloop::BloopSize ChunkCount() const noexcept { return m_oChunks.size(); }
 
 		// walks every chunk and checks the block layout invariants (debugging / tests)
 		[[nodiscard]] bool Verify() const;
@@ -37,19 +37,19 @@ namespace bloop::vm
 	private:
 		struct Chunk {
 			bloop::BloopByte* begin{};
-			bloop::BloopUInt size{};
+			bloop::BloopSize size{};
 		};
 
-		[[nodiscard]] GCHeader* TakeFromFreeList(bloop::BloopUInt payloadSize);
-		void Grow(bloop::BloopUInt minBlockSize);
-		void PushFree(GCHeader* block, bloop::BloopUInt totalSize);
+		[[nodiscard]] GCHeader* TakeFromFreeList(bloop::BloopSize payloadSize);
+		void Grow(bloop::BloopSize minBlockSize);
+		void PushFree(GCHeader* block, bloop::BloopSize totalSize);
 
 		std::vector<Chunk> m_oChunks;
 		GCHeader* m_pFreeList{};
 
-		bloop::BloopUInt m_uNextChunkSize{};
-		bloop::BloopUInt m_uHeapBytes{};
-		bloop::BloopUInt m_uAllocatedBytes{};
+		bloop::BloopSize m_uNextChunkSize{};
+		bloop::BloopSize m_uHeapBytes{};
+		bloop::BloopSize m_uAllocatedBytes{};
 	};
 
 }

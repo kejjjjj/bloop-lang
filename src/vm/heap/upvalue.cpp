@@ -5,6 +5,7 @@
 #include <new>
 #include <cstdio>
 #include <cstdlib>
+#include <limits>
 
 using namespace bloop::vm;
 

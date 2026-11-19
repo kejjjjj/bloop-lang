@@ -1,4 +1,5 @@
 #include "ast/ast.hpp"
+#include "ast/module.hpp"
 #include "defs.hpp"
 #include "lexer/lexer.hpp"
 #include "lexer/token.hpp"
@@ -17,6 +18,7 @@
 #include "parser/control/exception/throw.hpp"
 
 #include "utils/defs.hpp"
+#include "utils/fmt.hpp"
 
 #include <memory>
 
@@ -54,10 +56,28 @@ std::unique_ptr<bloop::ast::Program> CLexParserInternal::Parse(metadata::Metadat
 		.m_refMetadata = metadata
 	};
 
+	// imports have to come before everything else, so it's obvious what a file depends on
+	bool importsAllowed = true;
+
 	while (!IsEndOfBuffer()) {
 
-		if (ParseToken(ctx) != bloop::EStatus::success)
-			break;
+		const auto type = GetIteratorSafe()->Type();
+
+		if (type == ETokenType::tt_import) {
+			if (!importsAllowed)
+				throw exception::ParserError(BLOOPTEXT("imports must come before everything else in the file"), GetIteratorSafe()->GetCodePosition());
+
+			program->AddStatement(ParseImport());
+		} else {
+			importsAllowed = false;
+
+			if (type == ETokenType::tt_export) {
+				if (ParseExport(ctx) != bloop::EStatus::success)
+					break;
+			} else if (ParseToken(ctx) != bloop::EStatus::success) {
+				break;
+			}
+		}
 
 		if (IsEndOfBuffer())
 			break;
@@ -66,6 +86,78 @@ std::unique_ptr<bloop::ast::Program> CLexParserInternal::Parse(metadata::Metadat
 	}
 
 	return program;
+}
+
+std::unique_ptr<bloop::ast::Statement> CLexParserInternal::ParseImport() {
+
+	// import name [, name]... from "path";
+	auto statement = std::make_unique<ast::ImportStatement>(GetIteratorSafe()->GetCodePosition());
+	Advance(1); // skip import
+
+	const auto Expect = [this](bool ok, const bloop::BloopString& what) {
+		if (IsEndOfBuffer())
+			throw exception::ParserError(bloop::fmt::format(BLOOPTEXT("expected {} but reached the end of the file"), what), GetIteratorSafe()->GetCodePosition());
+		if (!ok)
+			throw exception::ParserError(bloop::fmt::format(BLOOPTEXT("expected {} instead of \"{}\""), what, GetIteratorSafe()->Source()), GetIteratorSafe()->GetCodePosition());
+	};
+
+	while (true) {
+		Expect(!IsEndOfBuffer() && GetIteratorSafe()->Type() == ETokenType::tt_name, BLOOPTEXT("a name to import"));
+		statement->m_oNames.push_back({ GetIteratorSafe()->Source(), GetIteratorSafe()->GetCodePosition() });
+		Advance(1);
+
+		Expect(!IsEndOfBuffer() && (GetIteratorSafe()->IsOperator(EPunctuation::p_comma) || GetIteratorSafe()->Type() == ETokenType::tt_name), 
+			BLOOPTEXT("\",\" or \"from\""));
+
+		if (GetIteratorSafe()->IsOperator(EPunctuation::p_comma)) {
+			Advance(1);
+			continue;
+		}
+		break;
+	}
+
+	// "from" isn't a keyword, so that it still works as a name elsewhere (std.string.from)
+	Expect(GetIteratorSafe()->Source() == BLOOPTEXT("from"), BLOOPTEXT("\"from\""));
+	Advance(1);
+
+	Expect(!IsEndOfBuffer() && GetIteratorSafe()->Type() == ETokenType::tt_string, BLOOPTEXT("the path of the module as a string"));
+	statement->m_sPath = GetIteratorSafe()->Source();
+	if (statement->m_sPath.empty())
+		throw exception::ParserError(BLOOPTEXT("the path of the module is empty"), GetIteratorSafe()->GetCodePosition());
+	Advance(1);
+
+	Expect(!IsEndOfBuffer() && GetIteratorSafe()->IsOperator(EPunctuation::p_semicolon), BLOOPTEXT("\";\""));
+	return statement;
+}
+
+bloop::EStatus CLexParserInternal::ParseExport(const CParserContext& ctx) {
+
+	// export let/const/fn ...
+	const auto position = GetIteratorSafe()->GetCodePosition();
+	Advance(1); // skip export
+
+	if (IsEndOfBuffer())
+		throw exception::ParserError(BLOOPTEXT("expected a declaration after \"export\""), position);
+
+	const auto type = GetIteratorSafe()->Type();
+	if (type != ETokenType::tt_let && type != ETokenType::tt_const && type != ETokenType::tt_fn)
+		throw exception::ParserError(BLOOPTEXT("only \"let\", \"const\" and \"fn\" declarations can be exported"), GetIteratorSafe()->GetCodePosition());
+
+	[[maybe_unused]] const auto count = ctx.m_pCurrentBlock->m_oStatements.size();
+	const auto status = ParseToken(ctx);
+
+	if (status == bloop::EStatus::success) {
+		assert(ctx.m_pCurrentBlock->m_oStatements.size() == count + 1u);
+		auto& declaration = ctx.m_pCurrentBlock->m_oStatements.back();
+
+		// "fn" without a name is a lambda expression, not a declaration
+		if (!declaration->GetDeclaredName())
+			throw exception::ParserError(BLOOPTEXT("expected a declaration after \"export\""), position);
+
+		declaration->m_bExported = true;
+	}
+
+	return status;
 }
 
 template<typename Parser>
@@ -126,6 +218,10 @@ bloop::EStatus bloop::parser::ParseToken(const CParserContext& ctx) {
 		return CreateParser<CParserTryCatchStatement>(ctx);
 	case ETokenType::tt_throw:
 		return CreateParser<CParserThrowStatement>(ctx);
+	case ETokenType::tt_import:
+		throw exception::ParserError(BLOOPTEXT("imports are only allowed at the top of the file"), ctx.GetIterator()->GetCodePosition());
+	case ETokenType::tt_export:
+		throw exception::ParserError(BLOOPTEXT("only declarations in the global scope can be exported"), ctx.GetIterator()->GetCodePosition());
 	default:
 		throw exception::ParserError(BLOOPTEXT("unexpected token: ") + ctx.GetIterator()->Source(), ctx.GetIterator()->GetCodePosition());
 	}

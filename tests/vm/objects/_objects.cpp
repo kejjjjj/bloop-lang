@@ -9,8 +9,11 @@ TEST_CASE("objects | growing an empty object to 20 properties") {
     bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "grow_from_empty"), Value::Type::t_int, std::array{ 100, 2, 7, 13, 19, 2000 });
 }
 TEST_CASE("objects | a missing property on a full object is an error, not a hang") {
-    // runtime errors make Run() return undefined
-    bloop::test::CheckConstant(MAKE_RELATIVE_PATH(PREFIX, "missing_property_on_full_object"), Value::Type::t_undefined, bloop::test::emptyStruct);
+    // the error is expected: the lookup used to loop forever
+    const auto ret = bloop::test::TEST_ExecuteFile(MAKE_RELATIVE_PATH(PREFIX, "missing_property_on_full_object"));
+    REQUIRE(ret.has_value());
+    REQUIRE(ret->type == Value::Type::t_undefined); // runtime errors make Run() return undefined
+    REQUIRE(bloop::test::TEST_LastOutput().find("unknown property \"missing\"") != std::string::npos);
 }
 TEST_CASE("objects | references see the properties added by growing") {
     const auto ret = bloop::test::TEST_ExecuteFile(MAKE_RELATIVE_PATH(PREFIX, "shared_after_growth"));

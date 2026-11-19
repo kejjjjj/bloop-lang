@@ -1,0 +1,7 @@
+export let count = 0;
+export const items = [];
+
+export fn increment() {
+	count = count + 1;
+	std.array.push(items, count);
+}

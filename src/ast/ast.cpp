@@ -13,7 +13,7 @@ void BlockStatement::ResolveStatements(TResolver& resolver) {
 			const auto asFunc = dynamic_cast<FunctionDeclarationStatement*>(s.get());
 
 			if (resolver.ResolveSymbol(asFunc->m_sName)) {
-				throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + asFunc->m_sName, asFunc->m_oApproximatePosition);
+				throw bloop::exception::ResolverError(bloop::fmt::format(BLOOPTEXT("identifier \"{}\" already declared"), asFunc->m_sName), asFunc->m_oApproximatePosition);
 			}
 
 			resolver.DeclareSymbol(asFunc->m_sName, true, true);

@@ -8,6 +8,8 @@
 #include <iostream>
 #include <ranges>
 #include <algorithm>
+#include <type_traits>
+#include <iterator>
 
 using namespace bloop::bytecode;
 

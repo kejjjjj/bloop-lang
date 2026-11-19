@@ -11,8 +11,9 @@ namespace bloop::vm {
 
 namespace bloop::standard {
 	// creates the field's value and assigns it to the (rooted) receiver object
-	void AssignField(bloop::vm::Heap& heap, const NativeField& field, const bloop::vm::Local& receiver);
+	// (fields that the environment doesn't allow are skipped)
+	void AssignField(bloop::vm::Heap& heap, const NativeField& field, const bloop::vm::Local& receiver, const Environment& environment);
 
-	[[nodiscard]] bloop::vm::Object* FromDefinitionToObject(bloop::vm::Heap& heap, const NativeDef& def);
+	[[nodiscard]] bloop::vm::Object* FromDefinitionToObject(bloop::vm::Heap& heap, const NativeDef& def, const Environment& environment);
 
 }

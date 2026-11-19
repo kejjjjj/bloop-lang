@@ -3,6 +3,9 @@
 
 #include <cassert>
 #include <unordered_map>
+#include <utility>
+#include <iterator>
+#include <cctype>
 
 constexpr bool IsDigit(bloop::BloopChar c) noexcept
 {
@@ -35,7 +38,9 @@ CLexer::CLexer(bloop::BloopStringView buffer, bloop::metadata::Metadata& metadat
 	m_oScriptEnd = m_sSource.end();
 	m_oLineStart = m_oScriptPos;
 
-	m_oParserPosition = std::make_tuple(size_t(1), size_t(1));
+	// when a program has several files, they all share one line map,
+	// so the lines of this file continue from where the previous file ended
+	m_oParserPosition = std::make_tuple(m_refMetadata.m_oLineMap.size() + 1u, size_t(1));
 
 	assert(m_oScriptPos != m_oScriptEnd);
 

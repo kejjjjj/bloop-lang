@@ -4,13 +4,18 @@
 #include "parser/expression/expression_context.hpp"
 
 #include <optional>
+#include <memory>
+#include <utility>
 
 namespace bloop::parser {
 	struct CParserContext;
 	struct CExpressionChain;
 
 	struct COperator {
-		const bloop::CPunctuationToken* m_pToken;
+		~COperator(); // (where Expression is complete)
+
+		const bloop::CPunctuationToken* m_pToken{};
+		UniqueExpression m_pThen; // the middle of condition ? then : otherwise
 	};
 
 	class COperatorParser final : public CParserSingle<CPunctuationToken> {
@@ -20,6 +25,7 @@ namespace bloop::parser {
 
 		[[nodiscard]] bloop::EStatus Parse(std::optional<PairMatcher>& eoe, CExpressionChain* expression, EEvaluationType evalType);
 		[[nodiscard]] auto GetToken() const { return m_pToken; }
+		[[nodiscard]] UniqueExpression TakeThen() noexcept { return std::move(m_pThen); }
 
 		// a comma operator was consumed and another element of the sequence follows
 		[[nodiscard]] bool SequenceFollows() const noexcept { return m_bSequenceFollows; }
@@ -29,7 +35,11 @@ namespace bloop::parser {
 		[[nodiscard]] bool IsOperator(const CPunctuationToken* token) const noexcept;
 		[[nodiscard]] bool EndOfExpression(const std::optional<PairMatcher>& eoe) const noexcept;
 
+		[[nodiscard]] UniqueExpression ParseThen();
+
 		bool m_bSequenceFollows{};
+		UniqueExpression m_pThen;
+		const CParserContext& m_oCtx;
 	};
 
 }

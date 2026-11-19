@@ -37,6 +37,10 @@ namespace bloop::vm::detail
 
 		switch (obj->type) {
 		case Object::Type::ot_array:
+			// first, so that the values get visited at their new location
+			if (!obj->ArrayHasInlineValues())
+				onBuffer(obj->array.values);
+
 			for (bloop::BloopInt i = 0; i < obj->array.count; i++)
 				visit(obj->array.values[i]);
 			break;

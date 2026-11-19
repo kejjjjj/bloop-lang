@@ -1,0 +1,5 @@
+import runs from "shared.bloop";
+import log from "log.bloop";
+std.array.push(log, "right");
+
+export const right = runs;

@@ -1,0 +1,24 @@
+// formatting helpers for the table output
+
+// spaces that make `text` `width` characters wide
+fn padding(text, width) {
+	const missing = width - std.length(text);
+	return missing > 0 ? std.string.clone(" ", missing) : "";
+}
+
+export fn pad_right(value, width) {
+	const text = std.string.from(value);
+	return text + padding(text, width);
+}
+
+export fn pad_left(value, width) {
+	const text = std.string.from(value);
+	return padding(text, width) + text;
+}
+
+// cuts long text and adds "..."
+export fn shorten(text, width) {
+	if (std.length(text) <= width)
+		return text;
+	return std.string.substring(text, 0, width - 3) + "...";
+}

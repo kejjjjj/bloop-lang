@@ -16,7 +16,7 @@ namespace {
 	}
 	void RequireString(const Value& v, const bloop::BloopString& expected) {
 		REQUIRE(v.IsString());
-		REQUIRE(bloop::BloopString(v.obj->string.data, v.obj->string.len) == expected);
+		REQUIRE(bloop::BloopString(v.obj->string.data, static_cast<std::size_t>(v.obj->string.len)) == expected);
 	}
 	Value Run(const bloop::BloopString& name) {
 		auto ret = bloop::test::TEST_ExecuteFile(bloop::BloopString(BLOOPTEXT(PREFIX)) + BLOOP_DIRECTORY_SEPARATOR + name + BLOOPTEXT(".bloop"));
@@ -74,7 +74,7 @@ TEST_CASE("gc | large arrays with young elements") {
 	auto& heap = vm->GetHeap();
 
 	// big enough to be allocated straight into the old generation
-	constexpr bloop::BloopIndex count = 10000;
+	constexpr bloop::BloopIndex count = 12000; // (Value is only 12 bytes on some 32-bit ABIs)
 	static_assert(sizeof(Object) + sizeof(Value) * count > LARGE_OBJECT_SIZE);
 
 	gc.PushTempRoot(heap.AllocArray(count));

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/defs.hpp"
+#include "std/environment.hpp"
 
 #include <vector>
 #include <variant>
@@ -56,12 +57,14 @@ namespace bloop::standard {
 			: m_sName(name), m_eType(NativeObjectPropertyType::method), m_oData(fn) {}
 		NativeField(const bloop::BloopString& name, ConstantData constant)
 			: m_sName(name), m_eType(NativeObjectPropertyType::property), m_oData(constant) {}
-		NativeField(const bloop::BloopString& name, const NativeDef& def)
-			: m_sName(name), m_eType(NativeObjectPropertyType::native_object), m_oData(def) {}
+		NativeField(const bloop::BloopString& name, const NativeDef& def, Permission permission = Permission::none)
+			: m_sName(name), m_eType(NativeObjectPropertyType::native_object), m_oData(def), m_ePermission(permission) {}
 
 		bloop::BloopString m_sName;
 		NativeObjectPropertyType m_eType{ NativeObjectPropertyType::method };
 		std::variant<NativeFunction, bloop::ConstantData, NativeDef> m_oData;
+		// the field only exists when the VM's environment allows this
+		Permission m_ePermission{ Permission::none };
 	};
 
 	// encodes a native constant the same way the parser encodes literals

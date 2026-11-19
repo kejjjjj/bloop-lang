@@ -4,6 +4,7 @@
 #include "parser/operand/operand.hpp"
 #include "parser/parser.hpp"
 #include "parser/expression/operator.hpp"
+#include "ast/ast.hpp"
 
 #include <cassert>
 
@@ -41,7 +42,9 @@ bloop::EStatus CParserSubExpression::Parse(std::optional<PairMatcher>& eoe, CExp
 		return EStatus::failure;
 	}
 
-	m_oOperator = std::make_unique<COperator>(COperator{ .m_pToken = p.GetToken() });
+	m_oOperator = std::make_unique<COperator>();
+	m_oOperator->m_pToken = p.GetToken();
+	m_oOperator->m_pThen = p.TakeThen();
 	return EStatus::success;
 }
 

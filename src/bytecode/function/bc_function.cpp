@@ -17,9 +17,8 @@ void CByteCodeFunction::Generate(bloop::metadata::Metadata& metadata) {
 	m_pFunc->m_pBody->EmitByteCode(b);
 	b.EnsureReturn(m_pFunc);
 
-	#ifndef BLOOP_TEST
+	if (metadata.m_bDebugOutput)
 		m_pFunc->PrintInstructions(b);
-	#endif
 	
 	bloop::bc::Function f;
 	f.m_oCaptures = {};

@@ -3,22 +3,51 @@
 #include "vm/vm.hpp"
 #include "tests/catch_amalgamated.hpp"
 #include "utils/hash.hpp"
+#include "module/module.hpp"
 
 #include <optional>
 #include <ranges>
+#include <array>
+#include <type_traits>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 //saves so much typing
 using namespace bloop::vm;
 
 
 namespace bloop::test {
+
+	// redirects std::cout while it exists (restored even when a REQUIRE fails and unwinds)
+	class CoutCapture {
+	public:
+		CoutCapture() : m_pOld(std::cout.rdbuf(m_oStream.rdbuf())) {}
+		~CoutCapture() { std::cout.rdbuf(m_pOld); }
+		CoutCapture(const CoutCapture&) = delete;
+		CoutCapture& operator=(const CoutCapture&) = delete;
+
+		[[nodiscard]] std::string Str() const { return m_oStream.str(); }
+	private:
+		std::ostringstream m_oStream;
+		std::streambuf* m_pOld;
+	};
 	[[maybe_unused]] struct {} emptyStruct;
 
-	[[nodiscard]] std::optional<Value> TEST_ExecuteFile(const bloop::BloopString& relative_path);
-	[[nodiscard]] std::optional<Value> TEST_ExecuteBuffer(bloop::BloopStringView buffer);
+	// scripts get everything in the standard library unless the test passes another environment
+	[[nodiscard]] std::optional<Value> TEST_ExecuteFile(const bloop::BloopString& relative_path,
+		const bloop::standard::Environment& environment = bloop::standard::Environment::Unrestricted());
+	[[nodiscard]] std::optional<Value> TEST_ExecuteBuffer(bloop::BloopStringView buffer,
+		const bloop::standard::Environment& environment = bloop::standard::Environment::Unrestricted());
 
 	// lexes, parses, resolves and compiles a script without running it. Errors are thrown (not reported as failures)
-	void TEST_CompileFile(const bloop::BloopString& relative_path);
+	void TEST_CompileFile(const bloop::BloopString& relative_path, const bloop::module::CompileOptions& options = {});
+	// the same for a script that isn't in a file (its imports are relative to tests/vm)
+	void TEST_CompileBuffer(bloop::BloopStringView buffer);
+
+	// what the last executed script printed (std.console.log output, runtime errors).
+	// Scripts don't print into the test log, the Check* helpers attach this to failures instead
+	[[nodiscard]] const std::string& TEST_LastOutput();
 
 	// the VM that executed the last script (kept alive so that the returned value stays valid)
 	[[nodiscard]] bloop::vm::VM* TEST_GetLastVM();
@@ -64,6 +93,7 @@ namespace bloop::test {
 	void CheckConstant(const bloop::BloopString& filename, Value::Type expectedType, T expectedValue) {
 
 		if (const auto ret = bloop::test::TEST_ExecuteFile(filename)) {
+			INFO("script output: " << bloop::test::TEST_LastOutput());
 			AssertValue(*ret, ExpectedValue<T>{ expectedType, expectedValue });
 			return;
 		}
@@ -74,6 +104,7 @@ namespace bloop::test {
 	template<typename T, std::size_t size>
 	void CheckArray(const bloop::BloopString& filename, Value::Type expectedType, const std::array<T, size>& vals){
 		if (const auto ret = bloop::test::TEST_ExecuteFile(filename)) {
+			INFO("script output: " << bloop::test::TEST_LastOutput());
 			
 			REQUIRE(ret->type == Value::Type::t_object);
 			REQUIRE(ret->obj->type == Object::Type::ot_array);
@@ -91,6 +122,7 @@ namespace bloop::test {
 	template<typename T, std::size_t size>
 	void CheckObject(const bloop::BloopString& filename, Value::Type expectedType, const std::array<std::pair<bloop::BloopString, T>, size>& vals){
 		if (const auto ret = bloop::test::TEST_ExecuteFile(filename)) {
+			INFO("script output: " << bloop::test::TEST_LastOutput());
 			
 			REQUIRE(ret->type == Value::Type::t_object);
 			REQUIRE(ret->obj->type == Object::Type::ot_object);

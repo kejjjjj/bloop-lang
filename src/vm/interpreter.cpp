@@ -55,11 +55,11 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			const auto numInitializers = FetchOperand();
 			auto obj = m_oHeap.AllocObject(numInitializers);
 
-			for ([[maybe_unused]] const auto i : std::views::iota(0u, numInitializers)) {
-				auto v = Pop();
-				auto k = Pop();
-				obj->ObjectSet(k, v);
-			}
+			// insert in source order, so that the keys keep the order they were written in
+			const auto base = m_oStack.size() - 2u * numInitializers;
+			for (const auto i : std::views::iota(0u, static_cast<bloop::BloopSize>(numInitializers)))
+				obj->ObjectSet(m_oStack[base + 2u * i], m_oStack[base + 2u * i + 1u]);
+			m_oStack.resize(base);
 
 			m_oGC.WriteBarrierAll(obj);
 			Push(obj);
@@ -274,6 +274,45 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			if(wasEmpty) // we are in a different frame, so exit it
 				return ExecutionReturnCode::rc_throw;
 			break;
+		} case TOpCode::ITER_PREPARE: {
+			assert(!m_oStack.empty());
+			const auto& iterable = m_oStack.back();
+
+			if (!iterable.IsArray() && !iterable.IsString())
+				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not iterable"), iterable.TypeToString()));
+
+			Push(Value{ bloop::BloopInt{ 0 } });
+			break;
+		} case TOpCode::ITER_NEXT: {
+			const auto target = FetchOperand();
+			assert(m_oStack.size() >= 2u);
+
+			const auto index = m_oStack[m_oStack.size() - 1u].i;
+			const auto* iterable = m_oStack[m_oStack.size() - 2u].obj;
+
+			// the length is read on every iteration (like js)
+			const auto length = iterable->IsArray() ? iterable->array.count : iterable->string.len;
+
+			if (index >= length) {
+				m_pCurrentFrame->m_pIp = m_pCurrentFrame->m_pIpBase + target;
+				break;
+			}
+
+			m_oStack[m_oStack.size() - 1u].i++;
+
+			if (iterable->IsArray()) {
+				Push(iterable->array.values[index]);
+			} else {
+				const auto c = iterable->string.data[index];
+				Push(m_oHeap.AllocString(&c, sizeof(c))); // may move the iterable, which is fine: it's on the stack
+			}
+			break;
+		} case TOpCode::CLOSE_UPVALUES: {
+			// gives closures created in a loop body their own copy of the loop's variables
+			const auto slot = m_pCurrentFrame->m_uBase + FetchOperand();
+			assert(slot < m_oStack.size());
+			m_oGC.CloseUpValues(&m_oStack[slot]);
+			break;
 		} case TOpCode::DUP: {
 			assert(!m_oStack.empty());
 			Push(m_oStack.back());
@@ -285,6 +324,10 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 		} case TOpCode::DECR: {
 			Value index = Pop();
 			Push(--index);
+			break;
+		} case TOpCode::NOT: {
+			const Value value = Pop();
+			Push(Value{ static_cast<bloop::BloopBool>(!value.IsTruthy()) });
 			break;
 		} case TOpCode::NEG: {
 			Value index = Pop();

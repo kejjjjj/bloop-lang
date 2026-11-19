@@ -6,11 +6,8 @@
 
 namespace {
 	std::pair<std::optional<Value>, std::string> RunCaptured(const std::string& src) {
-		std::ostringstream captured;
-		auto* old = std::cout.rdbuf(captured.rdbuf());
-		auto ret = bloop::test::TEST_ExecuteBuffer(src);
-		std::cout.rdbuf(old);
-		return { ret, captured.str() };
+		const auto ret = bloop::test::TEST_ExecuteBuffer(src);
+		return { ret, bloop::test::TEST_LastOutput() };
 	}
 }
 

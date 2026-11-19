@@ -59,6 +59,12 @@ namespace bloop::ast {
 		[[nodiscard]] virtual constexpr bool IsFunction() const noexcept { return false; }
 		[[nodiscard]] virtual constexpr bool IsReturn() const noexcept { return false; }
 		[[nodiscard]] virtual constexpr bool IsDeclaration() const noexcept { return false; }
+
+		// the name this statement declares in its scope (let, const, fn), if any
+		[[nodiscard]] virtual const bloop::BloopString* GetDeclaredName() const noexcept { return nullptr; }
+
+		// "export" in front of a global declaration
+		bloop::BloopBool m_bExported{};
 	};
 
 	struct BlockStatement : Statement {
@@ -241,6 +247,38 @@ namespace bloop::ast {
 	private:
 		void Store(TBCBuilder& builder, bool want_value);
 	};
+	// condition ? then : otherwise (left is the condition, right is the otherwise branch).
+	// only the branch that's picked is evaluated
+	struct ConditionalExpression : BinaryExpression {
+		ConditionalExpression(const bloop::CodePosition& cp)
+			: BinaryExpression(bloop::EPunctuation::p_question_mark, cp) {}
+
+		void Resolve(TResolver& resolver) override {
+			left->Resolve(resolver);
+			m_pThen->Resolve(resolver);
+			right->Resolve(resolver);
+		}
+		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+			left->EmitByteCode(builder, true);
+			const auto toOtherwise = EmitJump(builder, TOpCode::JZ);
+
+			m_pThen->EmitByteCode(builder, true);
+			const auto toEnd = EmitJump(builder, TOpCode::JMP);
+
+			PatchJump(builder, toOtherwise, builder.m_uOffset);
+			right->EmitByteCode(builder, true);
+
+			PatchJump(builder, toEnd, builder.m_uOffset);
+
+			// one POP after both branches (instead of one in each): loop and if conditions are emitted
+			// as statements and then their last instruction (the POP) is removed
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
+		}
+
+		std::unique_ptr<Expression> m_pThen;
+	};
+
 	struct FunctionExpression : Expression {
 
 		FunctionExpression(std::unique_ptr<FunctionDeclarationStatement>&& funcDecl, const bloop::CodePosition& cp);
@@ -312,6 +350,8 @@ namespace bloop::ast {
 	struct VariableDeclaration : Statement {
 		VariableDeclaration(const bloop::BloopString& name, std::unique_ptr<ExpressionStatement>&& init, const bloop::CodePosition& cp)
 			: Statement(cp), m_sName(name), m_pExpression(std::forward<decltype(init)>(init)) {}
+
+		[[nodiscard]] const bloop::BloopString* GetDeclaredName() const noexcept override { return &m_sName; }
 
 		void Resolve(TResolver& resolver) override {
 			if (resolver.ResolveSymbol(m_sName)) {

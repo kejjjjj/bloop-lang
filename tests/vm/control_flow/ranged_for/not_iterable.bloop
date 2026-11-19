@@ -1,0 +1,4 @@
+for (const x : 5) {
+    let y = x;
+}
+return 1;

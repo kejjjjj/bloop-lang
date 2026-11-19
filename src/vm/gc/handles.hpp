@@ -35,10 +35,10 @@ namespace bloop::vm
 		}
 
 	private:
-		Local(GC& gc, bloop::BloopUInt index, const Value& value) noexcept : m_pGC(&gc), m_uIndex(index) { Set(value); }
+		Local(GC& gc, bloop::BloopSize index, const Value& value) noexcept : m_pGC(&gc), m_uIndex(index) { Set(value); }
 
 		GC* m_pGC;
-		bloop::BloopUInt m_uIndex;
+		bloop::BloopSize m_uIndex;
 		Value m_oPrimitive;
 		bloop::BloopBool m_bObject{};
 	};
@@ -70,6 +70,6 @@ namespace bloop::vm
 
 	private:
 		GC& m_refGC;
-		bloop::BloopUInt m_uBase;
+		bloop::BloopSize m_uBase;
 	};
 }

@@ -19,7 +19,8 @@
 //                        views of an argument of that type (see below)
 //   bloop::vm::Value     anything, unchecked
 //   std::variant<...>    any of the alternatives above, the first one that accepts the argument wins
-//   NativeArgs           optional, last: the remaining arguments (makes the native variadic)
+//   std::optional<T>     trailing optional parameters: std::nullopt when the argument is missing or undefined
+//   NativeArgs           optional, last: the remaining arguments (makes the native variadic, can't be mixed with optionals)
 //
 // Return types:
 //   void (-> undefined), Value, BloopBool, integers, floating point, Object*, strings (allocated as a bloop string),
@@ -177,6 +178,11 @@ namespace bloop::standard
 			}
 		};
 
+		template<typename T>
+		struct is_optional : std::false_type {};
+		template<typename T>
+		struct is_optional<std::optional<T>> : std::true_type {};
+
 		// splits a native's signature into [VM&] parameters... [NativeArgs]
 		template<typename F>
 		struct BindTraits;
@@ -204,6 +210,21 @@ namespace bloop::standard
 
 			template<std::size_t I>
 			using Param = At<first + I>;
+
+			// the number of parameters before the first std::optional
+			static constexpr std::size_t required = []<std::size_t... I>(std::index_sequence<I...>) {
+				constexpr bool optional[] = { false, is_optional<Param<I>>::value... }; // (+1 so that it's never empty)
+				std::size_t n = 0;
+				while (n < sizeof...(I) && !optional[n + 1u])
+					n++;
+				return n;
+			}(std::make_index_sequence<count>{});
+
+			static constexpr bool optionalsAreTrailing = []<std::size_t... I>(std::index_sequence<I...>) {
+				return ((I < required || is_optional<Param<I>>::value) && ...);
+			}(std::make_index_sequence<count>{});
+
+			static constexpr bool hasOptionals = required < count;
 		};
 		template<typename R, typename... A>
 		struct BindTraits<R(*)(A...) noexcept> : BindTraits<R(*)(A...)> {};
@@ -216,10 +237,28 @@ namespace bloop::standard
 			}
 		}
 
+		// a parameter: checks and converts args[index]
+		template<typename P>
+		struct ParamBinding {
+			static void Check(NativeArgs args, std::size_t index) { CheckArg<P>(args[index], index); }
+			static P Get(NativeArgs args, std::size_t index) { return ArgTraits<P>::From(args[index]); }
+		};
+		// an optional parameter: missing or undefined -> std::nullopt
 		template<typename T>
-		struct is_optional : std::false_type {};
-		template<typename T>
-		struct is_optional<std::optional<T>> : std::true_type {};
+		struct ParamBinding<std::optional<T>> {
+			static bool IsGiven(NativeArgs args, std::size_t index) noexcept {
+				return index < args.size() && args[index].type != Value::Type::t_undefined;
+			}
+			static void Check(NativeArgs args, std::size_t index) {
+				if (IsGiven(args, index))
+					CheckArg<T>(args[index], index);
+			}
+			static std::optional<T> Get(NativeArgs args, std::size_t index) {
+				if (!IsGiven(args, index))
+					return std::nullopt;
+				return ArgTraits<T>::From(args[index]);
+			}
+		};
 
 		template<typename R>
 		[[nodiscard]] Value ToValue([[maybe_unused]] bloop::vm::VM& vm, R&& result) {
@@ -256,17 +295,17 @@ namespace bloop::standard
 			using Traits = BindTraits<decltype(Fn)>;
 
 			// check everything first (left to right), so that the error always names the first bad argument
-			(CheckArg<typename Traits::template Param<I>>(args[I], I), ...);
+			(ParamBinding<typename Traits::template Param<I>>::Check(args, I), ...);
 
 			const auto call = [&]() -> decltype(auto) {
 				if constexpr (Traits::takesVM && Traits::variadic)
-					return Fn(vm, ArgTraits<typename Traits::template Param<I>>::From(args[I])..., args.subspan(Traits::count));
+					return Fn(vm, ParamBinding<typename Traits::template Param<I>>::Get(args, I)..., args.subspan(Traits::count));
 				else if constexpr (Traits::takesVM)
-					return Fn(vm, ArgTraits<typename Traits::template Param<I>>::From(args[I])...);
+					return Fn(vm, ParamBinding<typename Traits::template Param<I>>::Get(args, I)...);
 				else if constexpr (Traits::variadic)
-					return Fn(ArgTraits<typename Traits::template Param<I>>::From(args[I])..., args.subspan(Traits::count));
+					return Fn(ParamBinding<typename Traits::template Param<I>>::Get(args, I)..., args.subspan(Traits::count));
 				else
-					return Fn(ArgTraits<typename Traits::template Param<I>>::From(args[I])...);
+					return Fn(ParamBinding<typename Traits::template Param<I>>::Get(args, I)...);
 			};
 
 			if constexpr (std::is_void_v<typename Traits::Return>) {
@@ -286,6 +325,11 @@ namespace bloop::standard
 					throw bloop::exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected at least {}"),
 						args.size(), Traits::count));
 				}
+			} else if constexpr (Traits::hasOptionals) {
+				if (args.size() < Traits::required || args.size() > Traits::count) {
+					throw bloop::exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {} to {}"),
+						args.size(), Traits::required, Traits::count));
+				}
 			} else {
 				// the VM already checks the argument count of non-variadic natives
 				assert(args.size() == Traits::count);
@@ -300,9 +344,12 @@ namespace bloop::standard
 	[[nodiscard]] constexpr NativeFunction Bind() noexcept {
 		using Traits = detail::BindTraits<decltype(Fn)>;
 		static_assert(Traits::count < bloop::VARIADIC_PARAMETER_COUNT, "too many parameters");
+		static_assert(Traits::optionalsAreTrailing, "std::optional parameters must come last");
+		static_assert(!(Traits::variadic && Traits::hasOptionals), "a native can't have both std::optional parameters and NativeArgs");
 
+		// natives with optional parameters check their argument count themselves
 		return NativeFunction{
-			.m_uParamCount = Traits::variadic ? bloop::VARIADIC_PARAMETER_COUNT : static_cast<bloop::BloopIndex>(Traits::count),
+			.m_uParamCount = Traits::variadic || Traits::hasOptionals ? bloop::VARIADIC_PARAMETER_COUNT : static_cast<bloop::BloopIndex>(Traits::count),
 			.m_pFunction = &detail::Thunk<Fn>
 		};
 	}

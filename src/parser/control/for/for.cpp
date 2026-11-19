@@ -7,6 +7,8 @@
 #include "parser/scope/scope.hpp"
 #include "parser/control/for/for.hpp"
 
+#include <cassert>
+
 using namespace bloop::parser;
 
 CParserForStatement::CParserForStatement(const CParserContext& ctx)
@@ -23,6 +25,10 @@ bloop::EStatus CParserForStatement::Parse() {
 	Advance(1); // skip (
 	StartScope();
 
+	// for (const x : iterable)
+	if (IsRangedFor())
+		return ParseRangedFor();
+
 	if (ParseInitializer() != bloop::EStatus::success)
 		return bloop::EStatus::failure;
 
@@ -31,6 +37,51 @@ bloop::EStatus CParserForStatement::Parse() {
 
 	if (ParseEndExpression() != bloop::EStatus::success)
 		return bloop::EStatus::failure;
+
+	ParseScope();
+	return bloop::EStatus::success;
+}
+bool CParserForStatement::IsRangedFor() {
+
+	// let/const name :
+	if (IsEndOfBuffer() || !IsDeclaration(GetIteratorSafe()))
+		return false;
+
+	const auto* begin = GetIteratorSafe();
+	auto steps = 0;
+	auto result = false;
+
+	Advance(1);
+	steps++;
+	if (!IsEndOfBuffer() && GetIteratorSafe()->Type() == bloop::ETokenType::tt_name) {
+		Advance(1);
+		steps++;
+		result = !IsEndOfBuffer() && GetIteratorSafe()->IsOperator(bloop::EPunctuation::p_colon);
+	}
+
+	Advance(-steps);
+	assert(GetIteratorSafe() == begin);
+	(void)begin;
+	return result;
+}
+bloop::EStatus CParserForStatement::ParseRangedFor() {
+
+	m_bRanged = true;
+	m_bIsConst = GetIteratorSafe()->Type() == bloop::ETokenType::tt_const;
+	Advance(1); // skip let/const
+
+	m_pElementName = GetIteratorSafe();
+	Advance(2); // skip the name and :
+
+	if (IsEndOfBuffer() || GetIteratorSafe()->IsOperator(bloop::EPunctuation::p_par_close))
+		throw exception::ParserError(BLOOPTEXT("expected an expression after \":\""), GetIteratorSafe()->GetCodePosition());
+
+	// the iterable, up to the )
+	CParserExpression expr(m_oCtx);
+	if (expr.Parse(PairMatcher(bloop::EPunctuation::p_par_open)) != bloop::EStatus::success)
+		return bloop::EStatus::failure;
+
+	m_pIterable = expr.ToExpression();
 
 	ParseScope();
 	return bloop::EStatus::success;
@@ -104,6 +155,15 @@ bloop::EStatus CParserForStatement::ParseEndExpression() {
 	return bloop::EStatus::success;
 }
 UniqueStatement CParserForStatement::ToStatement() {
+
+	if (m_bRanged) {
+		auto&& ranged = std::make_unique<bloop::ast::RangedForStatement>(m_oDeclPos);
+		ranged->m_sName = m_pElementName->Source();
+		ranged->m_bIsConst = m_bIsConst;
+		ranged->m_pIterable = std::move(m_pIterable);
+		ranged->m_oStatements = std::move(m_pBody->m_oStatements);
+		return ranged;
+	}
 
 	auto&& ptr = std::make_unique<bloop::ast::ForStatement>(m_oDeclPos);
 	ptr->m_pInitializer = std::move(m_pInitializer);

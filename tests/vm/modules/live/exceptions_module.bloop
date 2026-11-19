@@ -1,0 +1,7 @@
+export fn fail(value) {
+	throw "failed with " + std.string.from(value);
+}
+export fn out_of_bounds() {
+	const arr = [1];
+	return arr[5];
+}
