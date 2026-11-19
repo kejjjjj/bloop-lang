@@ -1,0 +1,21 @@
+// an old object grows: the new entry buffer (and the values in it) are young
+let o = { a: 0 };
+std.gc_major(); // o is old now
+
+o.b = "b" + "1";
+o.c = ["c" + ""];
+o.d = 4;
+o.e = "e" + "!";  // grows past 75%
+std.gc_minor();
+
+o.f = 6;
+o.g = "g" + "?";  // grows again
+std.gc_minor();
+std.gc_minor();   // the buffer got promoted
+
+o.h = "h" + "#";  // young value stored into an old buffer of an old object
+std.gc_minor();
+std.gc_major();
+std.gc_minor();
+
+return [o.b, o.c[0], o.e, o.g, o.h];

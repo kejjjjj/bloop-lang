@@ -1,0 +1,8 @@
+import fail from "exceptions_module.bloop";
+
+try {
+	fail(7);
+} catch (e) {
+	return e;
+}
+return "not caught";

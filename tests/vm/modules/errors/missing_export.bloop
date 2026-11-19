@@ -1,0 +1,2 @@
+import value, missing from "../basic/my_module.bloop";
+return value;

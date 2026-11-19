@@ -1,0 +1,4 @@
+// integers are 64-bit on every platform (also 32-bit builds)
+let big = 2147483647;
+let wide = 5000000000;
+return [big + 1, wide * 2, -2147483648 - 1, 4294967296];

@@ -1,0 +1,3 @@
+import value from "../basic/my_module.bloop";
+const value = 5;
+return value;

@@ -13,7 +13,7 @@ void BlockStatement::ResolveStatements(TResolver& resolver) {
 			const auto asFunc = dynamic_cast<FunctionDeclarationStatement*>(s.get());
 
 			if (resolver.ResolveSymbol(asFunc->m_sName)) {
-				throw bloop::exception::ResolverError(BLOOPTEXT("already declared: ") + asFunc->m_sName, asFunc->m_oApproximatePosition);
+				throw bloop::exception::ResolverError(bloop::fmt::format(BLOOPTEXT("identifier \"{}\" already declared"), asFunc->m_sName), asFunc->m_oApproximatePosition);
 			}
 
 			resolver.DeclareSymbol(asFunc->m_sName, true, true);
@@ -67,15 +67,13 @@ void AssignExpression::Store(TBCBuilder& builder, bool want_value)
 		if (dynamic_cast<FunctionCall*>(left.get()))
 			throw exception::ResolverError(BLOOPTEXT("invalid lhs operand"), m_oApproximatePosition);
 
+		// SUBSCRIPT_SET / PROPERTY_SET leave the assigned value on the stack, which is the value
+		// of the expression: (arr[0] = 2) < 10. (Loading it again would evaluate arr and 0 twice)
 		if (auto pf = dynamic_cast<Subscript*>(left.get())) {
 			pf->EmitSet(builder, true);
-			if (want_value)
-				pf->EmitGet(builder, true); // (arr[0] = 2) < 10
 		}
 		else if (auto pa = dynamic_cast<PropertyAccess*>(left.get())) {
 			pa->EmitSet(builder, true);
-			if (want_value)
-				pa->EmitGet(builder, true); // (obj.prop = 2) < 10
 		}
 		else {
 			ptr->Store(builder, true);

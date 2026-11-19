@@ -1,0 +1,16 @@
+// a global declared after a block used to share its slot with a variable of that block
+for (let i = 0; i < 1; i++) {
+    let a = 1;
+}
+let ok = 5;
+for (let i = 0; i < 3; i++) {
+    let b = 1;
+}
+{
+    let inner = 7;
+}
+let other = 6;
+{
+    let inner = 8;
+}
+return [ok, other];

@@ -1,0 +1,14 @@
+let obj = { a: 0, b: 0 };
+std.gc_major();
+
+obj.a = "a" + "1";
+std.gc_minor();
+obj.b = ["b" + "2"];
+std.gc_minor();
+
+// overwrite a remembered slot with a non-object, then collect again
+obj.a = 5;
+std.gc_minor();
+std.gc_major();
+
+return [obj.a, obj.b[0]];

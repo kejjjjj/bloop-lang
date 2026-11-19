@@ -1,0 +1,2 @@
+import a from "return_module.bloop";
+return a;

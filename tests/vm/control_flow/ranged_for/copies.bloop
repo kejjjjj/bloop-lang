@@ -1,0 +1,11 @@
+// like js: the element is a copy of the value, assigning to it doesn't change the array.
+// Objects are still shared
+let numbers = [1, 2, 3];
+for (let n : numbers)
+    n = n * 100;
+
+let objects = [{ v: 1 }, { v: 2 }];
+for (const o : objects)
+    o.v = o.v * 10;
+
+return [numbers[0], numbers[2], objects[0].v, objects[1].v];

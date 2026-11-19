@@ -2,47 +2,55 @@
 
 #include "utils/defs.hpp"
 
-#include "vm/gc/gc.hpp"
+#include <new>
+#include <cassert>
 
 namespace bloop::vm
 {
-
+	// A fixed-size bump allocator.
+	// It never collects by itself: when it runs out of room TryAlloc returns nullptr
+	// and the owner (the GC) decides what to do (collect, tenure, grow...)
 	class Arena {
-
+		BLOOP_NONCOPYABLE(Arena);
 	public:
-		Arena(GC& gc, bloop::BloopUInt size) : m_oGC(gc) {
-			m_pBegin = reinterpret_cast<bloop::BloopByte*>(::operator new(size));
+		explicit Arena(bloop::BloopSize size) {
+			m_pBegin = static_cast<bloop::BloopByte*>(::operator new(size));
 			m_pEnd = m_pBegin + size;
 			m_pPtr = m_pBegin;
 		}
 		~Arena() { ::operator delete(m_pBegin); }
 
-		template<typename T>
-		inline T* Alloc(bloop::BloopUInt size, bloop::BloopUInt align = alignof(std::max_align_t)) {
+		[[nodiscard]] inline void* TryAlloc(bloop::BloopSize size, bloop::BloopSize align = alignof(std::max_align_t)) noexcept {
+			assert((align & (align - 1)) == 0 && "alignment must be a power of 2");
 
-			bloop::BloopUInt ptr = reinterpret_cast<bloop::BloopUInt>(m_pPtr);
-			const auto aligned = (ptr + (align - 1) & ~(align - 1));
-			const auto next = reinterpret_cast<bloop::BloopByte*>(aligned + size);
+			const auto ptr = reinterpret_cast<bloop::BloopSize>(m_pPtr);
+			const auto aligned = (ptr + (align - 1)) & ~(align - 1);
 
-			if (next > m_pEnd)
-				m_oGC.Collect();
+			// compare sizes rather than pointers so that we never form an out of bounds pointer
+			const auto end = reinterpret_cast<bloop::BloopSize>(m_pEnd);
+			if (aligned > end || size > end - aligned)
+				return nullptr;
 
-			m_pPtr = next;
-			return reinterpret_cast<T*>(aligned);
+			m_pPtr = reinterpret_cast<bloop::BloopByte*>(aligned + size);
+			return reinterpret_cast<void*>(aligned);
 		}
 
-		template<typename T>
-		inline T* Alloc() {
-			return Alloc<T*>(static_cast<bloop::BloopUInt>(sizeof(T)));
+		inline void Reset() noexcept { m_pPtr = m_pBegin; }
+
+		[[nodiscard]] inline bool Contains(const void* p) const noexcept {
+			const auto b = reinterpret_cast<const bloop::BloopByte*>(p);
+			return b >= m_pBegin && b < m_pEnd;
 		}
 
-		inline void Reset() { m_pPtr = m_pBegin; }
+		[[nodiscard]] inline bloop::BloopByte* Begin() const noexcept { return m_pBegin; }
+		[[nodiscard]] inline bloop::BloopByte* Top() const noexcept { return m_pPtr; }
+		[[nodiscard]] inline bloop::BloopSize Used() const noexcept { return static_cast<bloop::BloopSize>(m_pPtr - m_pBegin); }
+		[[nodiscard]] inline bloop::BloopSize Capacity() const noexcept { return static_cast<bloop::BloopSize>(m_pEnd - m_pBegin); }
 
 	private:
 		bloop::BloopByte* m_pBegin{};
 		bloop::BloopByte* m_pEnd{};
 		bloop::BloopByte* m_pPtr{};
-		GC& m_oGC;
 	};
 
 }

@@ -11,3 +11,6 @@ TEST_CASE("else if statement is true") {
 TEST_CASE("else statement is true") {
     bloop::test::CheckConstant(MAKE_RELATIVE_PATH(PREFIX, "else_statement"), Value::Type::t_bool, true);
 }
+TEST_CASE("a loop at the end of an if block doesn't fall through into the else block") {
+    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "loop_at_end_of_if"), Value::Type::t_int, std::array{ 3, 3 });
+}

@@ -1,0 +1,27 @@
+fn makeCounter() {
+    let count = 0;
+    let label = "c";
+    fn next() {
+        count = count + 1;
+        label = label + "c"; // a young string stored into a (soon closed) upvalue
+        return count;
+    }
+    fn read() {
+        return label;
+    }
+    return [next, read];
+}
+
+let c = makeCounter();
+std.gc_major(); // the closures and the closed upvalues are old now
+
+let next = c[0];
+let read = c[1];
+
+next();
+std.gc_minor();
+next();
+std.gc_minor();
+std.gc_minor();
+
+return [next(), read()];

@@ -6,6 +6,7 @@
 
 #include <unordered_map>
 #include <cassert>
+#include <cstring>
 
 using namespace bloop::vm;
 
@@ -22,19 +23,23 @@ Value::Value(bloop::ConstantData c) {
 		break;
 	case VT::t_boolean:
 		type = Type::t_bool;
+		assert(data.size() >= 1u && "boolean constant needs 1 byte");
 		b = static_cast<bloop::BloopBool>(data[0]);
 		break;
 	case VT::t_int:
 		type = Type::t_int;
-		i = *reinterpret_cast<bloop::BloopInt*>(const_cast<bloop::BloopChar*>(data.data()));
+		assert(data.size() == sizeof(bloop::BloopInt) && "malformed int constant");
+		std::memcpy(&i, data.data(), sizeof(bloop::BloopInt));
 		break;
 	case VT::t_uint:
 		type = Type::t_uint;
-		u = *reinterpret_cast<bloop::BloopUInt*>(const_cast<bloop::BloopChar*>(data.data()));
+		assert(data.size() == sizeof(bloop::BloopUInt) && "malformed uint constant");
+		std::memcpy(&u, data.data(), sizeof(bloop::BloopUInt));
 		break;
 	case VT::t_double:
 		type = Type::t_double;
-		d = *reinterpret_cast<bloop::BloopDouble*>(const_cast<bloop::BloopChar*>(data.data()));
+		assert(data.size() == sizeof(bloop::BloopDouble) && "malformed double constant");
+		std::memcpy(&d, data.data(), sizeof(bloop::BloopDouble));
 		break;
 	default:
 		assert(false);

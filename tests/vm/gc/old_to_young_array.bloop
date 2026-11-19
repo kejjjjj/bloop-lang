@@ -1,0 +1,13 @@
+// an old array gets young values stored into it: the write barrier has to remember it
+let holder = [0, 0, 0];
+std.gc_major(); // holder is now in the old generation
+
+holder[0] = [1, 2, 3];
+holder[1] = "young" + " string";
+holder[2] = { value: "nested" + "!" };
+
+std.gc_minor();
+std.gc_minor();
+std.gc_minor(); // the young values got promoted by now
+
+return [holder[0][2], holder[1], holder[2].value];

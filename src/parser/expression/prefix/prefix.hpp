@@ -4,6 +4,8 @@
 #include "parser/defs.hpp"
 #include "parser/operand/operand.hpp"
 
+#include <utility>
+
 namespace bloop::parser {
 	struct CParserContext;
 
@@ -12,6 +14,7 @@ namespace bloop::parser {
 		enum class Type {
 			o_error,
 			o_negation,
+			o_logical_not,
 			o_increment,
 			o_decrement
 		};
@@ -39,7 +42,6 @@ namespace bloop::parser {
 
 		[[nodiscard]] std::unique_ptr<IPrefix> ParseNegation();
 
-		const CParserContext& m_oCtx;
 		std::vector<std::unique_ptr<IPrefix>> m_oPrefixes;
 	};
 

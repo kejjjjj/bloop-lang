@@ -7,75 +7,16 @@
 #include <cassert>
 #include <ranges>
 #include <cstring>
+#include <algorithm>
 
 using namespace bloop::vm;
 using namespace std::string_literals;
 Object::Object(Function* function, UpValue** upVals, bloop::BloopUInt numVals) 
 	: type(Type::ot_closure), closure({ .function = function, .upvalues = upVals, .numValues= numVals }) {}
 
-Object::Object(Value* values, bloop::BloopInt ucount) : type(Type::ot_array), array({ .values = values, .count = ucount }) {}
+Object::Object(Value* values, bloop::BloopInt ucount) : type(Type::ot_array), array({ .values = values, .count = ucount, .capacity = ucount }) {}
 Object::Object(ObjectEntry* entries, bloop::BloopInt ucount, bloop::BloopInt capacity) 
-	: type(Type::ot_object), object({ .entries = entries, .count = ucount, .capacity = capacity }) {}
-
-void Object::Free()
-{
-	switch (type) {
-	case Type::ot_string:
-		assert(string.data != nullptr || (string.len == 0 && "String has null data but non-zero length"));
-		delete[] string.data;
-		string.data = nullptr;  // poison after free
-		string.len = 0;
-		break;
-
-	case Type::ot_array:
-		assert(array.values != nullptr || (array.count == 0 && "Array has null values but non-zero length"));
-		delete[] array.values;
-		array.values = nullptr;
-		array.count = 0;
-		break;
-
-	case Type::ot_object:
-		assert(object.entries != nullptr || object.count == 0 || (object.capacity == 0 && "Object has null entries but non-zero length"));
-		delete[] object.entries;
-		object.entries = nullptr;
-		object.count = 0;
-		object.capacity = 0;
-		break;
-
-	case Type::ot_nativefunction:
-	case Type::ot_function:
-		// just handles - no owned allocations
-		break;
-	case Type::ot_closure:
-		assert(closure.upvalues != nullptr || (closure.numValues == 0 && "Closure has null upvalues but numValues > 0"));
-		delete[] closure.upvalues;
-		closure.upvalues = nullptr;
-		closure.numValues = 0;
-		break;
-	default:
-		assert(false && "Unknown / unhandled object type during Free()");
-		break;
-	}
-}
-
-bloop::BloopUInt Object::GetExternalBytes() const
-{
-	switch (type) {
-	case Type::ot_string:
-		return string.len;
-	case Type::ot_array:
-		return sizeof(Value) * array.count;
-	case Type::ot_object:
-		return sizeof(*object.entries) * object.capacity;
-	case Type::ot_closure:
-		return sizeof(UpValue*) * closure.numValues;
-	case Type::ot_function:
-	case Type::ot_nativefunction:
-		return 0;   // no external heap data
-	default:
-		return 0;
-	}
-}
+	: type(Type::ot_object), object({ .entries = entries, .count = ucount, .capacity = capacity, .nextOrder = ucount }) {}
 
 bool Object::IsIndexable() const {
 	return type == Type::ot_array || type == Type::ot_object || type == Type::ot_string;
@@ -91,7 +32,7 @@ bool Object::IsEqual(Object* obj)
 			return false;
 		if (string.len != obj->string.len)
 			return false;
-		return !std::memcmp(string.data, obj->string.data, string.len);
+		return !std::memcmp(string.data, obj->string.data, static_cast<std::size_t>(string.len));
 	default:
 		return this == obj;
 	}
@@ -149,7 +90,7 @@ bloop::BloopString Object::ValueToString(bloop::BloopUInt objectIndent) const {
 bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object*>& seen, bloop::BloopUInt depth) const {
 	switch (type) {
 	case VT::ot_string:
-		return bloop::BloopString(string.data, string.len);
+		return bloop::BloopString(string.data, static_cast<std::size_t>(string.len));
 	case Type::ot_array: {
 
 		if (seen.contains(this))
@@ -175,15 +116,12 @@ bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object
 		if (seen.contains(this))
 			return BLOOPTEXT("...");
 
-		auto oldIndent = bloop::BloopString(depth, BLOOPTEXT(' '));
-		auto newIndent = bloop::BloopString(depth + 2u, BLOOPTEXT(' '));
+		auto oldIndent = bloop::BloopString(static_cast<std::size_t>(depth), BLOOPTEXT(' '));
+		auto newIndent = bloop::BloopString(static_cast<std::size_t>(depth + 2u), BLOOPTEXT(' '));
 
 		bloop::BloopOStringStream ss;
 
-		for (bloop::BloopUInt count{}; const auto i : std::views::iota(0, object.capacity)) {
-
-			if (object.entries[i].key.type == Value::Type::t_undefined)
-				continue;
+		for (bloop::BloopUInt count{}; const auto i : ObjectSlotsInOrder()) {
 
 			if (count)
 				ss << BLOOPTEXT(",\n");
@@ -213,51 +151,108 @@ bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to a string"), TypeToString()));
 
 }
+bloop::BloopInt Object::ObjectFindSlot(Value key) const {
+
+	assert((object.capacity & (object.capacity - 1)) == 0); // power of 2
+
+	const auto mask = object.capacity - 1;
+	auto index = key.Hash() & mask;
+
+	// the table is never full, so this always hits an empty slot (the bound is just a safety net)
+	for (bloop::BloopInt probes = 0; probes < object.capacity; probes++) {
+		auto& entry = object.entries[index];
+
+		if (entry.key.type == Value::Type::t_undefined)
+			return -1;
+
+		if (key.type == entry.key.type && key.IsEqual(entry.key))
+			return index;
+
+		index = (index + 1) & mask;
+	}
+
+	return -1;
+}
+Value* Object::ObjectFind(Value key) const {
+	const auto slot = ObjectFindSlot(key);
+	return slot < 0 ? nullptr : &object.entries[slot].value;
+}
 Value& Object::ObjectGet(Value key) const {
 
-	assert((object.capacity & (object.capacity - 1)) == 0); // power of 2
+	if (auto* value = ObjectFind(key))
+		return *value;
 
-	const auto mask = object.capacity - 1;
-	auto index = key.Hash() & mask;
-
-	for (;;) {
-		auto& entry = object.entries[index];
-
-		if (entry.key.type == Value::Type::t_undefined) {
-			throw exception::VMError(bloop::fmt::format(BLOOPTEXT("unknown property \"{}\""), key.ValueToString()));
-		}
-
-		if (key.IsEqual(entry.key)) {
-			return entry.value;
-		}
-
-		index = (index + 1) & mask;
-	}
+	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("unknown property \"{}\""), key.ValueToString()));
 }
 
-Value& Object::ObjectSet(Value key, Value value)
-{
+ObjectEntry& Object::ObjectInsertNew(Value key) {
 	assert((object.capacity & (object.capacity - 1)) == 0); // power of 2
+	assert(object.count < object.capacity && "ObjectInsertNew: the object is full, use Heap::ObjectSet");
+	assert(ObjectFind(key) == nullptr);
+
+	if (object.count >= object.capacity)
+		throw exception::VMError(BLOOPTEXT("internal error: object is full"));
+
 	const auto mask = object.capacity - 1;
 	auto index = key.Hash() & mask;
 
-	for (;;) {
-
-		auto& entry = object.entries[index];
-
-		if (entry.key.type == Value::Type::t_undefined) {
-			entry.key = key;
-			entry.value = value;
-			object.count++;
-			return entry.value;
-		}
-
-		if (entry.key.IsEqual(key)) {
-			entry.value = value;
-			return entry.value;
-		}
-
+	while (object.entries[index].key.type != Value::Type::t_undefined)
 		index = (index + 1) & mask;
+
+	auto& entry = object.entries[index];
+	entry.key = key;
+	object.count++;
+	return entry;
+}
+Value& Object::ObjectSet(Value key, Value value)
+{
+	if (auto* existing = ObjectFind(key)) {
+		*existing = value;
+		return *existing;
 	}
 
+	auto& entry = ObjectInsertNew(key);
+	entry.value = value;
+	entry.order = object.nextOrder++;
+	return entry.value;
+}
+bool Object::ObjectRemove(Value key) {
+
+	const auto mask = object.capacity - 1;
+
+	auto hole = ObjectFindSlot(key);
+	if (hole < 0)
+		return false;
+
+	object.entries[hole] = ObjectEntry{};
+	object.count--;
+
+	// backward shift: move later entries of the probe sequence into the hole when their home slot allows it
+	for (auto next = (hole + 1) & mask; object.entries[next].key.type != Value::Type::t_undefined; next = (next + 1) & mask) {
+		const auto home = static_cast<bloop::BloopInt>(object.entries[next].key.Hash() & static_cast<bloop::BloopUInt32>(mask));
+
+		// is home cyclically outside of (hole, next]?
+		const auto outside = hole <= next ? (home <= hole || home > next) : (home <= hole && home > next);
+		if (outside) {
+			object.entries[hole] = object.entries[next];
+			object.entries[next] = ObjectEntry{};
+			hole = next;
+		}
+	}
+
+	return true;
+}
+std::vector<bloop::BloopInt> Object::ObjectSlotsInOrder() const {
+	std::vector<bloop::BloopInt> slots;
+	slots.reserve(static_cast<std::size_t>(object.count));
+
+	for (bloop::BloopInt i = 0; i < object.capacity; i++) {
+		if (object.entries[i].key.type != Value::Type::t_undefined)
+			slots.push_back(i);
+	}
+
+	std::sort(slots.begin(), slots.end(), [this](bloop::BloopInt a, bloop::BloopInt b) {
+		return object.entries[a].order < object.entries[b].order;
+	});
+	return slots;
 }

@@ -1,0 +1,4 @@
+export fn get() {
+
+	return not_declared_anywhere;
+}

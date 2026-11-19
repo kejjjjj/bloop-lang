@@ -42,10 +42,10 @@ bloop::bc::Chunk CByteCodeGlobals::Generate(bloop::metadata::Metadata& metadata)
 
 	}
 
-	#ifndef BLOOP_TEST
-	std::cout << "\nglobal:\n";
-	builder.Print();
-	#endif
+	if (metadata.m_bDebugOutput) {
+		std::cout << "\nglobal:\n";
+		builder.Print();
+	}
 	return { 
 		.m_oConstants = builder.m_oConstants, 
 		.m_oByteCode = builder.Encode(),

@@ -19,7 +19,6 @@ namespace bloop::bytecode {
 
 	private:
 		bloop::ast::FunctionDeclarationStatement* m_pFunc;
-		bloop::BloopUInt m_uNumConsts{};
 	};
 
 

@@ -1,0 +1,7 @@
+const name = "first";
+let calls = 0;
+
+export fn first_name() {
+	calls = calls + 1;
+	return name + std.string.from(calls);
+}

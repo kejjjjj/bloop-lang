@@ -1,82 +1,44 @@
 #pragma once
 
 #include "utils/defs.hpp"
+#include "vm/gc/arena.hpp"
 
-#include <vector>
+#include <utility>
 
 namespace bloop::vm
 {
-	struct Object;
-	struct GCHeader;
-	class GC;
-	
-
-	struct Space {
-		BLOOP_NONCOPYABLE(Space);
-
-		Space(bloop::BloopUInt size) {
-			m_pBegin = reinterpret_cast<bloop::BloopByte*>(::operator new(size));
-			m_pEnd = m_pBegin + size;
-			m_pPtr = m_pBegin;
-		}
-		~Space() { ::operator delete(m_pBegin); }
-
-		inline void Reset() { m_pPtr = m_pBegin; }
-
-		Space(Space&& other) noexcept {
-			*this = std::move(other);
-		}
-
-		Space& operator=(Space&& other) noexcept {
-			if (this != &other) {
-				::operator delete(m_pBegin);
-
-				m_pBegin = other.m_pBegin;
-				m_pEnd = other.m_pEnd;
-				m_pPtr = other.m_pPtr;
-
-				other.m_pBegin = nullptr;
-				other.m_pEnd = nullptr;
-				other.m_pPtr = nullptr;
-			}
-			return *this;
-		}
-
-		bloop::BloopByte* m_pBegin{};
-		bloop::BloopByte* m_pEnd{};
-		bloop::BloopByte* m_pPtr{};
-	};
-
+	// The young generation: two equally sized arenas (semispaces).
+	// New objects are bump allocated into the active arena. A minor GC flips the
+	// arenas and evacuates the survivors from the reserve arena (from-space) into the
+	// fresh active arena (to-space), or promotes them into the old generation.
 	struct MinorSpace {
-		friend class GC;
+		BLOOP_NONCOPYABLE(MinorSpace);
 
-		MinorSpace(GC& gc, bloop::BloopUInt size=MB) : m_spaceA(size), m_spaceB(size), m_oGC(gc) {
-			m_pAllocSpace = &m_spaceA;
-			m_pScanSpace = &m_spaceB;
+		explicit MinorSpace(bloop::BloopSize size) : m_oSpaceA(size), m_oSpaceB(size) {}
+
+		[[nodiscard]] inline void* TryAlloc(bloop::BloopSize size) noexcept { return m_pActive->TryAlloc(size); }
+
+		// start of a minor GC: the active arena becomes from-space, the reserve becomes the empty to-space
+		inline void Flip() noexcept {
+			std::swap(m_pActive, m_pReserve);
+			m_pActive->Reset();
 		}
 
-		[[nodiscard]] void* AllocSpace(bloop::BloopUInt size, bloop::BloopUInt align = alignof(std::max_align_t));
+		[[nodiscard]] inline bool InToSpace(const void* p) const noexcept { return m_pActive->Contains(p); }
+		[[nodiscard]] inline bool InFromSpace(const void* p) const noexcept { return m_pReserve->Contains(p); }
 
-		inline void SwapSpaces() {
-			std::swap(m_pAllocSpace, m_pScanSpace);
-			m_pAllocSpace->Reset();
-		}
+		[[nodiscard]] inline bloop::BloopSize Capacity() const noexcept { return m_pActive->Capacity(); }
+		[[nodiscard]] inline bloop::BloopSize Used() const noexcept { return m_pActive->Used(); }
 
-		void WriteBarrier(const Object* owner, Object** slot, const Object* value);
+		[[nodiscard]] inline Arena& Active() noexcept { return *m_pActive; }
+		[[nodiscard]] inline Arena& Reserve() noexcept { return *m_pReserve; }
 
 	private:
-		[[maybe_unused]] Object* Copy(GCHeader* obj);
-		[[nodiscard]] Object* Promote(GCHeader* h);
+		Arena m_oSpaceA;
+		Arena m_oSpaceB;
 
-		Space m_spaceA;
-		Space m_spaceB;
-
-		Space* m_pAllocSpace{};
-		Space* m_pScanSpace{};
-
-		std::vector<Object**> m_oRememberedSet;
-
-		GC& m_oGC;
+		Arena* m_pActive{ &m_oSpaceA };
+		Arena* m_pReserve{ &m_oSpaceB };
 	};
 
 }

@@ -1,0 +1,5 @@
+// { a, b, c, d } used to fill the whole table, so adding a key looped forever
+let o = { a: 1, b: 2, c: 3, d: 4 };
+o.e = 5;
+o.f = 6;
+return [o.a, o.b, o.c, o.d, o.e, o.f];

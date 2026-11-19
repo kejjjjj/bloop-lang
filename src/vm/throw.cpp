@@ -10,7 +10,8 @@ using namespace bloop::vm;
 void VM::Throw(Value value) {
     //assert(!m_oStack.empty() && "Throw called with empty stack");
 
-    while (!m_oFrames.empty()) {
+    // inside VM::Call, only the frames of the callee may handle the exception
+    while (m_oFrames.size() > m_uThrowBoundary) {
         auto& frame = m_pCurrentFrame;
         assert(frame != nullptr && "Current frame pointer is null while frames exist");
         assert(frame == &m_oFrames.back() && "m_pCurrentFrame does not point to top of frame stack");
@@ -71,6 +72,9 @@ void VM::Throw(Value value) {
             assert(m_pCurrentFrame == nullptr && "Current frame not cleared after last pop");
         }
     }
+
+    if (m_uThrowBoundary)
+        throw exception::VMError(bloop::fmt::format(BLOOPTEXT("uncaught exception in a function called by a native function: {}"), value.ValueToString()));
 
     throw exception::VMError(bloop::fmt::format(BLOOPTEXT("uncaught exception: {}"), value.ValueToString()));
 }

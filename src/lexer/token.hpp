@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <ranges>
 #include <array>
+#include <utility>
 
 #include "utils/defs.hpp"
 #include "lexer/punctuation.hpp"

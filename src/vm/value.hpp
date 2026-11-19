@@ -91,6 +91,12 @@ namespace bloop::vm {
     struct ObjectEntry {
         Value key;
         Value value;
+        bloop::BloopInt order{}; // insertion order, so that keys can be listed in the order they were added
     };
+
+    inline void GC::WriteBarrier(const void* owner, const Value& value) noexcept {
+        if (value.type == Value::Type::t_object)
+            WriteBarrier(owner, value.obj);
+    }
 
 }

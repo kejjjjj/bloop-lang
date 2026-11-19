@@ -1,0 +1,2 @@
+import self from "self.bloop";
+export const self = 1;

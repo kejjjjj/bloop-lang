@@ -1,0 +1,10 @@
+// an assignment to an element/property is an expression with the assigned value
+let arr = [0, 0];
+let obj = { x: 0 };
+let i = 0;
+
+let r1 = (arr[0] = 2) < 10;
+let r2 = (obj.x = 20) > 10;
+let r3 = arr[i++] = 5;   // the target must only be evaluated once
+
+return [r1, r2, r3 === 5, i === 1, arr[0] === 5];

@@ -2,6 +2,11 @@
 #include "vm/value.hpp"
 #include "vm/heap/dvalue.hpp"
 
+#include <new>
+#include <cstdio>
+#include <cstdlib>
+#include <limits>
+
 using namespace bloop::vm;
 
 [[maybe_unused]] constexpr auto MAX_OPEN_UPVALUES = 8192u; // arbitrary large but finite
@@ -9,46 +14,46 @@ using namespace bloop::vm;
 UpValue* GC::CaptureUpValue(Value* slot) {
     assert(slot != nullptr && "CaptureUpValue called with null slot pointer");
 
-    UpValue** pp = &m_pOpenUpValues;
-    UpValue* curr = *pp;
+    const auto find = [this, slot](UpValue**& pp) -> UpValue* {
+        pp = &m_pOpenUpValues;
+        [[maybe_unused]] auto count = 0u;
 
-    UpValue* seen = nullptr;
-    [[maybe_unused]] auto count = 0u;
+        // the list is sorted by descending stack location
+        for (UpValue* curr = *pp; curr; pp = &curr->next, curr = *pp) {
+            assert(count++ < MAX_OPEN_UPVALUES && "Possible cycle or extremely long open upvalue list");
+            assert(curr->location != nullptr && "Found upvalue with null location in open list");
+            assert(!curr->IsClosed() && "Closed upvalue in the open list");
 
-    while (curr) {
-        assert(count++ < MAX_OPEN_UPVALUES && "Possible cycle or extremely long open upvalue list");
-        assert(curr->location != nullptr && "Found upvalue with null location in open list");
+            if (curr->location == slot)
+                return curr;
 
-        if (curr == seen) {
-            assert(false && "Cycle detected in open upvalue list during capture");
+            if (curr->location < slot)
+                break; // insertion point found
         }
-        seen = curr;
+        return nullptr;
+    };
 
-        if (curr->location == slot) {
-            assert(curr->location == slot && "location mismatch after compare");
-            assert(!curr->IsClosed() && "Reusing closed upvalue as open");
-            return curr;
-        }
+    UpValue** pp{};
+    if (auto* existing = find(pp))
+        return existing;
 
-        if (curr->location <= slot) {
-            break; // insertion point found
-        }
+    // Upvalues never move: they live in the old generation from the start.
+    // Closures (young or old) can then point to them without any barriers.
+    auto* h = AllocOld(sizeof(UpValue), GCKind::upvalue);
 
-        pp = &curr->next;
-        curr = *pp;
-    }
+    // the allocation may have collected, so look up the insertion point again
+    [[maybe_unused]] auto* again = find(pp);
+    assert(!again && "upvalue appeared during allocation");
 
-    auto up = Allocate<UpValue>(slot, Value{}, curr);
-    assert(up != nullptr && "Allocate<UpValue> returned null");
-    assert(up->location == slot && "Allocated upvalue has wrong location");
-    assert(up->next == curr && "Constructor did not set next correctly");
-    assert(!up->IsClosed() && "New upvalue already marked closed");
-
-    up->next = curr;
+    auto* up = new (h->GetValue<void>()) UpValue{ .location = slot, .closed = Value{}, .next = *pp };
     *pp = up;
 
-    assert(m_pOpenUpValues != nullptr && "Open list head became null after insert");
-    assert(*pp == up && "Insertion via pointer-to-pointer failed");
+    assert(up->location == slot && "Allocated upvalue has wrong location");
+    assert(!up->IsClosed() && "New upvalue already marked closed");
+
+#if (DEBUG || _DEBUG)
+    CheckUpValueList();
+#endif
 
     return up;
 }
@@ -79,6 +84,9 @@ void GC::CloseUpValues(Value* lastSlot)
         Value old_value = *uv->location;  // copy before we change pointer
         uv->closed = old_value;
         uv->location = &uv->closed;
+
+        // the upvalue is old, the value it now holds may be young
+        WriteBarrier(uv, uv->closed);
 
         assert(uv->IsClosed() && "Close did not set location to &closed");
         assert(uv->closed.IsEqual(old_value) && "Closed value was corrupted during assignment");

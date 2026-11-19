@@ -1,0 +1,12 @@
+// the iterable is only reachable from the loop while collections happen
+fn build() {
+    return ["a" + "1", "b" + "2", "c" + "3"];
+}
+let result = "";
+for (const s : build()) {
+    std.gc_minor();
+    std.gc_major();
+    let garbage = [s + s, [s]];
+    result = result + s;
+}
+return result;

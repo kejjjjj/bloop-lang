@@ -1,92 +1,261 @@
 #include "vm/gc/major.hpp"
 #include "vm/gc/gc.hpp"
+#include "vm/gc/trace.hpp"
+
+#include <algorithm>
+#include <cstring>
+#include <new>
 
 using namespace bloop::vm;
 
-GCHeader* MajorSpace::Alloc(bloop::BloopUInt payloadSize) {
+namespace {
+	constexpr auto HEADER = sizeof(GCHeader);
+	// don't leave behind free fragments that can't hold anything useful
+	constexpr auto MIN_SPLIT = HEADER + alignof(std::max_align_t);
+	constexpr bloop::BloopSize MAX_CHUNK_SIZE = 64u * bloop::MB;
 
-	const auto needed = sizeof(GCHeader) + payloadSize;
-
-	// do we have a free block somewhere
-	if (const auto block = FindFree(needed))
-		return UseBlock(block, needed);
-
-	// call the GC to see if we can free up some space
-	m_oGC.MajorGC();
-
-	if (const auto block = FindFree(needed))
-		return UseBlock(block, needed);
-
-	// if not, grow the heap
-	Grow(needed);
-
-	//find free space from the new heap space
-	if (const auto block = FindFree(needed))
-		return UseBlock(block, needed);
-
-	assert(false);
-	return nullptr;
+	inline void InitFreeBlock(GCHeader* h, bloop::BloopSize totalSize) noexcept {
+		h->size = totalSize - HEADER;
+		h->forwarding = nullptr;
+		h->nextFree = nullptr;
+		h->age = OLD_AGE;
+		h->kind = GCKind::object;
+		h->marked = false;
+		h->remembered = false;
+		h->free = true;
+	}
 }
-FreeBlock* MajorSpace::FindFree(bloop::BloopUInt needed) {
 
-	auto** block = &free_list;
+MajorSpace::MajorSpace(bloop::BloopSize initialChunkSize) : m_uNextChunkSize(bloop::Align(initialChunkSize)) {
+	Grow(m_uNextChunkSize);
+}
+MajorSpace::~MajorSpace() {
+	for (auto& chunk : m_oChunks)
+		::operator delete(chunk.begin);
+}
+GCHeader* MajorSpace::Alloc(bloop::BloopSize payloadSize) {
 
-	while (*block) {
+	payloadSize = bloop::Align(payloadSize);
 
-		if ((*block)->size >= needed) {
-			auto* result = *block;
-			*block = result->next;
-			return result; // reuse memory
+	if (auto* h = TakeFromFreeList(payloadSize))
+		return h;
+
+	Grow(HEADER + payloadSize);
+
+	auto* h = TakeFromFreeList(payloadSize);
+	assert(h && "a freshly grown chunk must fit the allocation");
+	return h;
+}
+GCHeader* MajorSpace::TakeFromFreeList(bloop::BloopSize payloadSize) {
+
+	const auto needed = HEADER + payloadSize;
+
+	// first fit
+	for (auto** link = &m_pFreeList; *link; link = &(*link)->nextFree) {
+		auto* block = *link;
+		assert(block->free && "non-free block in the free list");
+
+		const auto total = block->TotalSize();
+		if (total < needed)
+			continue;
+
+		*link = block->nextFree;
+
+		// split it if the remainder is still usable, otherwise hand out the whole block
+		if (total - needed >= MIN_SPLIT) {
+			auto* rest = reinterpret_cast<GCHeader*>(reinterpret_cast<bloop::BloopByte*>(block) + needed);
+			PushFree(rest, total - needed);
+			block->size = payloadSize;
 		}
 
-		block = &(*block)->next;
+		block->free = false;
+		block->marked = false;
+		block->remembered = false;
+		block->forwarding = nullptr;
+		block->nextFree = nullptr;
+		block->age = OLD_AGE;
+		block->kind = GCKind::object;
+
+		m_uAllocatedBytes += block->TotalSize();
+		return block;
 	}
 
 	return nullptr;
-
 }
-void MajorSpace::Grow(bloop::BloopUInt minSize)
+void MajorSpace::Grow(bloop::BloopSize minBlockSize)
 {
-	const auto growSize = std::max(minSize, m_uHeapSize * 2);
+	const auto size = bloop::Align(std::max(minBlockSize, m_uNextChunkSize));
+	m_uNextChunkSize = std::min(m_uNextChunkSize * 2u, MAX_CHUNK_SIZE);
 
-	auto mem = new char[growSize];
-	assert(mem);
+	// operator new returns memory aligned to at least __STDCPP_DEFAULT_NEW_ALIGNMENT__ (== alignof(max_align_t))
+	auto* mem = static_cast<bloop::BloopByte*>(::operator new(size));
+	m_oChunks.push_back({ mem, size });
+	m_uHeapBytes += size;
 
-	auto* block = reinterpret_cast<FreeBlock*>(mem);
-	block->size = growSize;
+	PushFree(reinterpret_cast<GCHeader*>(mem), size);
+}
+void MajorSpace::PushFree(GCHeader* block, bloop::BloopSize totalSize) {
+	assert(totalSize >= HEADER);
+	InitFreeBlock(block, totalSize);
+	block->nextFree = m_pFreeList;
+	m_pFreeList = block;
+}
+void MajorSpace::Sweep() {
 
+	m_pFreeList = nullptr;
+	m_uAllocatedBytes = 0u;
 
-	if (!free_list) {
-		free_list = block;
-		block->next = nullptr;
-	}else {
-		block->next = free_list;
+	std::vector<Chunk> keep;
+	keep.reserve(m_oChunks.size());
+	auto remaining = m_oChunks.size();
+
+	for (auto& chunk : m_oChunks) {
+
+		auto* p = chunk.begin;
+		auto* const end = chunk.begin + chunk.size;
+
+		GCHeader* run = nullptr;   // start of the current run of dead/free blocks
+		bloop::BloopSize runSize{};
+
+		auto flush = [&]() {
+			if (!run)
+				return;
+			PushFree(run, runSize);
+			run = nullptr;
+			runSize = 0u;
+		};
+
+		while (p < end) {
+			auto* h = reinterpret_cast<GCHeader*>(p);
+			const auto total = h->TotalSize();
+			assert(total >= HEADER && p + total <= end && "corrupted old generation block");
+
+			if (h->free || !h->marked) {
+#ifndef NDEBUG
+				if (!h->free) // poison dead objects so that dangling pointers fail loudly
+					std::memset(h->GetValue<void>(), 0xDD, h->size);
+#endif
+				if (!run)
+					run = h;
+				runSize += total;
+			} else {
+				flush();
+				assert(!h->remembered && "the remembered set must be empty during a major GC");
+				h->marked = false;
+				m_uAllocatedBytes += total;
+			}
+
+			p += total;
+		}
+
+		// the whole chunk is garbage, give it back (but always keep at least one chunk around)
+		if (run == reinterpret_cast<GCHeader*>(chunk.begin) && runSize == chunk.size && remaining > 1u) {
+			::operator delete(chunk.begin);
+			m_uHeapBytes -= chunk.size;
+			remaining--;
+			continue;
+		}
+
+		flush();
+		keep.push_back(chunk);
 	}
 
-	m_uHeapSize += growSize;
+	m_oChunks = std::move(keep);
 }
-GCHeader* MajorSpace::UseBlock(FreeBlock* block, bloop::BloopUInt needed)
-{
-	const auto remaining = block->size - needed;
+bool MajorSpace::Contains(const void* p) const noexcept {
+	const auto* b = static_cast<const bloop::BloopByte*>(p);
+	for (const auto& chunk : m_oChunks) {
+		if (b >= chunk.begin && b < chunk.begin + chunk.size)
+			return true;
+	}
+	return false;
+}
+bool MajorSpace::Verify() const {
 
-	// split it if possible
-	// + 16 to give the whole block rather than give an unusable free fragment
-	if (remaining > sizeof(FreeBlock) + 16) {
-		auto* newFree = reinterpret_cast<FreeBlock*>(reinterpret_cast<bloop::BloopUInt8*>(block) + needed);
-		newFree->size = remaining;
-		newFree->next = free_list;
-		free_list = newFree;
-		block->size = needed;
+	bloop::BloopSize allocated{};
+	bloop::BloopSize heap{};
+
+	for (const auto& chunk : m_oChunks) {
+		const auto* p = chunk.begin;
+		const auto* end = chunk.begin + chunk.size;
+		heap += chunk.size;
+
+		while (p < end) {
+			const auto* h = reinterpret_cast<const GCHeader*>(p);
+			if (h->size % alignof(std::max_align_t))
+				return false;
+			if (h->TotalSize() > static_cast<bloop::BloopSize>(end - p))
+				return false;
+			if (h->age != OLD_AGE || h->forwarding)
+				return false;
+			if (!h->free)
+				allocated += h->TotalSize();
+			p += h->TotalSize();
+		}
+		if (p != end)
+			return false;
 	}
 
-	auto* header = reinterpret_cast<GCHeader*>(block);
+	for (const auto* f = m_pFreeList; f; f = f->nextFree) {
+		if (!f->free || !Contains(f))
+			return false;
+	}
 
-	header->size = needed - sizeof(GCHeader);
-	header->marked = false;
-	header->age = PROMOTION_THRESHOLD; // it's old gen now
-	header->forwarding = nullptr;
-	header->next = objects ? objects : nullptr;
-	objects = header;
+	return allocated == m_uAllocatedBytes && heap == m_uHeapBytes;
+}
 
-	return header;
+/***********************************************************************
+ *                              MAJOR GC
+ ***********************************************************************/
+
+void GC::MajorGC() {
+
+	// empty the nursery first, so that the mark & sweep only has to care about the old generation
+	MinorCollect(true);
+
+	assert(m_oMinorSpace.Used() == 0u && "tenuring everything should empty the nursery");
+	assert(m_oRememberedSet.empty() && "no young objects -> no old to young pointers");
+
+	m_bCollecting = true;
+	m_oStats.majorCollections++;
+
+	MarkRoots();
+	DrainMarkStack();
+
+	m_oMajorSpace.Sweep();
+
+	// next major collection when the old generation has doubled
+	m_uNextMajorAt = std::max(MAJOR_MIN_THRESHOLD, m_oMajorSpace.AllocatedBytes() * 2u);
+
+	m_bCollecting = false;
+
+#if defined(BLOOP_GC_VERIFY) && !defined(NDEBUG)
+	assert(Verify() && "heap verification failed after a major GC");
+#endif
+}
+void GC::MarkRoots() {
+	ForEachRoot([this](Object*& slot) { MarkHeader(GCHeader::GetHeader(slot)); });
+
+	// open upvalues are reachable through the open upvalue list
+	for (auto* uv = m_pOpenUpValues; uv; uv = uv->next)
+		MarkHeader(GCHeader::GetHeader(uv));
+}
+void GC::MarkHeader(GCHeader* h) {
+	assert(h->IsOld() && !h->free && "the major GC only sees old, allocated blocks");
+	if (h->marked)
+		return;
+
+	h->marked = true;
+	m_oWorkList.push_back(h);
+}
+void GC::DrainMarkStack() {
+	while (!m_oWorkList.empty()) {
+		auto* h = m_oWorkList.back();
+		m_oWorkList.pop_back();
+
+		detail::VisitChildren(h,
+			[this](Object*& slot) { MarkHeader(GCHeader::GetHeader(slot)); },
+			[this](UpValue* uv) { MarkHeader(GCHeader::GetHeader(uv)); },
+			[this](auto*& buffer) { MarkHeader(GCHeader::GetHeader(buffer)); });
+	}
 }

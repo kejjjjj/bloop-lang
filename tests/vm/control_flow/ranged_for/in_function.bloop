@@ -1,0 +1,8 @@
+fn total(values) {
+    let sum = 0;
+    for (const v : values)
+        sum = sum + v;
+    return sum;
+}
+
+return [total([1, 2, 3, 4]), total([]), total([10])];

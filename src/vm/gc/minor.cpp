@@ -1,65 +1,135 @@
-#include "vm/gc/minor.hpp"
 #include "vm/gc/gc.hpp"
-#include "vm/heap/dvalue.hpp"
-#include "vm/value.hpp"
+#include "vm/gc/trace.hpp"
 
-#include <iostream>
+#include <cstring>
 
 using namespace bloop::vm;
 
-void* MinorSpace::AllocSpace(bloop::BloopUInt size, bloop::BloopUInt align)
-{
-	bloop::BloopUInt ptr = reinterpret_cast<bloop::BloopUInt>(m_pAllocSpace->m_pPtr);
-	const auto aligned = (ptr + (align - 1) & ~(align - 1));
-	const auto next = reinterpret_cast<bloop::BloopByte*>(aligned + size);
+/***********************************************************************
+ *                              MINOR GC
+ ***********************************************************************/
 
-	if (next > m_pAllocSpace->m_pEnd)
-		m_oGC.MinorGC();
-
-	m_pAllocSpace->m_pPtr = next;
-	return reinterpret_cast<void*>(aligned);
+void GC::MinorGC() {
+	MinorCollect(false);
 }
-void MinorSpace::WriteBarrier(const Object* owner, Object** slot, const Object* value) {
-	if (owner->IsOld() && value->IsYoung())
-		m_oRememberedSet.push_back(slot);
+void GC::MinorCollect(bool tenureAll) {
 
+	assert(!m_bCollecting && "recursive garbage collection");
+	m_bCollecting = true;
+	m_bTenureAll = tenureAll;
+	m_oStats.minorCollections++;
+
+	m_oMinorSpace.Flip();
+	assert(m_oWorkList.empty());
+
+	// 1. roots
+	ForEachRoot([this](Object*& slot) { EvacuateObject(slot); });
+
+	// 2. old objects that (may) point into the nursery.
+	//    Scanning them can remember them again (for the next cycle) if they still point to young objects
+	auto remembered = std::move(m_oRememberedSet);
+	m_oRememberedSet.clear();
+
+	for (auto* h : remembered) {
+		h->remembered = false;
+		ScanRemembered(h);
+	}
+
+	// 3. everything reachable from the evacuated objects (Cheney style, but with a work list
+	//    because promoted objects don't live in to-space)
+	while (!m_oWorkList.empty()) {
+		auto* h = m_oWorkList.back();
+		m_oWorkList.pop_back();
+
+		if (h->IsOld())
+			ScanRemembered(h);
+		else
+			ScanEvacuated(h);
+	}
+
+#ifndef NDEBUG
+	// nothing may point into from-space anymore
+	auto& from = m_oMinorSpace.Reserve();
+	std::memset(from.Begin(), 0xCD, from.Used());
+#endif
+
+	m_bTenureAll = false;
+	m_bCollecting = false;
+
+#if defined(BLOOP_GC_VERIFY) && !defined(NDEBUG)
+	assert(Verify() && "heap verification failed after a minor GC");
+#endif
 }
-Object* MinorSpace::Copy(GCHeader* old) {
+GCHeader* GC::Evacuate(GCHeader* h) {
 
-	assert(old);
+	if (!m_oMinorSpace.InFromSpace(h))
+		return h; // old object (or already in to-space)
 
-	if (old->forwarding)
-		return old->forwarding->GetValue<Object>();
+	if (h->forwarding)
+		return h->forwarding;
 
-	if (old->age >= PROMOTION_THRESHOLD)
-		return Promote(old);
+	assert(h->kind != GCKind::upvalue && "upvalues never live in the nursery");
 
-	const auto totalSize = sizeof(GCHeader) + old->size;
-	auto newHeader = reinterpret_cast<GCHeader*>(AllocSpace(totalSize));
+	const auto total = h->TotalSize();
+	const auto age = static_cast<bloop::BloopUInt8>(h->age + 1u);
 
-	memcpy(newHeader, old, totalSize);
-	assert(!newHeader->forwarding);
+	GCHeader* n = nullptr;
 
-	old->forwarding = newHeader;
-	newHeader->age++;
+	if (!m_bTenureAll && age < PROMOTION_THRESHOLD)
+		n = static_cast<GCHeader*>(m_oMinorSpace.TryAlloc(total));
 
-	return newHeader->GetValue<Object>();
+	if (n) {
+		std::memcpy(n, h, total);
+		n->age = age;
+		m_oStats.bytesSurvived += total;
+	} else {
+		// promote (or the to-space overflowed, which can only happen with heavy fragmentation)
+		n = m_oMajorSpace.Alloc(h->size);
+		assert(n->size >= h->size && "the old generation may hand out a slightly bigger block");
+		std::memcpy(n->GetValue<void>(), h->GetValue<void>(), h->size);
+		n->kind = h->kind;
+		n->age = OLD_AGE;
+		m_oStats.bytesPromoted += total;
+	}
+
+	n->forwarding = nullptr;
+	n->nextFree = nullptr;
+	n->marked = false;
+	n->remembered = false;
+	n->free = false;
+
+	detail::RelocateInternalPointers(h, n);
+
+	h->forwarding = n;
+	m_oWorkList.push_back(n);
+	return n;
 }
-Object* MinorSpace::Promote(GCHeader* h) {
+void GC::EvacuateObject(Object*& obj) {
+	assert(obj);
+	obj = Evacuate(GCHeader::GetHeader(obj))->GetValue<Object>();
+}
+void GC::ScanEvacuated(GCHeader* h) {
+	// closures only reference upvalues, which are always old
+	detail::VisitChildren(h,
+		[this](Object*& slot) { EvacuateObject(slot); },
+		[](UpValue*) {},
+		[this](auto*& buffer) { EvacuateBuffer(buffer); });
+}
+void GC::ScanRemembered(GCHeader* h) {
 
-	assert(h);
+	bool pointsToYoung = false;
 
-	std::cout << "promotion!\n";
+	detail::VisitChildren(h,
+		[&](Object*& slot) {
+			EvacuateObject(slot);
+			pointsToYoung |= GCHeader::GetHeader(slot)->IsYoung();
+		},
+		[](UpValue*) {},
+		[&](auto*& buffer) {
+			EvacuateBuffer(buffer);
+			pointsToYoung |= GCHeader::GetHeader(buffer)->IsYoung();
+		});
 
-	auto* newObj = m_oGC.m_oMajorSpace.Alloc(h->size);
-
-	// copy object body
-	memcpy(newObj + 1, h + 1, h->size);
-	newObj->age = h->age;
-	newObj->marked = false;
-	newObj->forwarding = nullptr;
-
-	h->forwarding = newObj;
-
-	return newObj->GetValue<Object>();
+	if (pointsToYoung && !h->remembered)
+		Remember(h);
 }

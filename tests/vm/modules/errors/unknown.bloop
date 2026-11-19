@@ -1,0 +1,2 @@
+import get from "unknown_in_module.bloop";
+return get();

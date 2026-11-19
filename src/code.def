@@ -1,9 +1,12 @@
 R"(
 
-let a = ["ass"];
+const names = std.object.keys(std.array);
 
-a[0] = "hello!";
+const newNames = [];
+for(const name : names){
+	if(std.string.starts_with(name, 't'))
+		std.array.push(newNames, name);
+}
 
-return a;
-
+return newNames;
 )"

@@ -1,0 +1,2 @@
+import fine from "bad_syntax_module.bloop";
+return fine;

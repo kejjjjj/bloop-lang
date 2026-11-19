@@ -42,14 +42,30 @@ namespace bloop::resolver {
 		};
 
 		using DeclaredIdentifier = std::unordered_map<bloop::BloopString, bloop::BloopIndex>;
+
+		// the names a module exports
+		using ExportTable = std::unordered_map<bloop::BloopString, std::shared_ptr<Symbol>>;
+
 		struct Resolver {
 
 			Resolver(bloop::metadata::Metadata& metadata) : m_refMetadata(metadata){}
+
+			// a program is resolved one module at a time (dependencies first):
+			//   BeginProgram(), ResolveModule() for every module, EndProgram()
+			// every module has its own global scope, but all globals live in one table
+			void BeginProgram();
+			void ResolveModule(bloop::ast::Program* code, bool isImported, ExportTable* exports);
+			void EndProgram(bloop::ast::Program* code);
+
+			// makes an exported symbol visible in the current module (read-only)
+			void ImportSymbol(const bloop::BloopString& name, const Symbol& exported);
 
 			std::vector<Scope> m_oScopes;
 			std::vector<FunctionContext> m_oFunctions; // to keep track of local counts
 			std::vector<DeclaredIdentifier> m_oDeclaredIdentifiers; // to avoid duplicate declarations
 			bloop::BloopInt m_iLoopDepth{};
+			bloop::BloopIndex m_uNextGlobalSlot{};
+			bloop::BloopBool m_bInImportedModule{};
 			bloop::BloopInt m_iScopeDepth{-1};
 			bloop::metadata::Metadata& m_refMetadata;
 

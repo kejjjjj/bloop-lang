@@ -1,0 +1,9 @@
+export const helper_value = 21;
+
+// exported functions are hoisted inside their module like any other function
+export fn outer() {
+	return inner() * 2;
+}
+fn inner() {
+	return helper_value;
+}

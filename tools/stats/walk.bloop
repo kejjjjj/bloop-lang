@@ -1,0 +1,50 @@
+// walks a directory tree and collects every file
+
+const SKIPPED_DIRECTORIES = ["build", "out", "node_modules", "bin", "obj"];
+
+fn is_skipped(name) {
+	return std.string.starts_with(name, ".") || std.array.contains(SKIPPED_DIRECTORIES, name);
+}
+
+// "a" + "b" -> "a/b", "" + "b" -> "b"
+fn join(directory, name) {
+	return directory === "" ? name : directory + "/" + name;
+}
+
+// the paths (relative to `root`, with "/" separators) of every file under `root`
+export fn collect_files(root) {
+	const files = [];
+	const pending = [""];
+
+	while (std.length(pending) > 0) {
+		const relative = std.array.pop(pending);
+		const names = std.fs.list(join(root, relative));
+
+		if (names === undefined)
+			continue;
+
+		for (const name : names) {
+			const child = join(relative, name);
+
+			if (std.fs.is_dir(join(root, child))) {
+				if (!is_skipped(name))
+					std.array.push(pending, child);
+			} else {
+				std.array.push(files, child);
+			}
+		}
+	}
+
+	return std.array.sort(files);
+}
+
+// "src/vm/vm.cpp" -> ".cpp", "Makefile" -> "(none)"
+export fn extension_of(path) {
+	const name = std.string.substring(path, std.string.find_last(path, "/") + 1); // (-1 + 1 when there's no "/")
+	const dot = std.string.find_last(name, ".");
+
+	if (dot <= 0)
+		return "(none)";
+
+	return std.string.to_lower(std.string.substring(name, dot));
+}

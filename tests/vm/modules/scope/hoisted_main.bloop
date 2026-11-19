@@ -1,0 +1,2 @@
+import outer, helper_value from "hoisted.bloop";
+return [outer(), helper_value];

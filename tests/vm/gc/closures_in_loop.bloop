@@ -1,0 +1,20 @@
+// lots of closures and upvalues, only a few of them stay alive
+fn make(value) {
+    let text = "v" + "";
+    return () => value + 1;
+}
+
+let kept = [0, 0, 0];
+
+for (let i = 0; i < 30000; i++) {
+    let f = make(i);
+    if (i === 100)
+        kept[0] = f;
+    if (i === 20000)
+        kept[1] = f;
+    if (i === 29999)
+        kept[2] = f;
+}
+
+std.gc_major();
+return [kept[0](), kept[1](), kept[2]()];

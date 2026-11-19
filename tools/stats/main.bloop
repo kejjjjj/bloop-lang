@@ -1,0 +1,105 @@
+// code statistics for a directory: lines per file type, the biggest files and TODO comments
+//
+//   bloop tools/stats/main.bloop <directory> [--json] [--todos]
+//
+//   --json   prints the whole report as json instead of a table
+//   --todos  also lists every TODO comment
+
+import collect_files, extension_of from "walk.bloop";
+import analyze from "analyze.bloop";
+import pad_left, pad_right, shorten from "text.bloop";
+
+const args = std.process.args();
+
+if (std.length(args) === 0) {
+	std.console.log("usage: bloop main.bloop <directory> [--json] [--todos]");
+	std.process.exit(1);
+}
+
+const root = args[0];
+const as_json = std.array.contains(args, "--json");
+const show_todos = std.array.contains(args, "--todos");
+
+if (!std.fs.is_dir(root)) {
+	std.console.log("not a directory: " + root);
+	std.process.exit(1);
+}
+
+// ---------- collect ----------
+
+const by_type = {};    // extension -> { files, lines, blank, comments }
+const files = [];      // { path, lines }
+const todos = [];      // { path, line, text }
+let skipped = 0;
+
+for (const path : collect_files(root)) {
+	const stats = analyze(root + "/" + path);
+	if (stats === undefined) {
+		skipped++;
+		continue;
+	}
+
+	const type = extension_of(path);
+	if (!std.object.has(by_type, type))
+		std.object.set(by_type, type, { files: 0, lines: 0, blank: 0, comments: 0 });
+
+	const totals = std.object.get(by_type, type);
+	totals.files++;
+	totals.lines += stats.lines;
+	totals.blank += stats.blank;
+	totals.comments += stats.comments;
+
+	std.array.push(files, { path: path, lines: stats.lines });
+
+	for (const todo : stats.todos)
+		std.array.push(todos, { path: path, line: todo.line, text: todo.text });
+}
+
+// biggest types and files first
+const types = std.array.sort(std.object.keys(by_type), (a, b) => std.object.get(by_type, b).lines - std.object.get(by_type, a).lines);
+std.array.sort(files, (a, b) => b.lines - a.lines);
+
+// ---------- report ----------
+
+if (as_json) {
+	const report = { root: root, types: {}, largest: std.array.slice(files, 0, 10), todos: todos, unreadable: skipped };
+	for (const type : types)
+		std.object.set(report.types, type, std.object.get(by_type, type));
+
+	std.console.log(std.json.stringify(report, 2));
+	std.process.exit(0);
+}
+
+const header = pad_right("type", 10) + pad_left("files", 8) + pad_left("lines", 10) + pad_left("code", 10) + pad_left("comments", 10) + pad_left("blank", 8);
+std.console.log(header);
+std.console.log(std.string.clone("-", std.length(header)));
+
+const total = { files: 0, lines: 0, blank: 0, comments: 0 };
+
+for (const type : types) {
+	const t = std.object.get(by_type, type);
+	std.console.log(pad_right(type, 10) + pad_left(t.files, 8) + pad_left(t.lines, 10) + pad_left(t.lines - t.blank - t.comments, 10)
+		+ pad_left(t.comments, 10) + pad_left(t.blank, 8));
+
+	total.files += t.files;
+	total.lines += t.lines;
+	total.blank += t.blank;
+	total.comments += t.comments;
+}
+
+std.console.log(std.string.clone("-", std.length(header)));
+std.console.log(pad_right("total", 10) + pad_left(total.files, 8) + pad_left(total.lines, 10) + pad_left(total.lines - total.blank - total.comments, 10)
+	+ pad_left(total.comments, 10) + pad_left(total.blank, 8));
+
+if (skipped > 0)
+	std.console.log("\n(" + std.string.from(skipped) + " binary or unreadable files skipped)");
+
+std.console.log("\nlargest files:");
+for (const file : std.array.slice(files, 0, 5))
+	std.console.log("  " + pad_left(file.lines, 6) + "  " + file.path);
+
+std.console.log("\n" + std.string.from(std.length(todos)) + " TODO comments" + (show_todos ? ":" : " (--todos lists them)"));
+if (show_todos) {
+	for (const todo : todos)
+		std.console.log("  " + shorten(todo.path + ":" + std.string.from(todo.line), 45) + "  " + shorten(todo.text, 70));
+}

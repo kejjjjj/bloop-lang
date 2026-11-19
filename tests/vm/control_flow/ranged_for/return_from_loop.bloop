@@ -1,0 +1,14 @@
+fn find(values, wanted) {
+    for (const v : values) {
+        if (v === wanted)
+            return "found";
+    }
+    return "missing";
+}
+
+let r1 = find([1, 2, 3], 2);
+let r2 = find([1, 2, 3], 7);
+
+// returning from inside a loop at the top level
+for (const x : [r1, r2])
+    return x + "|" + r2;

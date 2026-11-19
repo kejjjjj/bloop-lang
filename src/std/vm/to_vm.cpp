@@ -2,38 +2,50 @@
 #include "vm/heap/heap.hpp"
 #include "vm/value.hpp"
 #include "vm/heap/dvalue.hpp"
+#include "vm/gc/handles.hpp"
+
+#include <cassert>
 
 using namespace bloop::vm;
 
-void bloop::standard::AssignField(Heap& heap, const NativeField& field, Object* receiver) {
+// every allocation can move young objects, so the receiver and the key stay rooted
+void bloop::standard::AssignField(Heap& heap, const NativeField& field, const Local& receiver, const Environment& environment) {
 
-	const Value key{ heap.AllocString(const_cast<char*>(field.m_sName.data()), field.m_sName.size()) };
+	if (!environment.Allows(field.m_ePermission))
+		return;
+
+	RootScope scope(heap.GetGC());
+	const auto key = scope.Keep(heap.AllocString(field.m_sName.data(), field.m_sName.size()));
+
+	Value value;
 
 	switch (field.m_eType) {
 	case NativeObjectPropertyType::method:
-		receiver->ObjectSet(key, heap.AllocNativeFunction(&std::get<0>(field.m_oData)));
+		value = Value{ heap.AllocNativeFunction(&std::get<0>(field.m_oData)) };
 		break;
 	case NativeObjectPropertyType::property: {
 		const auto& constant = std::get<1>(field.m_oData);
 
 		if (std::get<1>(constant) == bloop::EValueType::t_string) {
 			const auto& data = std::get<0>(constant);
-			receiver->ObjectSet(key, { heap.AllocString(const_cast<char*>(data.data()), data.size()) });
+			value = Value{ heap.AllocString(data.data(), data.size()) };
 		} else {
-			receiver->ObjectSet(key, Value{ constant });
+			value = Value{ constant };
 		}
 		break;
 	} 
 	case NativeObjectPropertyType::native_object: 
-		receiver->ObjectSet(key, Value{ FromDefinitionToObject(heap, std::get<2>(field.m_oData)) });
+		value = Value{ FromDefinitionToObject(heap, std::get<2>(field.m_oData), environment) };
 		break;
 	default:
 		break;
 	}
 
+	// value is the newest allocation, nothing can move it before it's stored
+	heap.ObjectSet(receiver.Obj(), key.Get(), value);
 }
 
-Object* bloop::standard::FromDefinitionToObject(Heap& heap, const NativeDef& def) {
+Object* bloop::standard::FromDefinitionToObject(Heap& heap, const NativeDef& def, const Environment& environment) {
 
 	switch (def.m_eType) {
 	case NativeType::function:
@@ -41,13 +53,14 @@ Object* bloop::standard::FromDefinitionToObject(Heap& heap, const NativeDef& def
 	case NativeType::object: {
 		const auto& defObj = std::get<1>(def.m_oData);
 		assert(defObj);
-		auto obj = heap.AllocObject(static_cast<bloop::BloopIndex>(defObj->m_oFields.size()));
-		
-		for (const auto& field : defObj->m_oFields) {
-			AssignField(heap, field, obj);
-		}
 
-		return obj;
+		RootScope scope(heap.GetGC());
+		const auto obj = scope.Keep(heap.AllocObject(static_cast<bloop::BloopIndex>(defObj->m_oFields.size())));
+		
+		for (const auto& field : defObj->m_oFields)
+			AssignField(heap, field, obj, environment);
+
+		return obj.Obj();
 	}
 	default:
 		return nullptr;

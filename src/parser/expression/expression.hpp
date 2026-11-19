@@ -62,6 +62,8 @@ namespace bloop::parser {
 		bloop::CodePosition m_oDeclPos;
 	private:
 		[[nodiscard]] UniqueExpression ToExpression_Internal();
+		// parses one comma separated element, returns true if another element follows
+		[[nodiscard]] bool ParseElement(std::optional<PairMatcher>& eoe, CExpressionChain* chain, EEvaluationType evalType);
 
 		[[nodiscard]] bool EndOfExpression(const std::optional<PairMatcher>& eoe) const noexcept;
 
@@ -75,7 +77,7 @@ namespace bloop::parser {
 		[[nodiscard]] Operators::iterator FindLowestPriorityOperator(Operators& operators);
 		void CreateExpressionRecursively(bloop::ast::BinaryExpression* _this, Operands& operands, Operators& operators);
 		[[nodiscard]] std::unique_ptr<bloop::ast::AssignExpression> MakeAssignment(bloop::EPunctuation p, bloop::CodePosition pos);
-		void SetBranch(UniqueExpression& getter, const bloop::CPunctuationToken* t);
+		void SetBranch(UniqueExpression& getter, COperator* op);
 
 	};
 

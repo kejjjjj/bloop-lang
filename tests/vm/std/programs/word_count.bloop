@@ -1,0 +1,35 @@
+// uses arrays, strings and objects together: counts words and lists the most common ones
+fn countWords(text) {
+    let counts = {};
+    for (const raw : std.string.split(std.string.to_lower(text), " ")) {
+        const word = std.string.trim(raw);
+        if (std.length(word) === 0)
+            continue;
+
+        let current = std.object.get(counts, word);
+        if (current === undefined)
+            current = 0;
+        std.object.set(counts, word, current + 1);
+    }
+    return counts;
+}
+
+fn top(counts) {
+    // "count:word" strings can't be sorted by count directly, so sort the counts and look them up
+    let result = [];
+    let numbers = std.array.sort(std.object.values(counts));
+    std.array.reverse(numbers);
+
+    for (const n : numbers) {
+        for (const word : std.object.keys(counts)) {
+            if (std.object.get(counts, word) === n && std.array.contains(result, word) === false) {
+                std.array.push(result, word);
+                break;
+            }
+        }
+    }
+    return std.array.slice(result, 0, 3);
+}
+
+const counts = countWords("the cat and the dog and THE bird   saw a cat");
+return std.array.join(top(counts), ",") + "|" + std.string.from(std.length(counts));

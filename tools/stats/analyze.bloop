@@ -1,0 +1,60 @@
+// counts the lines of a file and finds its TODO comments
+
+// lines that start with these are comments
+const COMMENT_PREFIXES = ["//", "#", "/*", "*", "--"];
+
+fn is_comment(line) {
+	return std.array.any(COMMENT_PREFIXES, (prefix) => std.string.starts_with(line, prefix));
+}
+
+fn is_letter(code) {
+	return (code >= 97 && code <= 122) || (code >= 65 && code <= 90) || code === 95; // a-z, A-Z, _
+}
+
+// whether `word` appears in `text` on its own ("todo" is in "// todo: x", but not in "toDouble")
+fn contains_word(text, word) {
+	let at = std.string.find(text, word);
+
+	while (at !== -1) {
+		const end = at + std.length(word);
+		const before_ok = at === 0 || !is_letter(std.string.get_code_at(text, at - 1));
+		const after_ok = end === std.length(text) || !is_letter(std.string.get_code_at(text, end));
+
+		if (before_ok && after_ok)
+			return true;
+
+		at = std.string.find(text, word, at + 1);
+	}
+	return false;
+}
+
+// { lines, blank, comments, todos: [{ line, text }] }, or undefined if the file can't be read (or isn't text)
+export fn analyze(path) {
+	const contents = std.fs.read(path);
+	if (contents === undefined || std.string.contains(contents, std.string.from_char_code(0)))
+		return undefined;
+
+	const result = { lines: 0, blank: 0, comments: 0, todos: [] };
+	const lines = std.string.split(contents, "\n");
+
+	// "a\nb\n" splits into 3 pieces, but it's 2 lines
+	if (std.length(lines) > 0 && lines[std.length(lines) - 1] === "")
+		std.array.pop(lines);
+
+	for (let i = 0; i < std.length(lines); i++) {
+		const line = std.string.trim(lines[i]);
+		result.lines++;
+
+		if (line === "") {
+			result.blank++;
+		} else if (is_comment(line)) {
+			result.comments++;
+		}
+
+		if (contains_word(std.string.to_lower(line), "todo")) {
+			std.array.push(result.todos, { line: i + 1, text: line });
+		}
+	}
+
+	return result;
+}

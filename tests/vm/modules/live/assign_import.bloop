@@ -1,0 +1,2 @@
+import count from "counter.bloop";
+count = 5;

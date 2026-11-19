@@ -34,5 +34,6 @@ namespace bloop::parser {
 		const CParserContext& m_oCtx;
 		std::unique_ptr<CParserOperand> m_oLhsOperand;
 		std::unique_ptr<COperator> m_oOperator;
+		bool m_bSequenceFollows{}; // ended at a comma operator
 	};
 }

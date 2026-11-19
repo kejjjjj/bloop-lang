@@ -9,10 +9,16 @@
 
 #include <cassert>
 #include <ranges>
+#include <utility>
 
 using namespace bloop::vm;
 
 std::vector<Value> VM::BuildConstants(const std::vector<bloop::ConstantData>& constants) {
+
+	// constants live as long as the VM, so they go straight to the old generation.
+	// `vals` isn't a GC root yet, so nothing may get collected while it's being built
+	GC::PretenureScope pretenure(m_oGC);
+
 	std::vector<Value> vals;
 	vals.reserve(constants.size());
 
@@ -28,8 +34,8 @@ std::vector<Value> VM::BuildConstants(const std::vector<bloop::ConstantData>& co
 	}
 	return vals;
 }
-VM::VM(bloop::metadata::Metadata& metadata)
-	: m_oHeap(&m_oGC), m_oGC(this), m_refMetaData(metadata) {
+VM::VM(bloop::metadata::Metadata& metadata, bloop::standard::Environment environment)
+	: m_oEnvironment(std::move(environment)), m_oHeap(&m_oGC), m_oGC(this), m_refMetaData(metadata) {
 	
 	assert(metadata.m_oVMData.m_pGlobalChunk);
 	m_oGlobalChunk.m_oConstants = BuildConstants(metadata.m_oVMData.m_pGlobalChunk->m_oConstants);
@@ -55,24 +61,12 @@ VM::VM(bloop::metadata::Metadata& metadata)
 	m_oStack.reserve(BLOOP_MAX_STACK);
 	m_oFrames.reserve(BLOOP_MAX_FRAMES);
 }
-VM::~VM() {
-	
-	// if the user never called "Run", then nothing needs to be cleared
-	if (!m_oStack.empty()) {
-		//assert(m_oStack.size() == 1); //something leaked if not true
-		m_oStack.clear(); //free everything for the GC
-		m_oGlobals.clear(); // let the gc get rid of these
-		m_oGlobalChunk.m_oConstants.clear();
-		m_oFunctions.clear();
-		m_oGC.MajorGC(); //clear everything
-
-	}
-
-	//assert(m_oGC.GetAllocatedSize() == 0u);
-}
+// the GC owns all of the memory (nursery + old generation chunks) and releases it wholesale
+VM::~VM() = default;
 
 #include <chrono>
 #include <iostream>
+#include <iomanip>
 template<typename Callable>
 void Benchmark(const char* name, Callable&& fn) {
 	using clock = std::chrono::high_resolution_clock;
@@ -96,25 +90,19 @@ Value VM::Run() {
 	//}
 
 	try {
-		#ifdef BLOOP_TEST
-		RunGlobal();
-		//if (func) {
-		//	RunFunction(func);
-		//	assert(m_oStack.size() == 1u);
-		//}
-		//m_oGC.MajorGC();
-		#else
-		Benchmark("glob+main", [&]() {
+		if (m_refMetaData.m_bDebugOutput)
+			Benchmark("glob+main", [&]() { RunGlobal(); });
+		else
 			RunGlobal();
-			//if (func) {
-			//	RunFunction(func);
-			//	assert(m_oStack.size() == 1u);
-			//}
-			//m_oGC.MajorGC();
-		});
-		#endif
 
+	} catch (exception::ExitRequest& exit) {
+		// unwind everything (closing the upvalues) like an error would, but quietly
+		[[maybe_unused]] const auto positions = StackTrace();
+		m_oStack.clear();
+		m_oExitCode = exit.m_iCode;
+		return Value{};
 	} catch (exception::VMError& ex) {
+		m_bFailed = true;
 		const auto positions = StackTrace();
 		bloop::BloopString msg = BLOOPTEXT("\nruntime error\n\n");
 
@@ -151,8 +139,8 @@ VM::ExecutionReturnCode VM::RunFrame() {
 void VM::RunGlobal() {
 	m_pCurrentFrame = &m_oFrames.emplace_back(&m_oGlobalChunk, 0u);
 
-	for (bloop::BloopUInt i{}; const auto& native : bloop::standard::g_Natives) {
-		m_oGlobals[i++] = bloop::standard::FromDefinitionToObject(m_oHeap, native);
+	for (bloop::BloopSize i{}; const auto& native : bloop::standard::g_Natives) {
+		m_oGlobals[i++] = bloop::standard::FromDefinitionToObject(m_oHeap, native, m_oEnvironment);
 	}
 
 	const auto returnCode = RunFrame();
@@ -163,6 +151,9 @@ void VM::RunGlobal() {
 
 	m_oFrames.clear();
 	m_pCurrentFrame = nullptr;
+
+	// returning from inside a loop can leave temporaries behind (a ranged for keeps its iterator on the stack)
+	m_oStack.clear();
 	Push(ret);
 }
 void VM::RunFunction(Function* fn) {
@@ -180,7 +171,7 @@ void VM::RunFunction(Function* fn) {
 	PopFrame();
 	Push(ret);
 }
-void VM::RunClosure(Closure* closure)
+void VM::RunClosure(Object* closure)
 {
 	PushFrame(closure);
 	const auto returnCode = RunFrame();
@@ -195,4 +186,62 @@ void VM::RunClosure(Closure* closure)
 	m_oGC.CloseUpValues(m_oStack.data() + m_oFrames.back().m_uBase);
 	PopFrame();
 	Push(ret);
+}
+void VM::Exit(bloop::BloopInt code) {
+	throw exception::ExitRequest{ code };
+}
+
+Value VM::Call(const Value& callee, std::span<const Value> args) {
+
+	if (!callee.IsCallable())
+		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not callable"), callee.TypeToString()));
+
+	if (m_oStack.size() + args.size() + 1u >= BLOOP_MAX_STACK)
+		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} stack values"), BLOOP_MAX_STACK));
+
+	// throws inside the callee must not unwind into the frame of the native that called it
+	struct BoundaryGuard {
+		VM& vm;
+		bloop::BloopSize previous;
+		~BoundaryGuard() { vm.m_uThrowBoundary = previous; }
+	} guard{ *this, m_uThrowBoundary };
+	m_uThrowBoundary = m_oFrames.size();
+
+	const auto argc = args.size();
+	const auto base = m_oStack.size();
+
+	// (args may point into the stack, which is fine: it never reallocates)
+	for (const auto& arg : args)
+		Push(arg);
+
+	auto* obj = callee.obj;
+
+	switch (obj->type) {
+	case Object::Type::ot_function:
+		if (obj->function->m_uParamCount != argc)
+			throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, obj->function->m_uParamCount));
+		RunFunction(obj->function);
+		break;
+	case Object::Type::ot_closure:
+		if (obj->closure.function->m_uParamCount != argc)
+			throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, obj->closure.function->m_uParamCount));
+		RunClosure(obj); // the frame keeps the closure alive
+		break;
+	case Object::Type::ot_nativefunction: {
+		const auto* native = obj->nativeFunction;
+		if (native->m_uParamCount != bloop::VARIADIC_PARAMETER_COUNT && native->m_uParamCount != argc)
+			throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, native->m_uParamCount));
+
+		const auto result = native->m_pFunction(*this, std::span<const Value>(m_oStack.data() + base, argc));
+		m_oStack.resize(base);
+		return result;
+	}
+	default:
+		assert(false);
+		break;
+	}
+
+	// RunFunction / RunClosure leave the return value on the stack
+	assert(m_oStack.size() == base + 1u);
+	return Pop();
 }

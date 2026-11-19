@@ -1,0 +1,13 @@
+// builds big lists and drops them, the major GC should be able to free them again
+let keep = 0;
+
+for (let round = 0; round < 5; round++) {
+    let list = 0;
+    for (let i = 0; i < 60000; i++) {
+        list = [list, { index: i, text: "item" + "" }];
+    }
+    keep = list[1].index;
+}
+
+std.gc_major();
+return keep;

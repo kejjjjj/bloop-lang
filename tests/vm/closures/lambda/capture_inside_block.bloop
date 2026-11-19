@@ -1,0 +1,13 @@
+fn outer() {
+	const x = 2;
+	if (true) {
+		const f = () => {
+			const y = 5;
+			const g = () => y * x;
+			return g();
+		};
+		return f();
+	}
+	return 0;
+}
+return outer();

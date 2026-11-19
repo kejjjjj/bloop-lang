@@ -8,6 +8,7 @@
 #include <memory>
 
 namespace bloop::ast {
+	struct Statement;
 	struct BlockStatement;
 	struct Program;
 }
@@ -49,6 +50,8 @@ namespace bloop::parser {
 		[[nodiscard]] std::unique_ptr<bloop::ast::Program> Parse(metadata::Metadata& metadata);
 
 	private:
+		[[nodiscard]] std::unique_ptr<bloop::ast::Statement> ParseImport();
+		[[nodiscard]] bloop::EStatus ParseExport(const CParserContext& ctx);
 	};
 
 	//other parsers might utilize this

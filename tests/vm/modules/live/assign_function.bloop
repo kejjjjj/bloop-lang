@@ -1,0 +1,2 @@
+import increment from "counter.bloop";
+increment = 5;

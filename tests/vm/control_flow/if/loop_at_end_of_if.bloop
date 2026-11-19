@@ -1,0 +1,22 @@
+// a loop as the last statement of an if block used to fall through into the else block
+let a = 0;
+if (true) {
+    for (let i = 0; i < 3; i++) {
+        a = a + 1;
+    }
+} else {
+    a = 100;
+}
+
+let b = 0;
+if (true) {
+    for (const x : [1, 2]) {
+        b = b + x;
+    }
+} else if (false) {
+    b = 200;
+} else {
+    b = 100;
+}
+
+return [a, b];

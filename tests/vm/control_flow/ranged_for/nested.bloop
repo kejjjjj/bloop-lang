@@ -1,0 +1,12 @@
+fn pairs() {
+    let count = 0;
+    for (const a : [1, 2, 3]) {
+        for (const b : [10, 20]) {
+            if (b === 20 && a === 2)
+                break;
+            count = count + a * b;
+        }
+    }
+    return count; // 10 + 20 + 20 + 30 + 60
+}
+return pairs();
