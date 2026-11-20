@@ -27,7 +27,7 @@ TEST_CASE("long array literal (20000 elements)") {
     REQUIRE(ret->obj->array.values[count - 1].i == count - 1);
 }
 TEST_CASE("long array literal of expressions and nested arrays") {
-    constexpr auto count = 2000; // (a chunk can hold at most 65535 bytes of bytecode)
+    constexpr auto count = 8000; // (more than 64KB of bytecode)
 
     bloop::BloopString src = BLOOPTEXT("let x = 2;\nreturn [");
     for (auto i = 0; i < count; i++)

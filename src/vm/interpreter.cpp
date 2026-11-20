@@ -113,57 +113,16 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 		case TOpCode::BITWISE_XOR:	BinaryOp([](auto& a, auto& b) { return a ^ b; }); break;
 
 		case TOpCode::JZ: {
-			const auto target = FetchOperand();
+			const auto target = FetchTarget();
 			const Value v = Pop();
 			if (!v.IsTruthy())
 				m_pCurrentFrame->m_pIp = m_pCurrentFrame->m_pIpBase + target; // skip to the end of the loop
 			break;
 		} case TOpCode::JMP: {
-			m_pCurrentFrame->m_pIp = m_pCurrentFrame->m_pIpBase + FetchOperand();
+			m_pCurrentFrame->m_pIp = m_pCurrentFrame->m_pIpBase + FetchTarget();
 			break;
 		} case TOpCode::CALL: {
-			const auto argc = FetchOperand();
-
-			Value callee = Pop();
-
-			if (!callee.IsCallable())
-				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not callable"), callee.TypeToString()));
-
-			switch (callee.obj->type) {
-			case Object::Type::ot_function:
-				if (callee.obj->function->m_uParamCount != argc)
-					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->function->m_uParamCount));
-
-				RunFunction(callee.obj->function);
-				break;
-				
-			case Object::Type::ot_closure:
-				if (callee.obj->closure.function->m_uParamCount != argc)
-					throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, callee.obj->closure.function->m_uParamCount));
-
-				// the frame roots the closure object for the duration of the call
-				RunClosure(callee.obj);
-				break;
-			case Object::Type::ot_nativefunction: {
-					const auto* native = callee.obj->nativeFunction;
-					if (native->m_uParamCount != bloop::VARIADIC_PARAMETER_COUNT && native->m_uParamCount != argc)
-						throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, native->m_uParamCount));
-
-					// the arguments stay on the stack during the call, so they remain GC roots
-					// (and get updated in place if the native allocates). The stack never reallocates.
-					assert(m_oStack.size() >= argc);
-					const auto base = m_oStack.size() - argc;
-					const auto result = native->m_pFunction(*this, std::span<const Value>(m_oStack.data() + base, argc));
-
-					m_oStack.resize(base);
-					Push(result);
-					break;
-				}
-			default:
-				assert(false);
-				break;
-			}
-			break;
+			return CallOp(); // (normally Execute calls it directly)
 		} case TOpCode::SUBSCRIPT_GET: {
 			Value index = Pop();
 			Value operand = Pop();
@@ -179,19 +138,28 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			}
 			break;
 		} case TOpCode::SUBSCRIPT_SET: {
+			// [value, operand, index] -> [value]. The value stays on the stack (a root) while the object may grow
 			Value index = Pop();
 			Value operand = Pop();
-			Value value = Pop();
+			const auto& value = m_oStack.back();
 
 			if (!operand.IsIndexable())
 				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not indexable"), operand.TypeToString()));
+
+			// obj["key"] = value adds the key when it's missing, like obj.key = value
+			if (operand.obj->IsObject()) {
+				if (!index.IsString())
+					throw exception::VMError(BLOOPTEXT("object index must be a string"));
+
+				m_oHeap.ObjectSet(operand.obj, index, value);
+				break;
+			}
 
 			//returns Value&
 			auto& idx = operand.obj->Index(index);
 
 			idx = value;
 			m_oGC.WriteBarrier(operand.obj, value);
-			Push(value);
 			break;
 		} case TOpCode::PROPERTY_GET: {
 			Value key = Pop();
@@ -204,15 +172,14 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			break;
 
 		} case TOpCode::PROPERTY_SET: {
+			// [value, operand, key] -> [value]. The value stays on the stack (a root) while the object may grow
 			Value key = Pop();
 			Value operand = Pop();
-			Value value = Pop();
 
 			if (!operand.IsAggregate())
 				throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not an aggregate type"), operand.TypeToString()));
 
-			m_oHeap.ObjectSet(operand.obj, key, value);
-			Push(value);
+			m_oHeap.ObjectSet(operand.obj, key, m_oStack.back());
 			break;
 
 		} case TOpCode::RETURN: {
@@ -240,7 +207,10 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 				UpValue* uv{};
 
-				if (opcode == TOpCode::CAPTURE_LOCAL) {
+				if (opcode == TOpCode::CAPTURE_GLOBAL) {
+					assert(slot < m_oGlobals.size());
+					uv = m_oGC.NewClosedUpValue(&m_oGlobals[slot]);
+				} else if (opcode == TOpCode::CAPTURE_LOCAL) {
 					const auto stack_idx = m_pCurrentFrame->m_uBase + slot;
 					assert(stack_idx < m_oStack.size() && "Capture local: stack index out of bounds");
 
@@ -262,17 +232,18 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			break;
 		} case TOpCode::TRY: {
 			//ip, catchvar
-			m_pCurrentFrame->m_oExceptionHandlers.push_back({ FetchOperand(), m_oStack.size(), FetchOperand() });
+			const auto target = FetchTarget();
+			const auto catchVar = FetchOperand();
+			m_pCurrentFrame->m_oExceptionHandlers.push_back({ target, m_oStack.size(), catchVar });
 			break;
 		}case TOpCode::TRY_END: {
 			assert(!m_pCurrentFrame->m_oExceptionHandlers.empty());
 			m_pCurrentFrame->m_oExceptionHandlers.pop_back();
 			break;
 		} case TOpCode::THROW: {
-			const auto wasEmpty = m_pCurrentFrame->m_oExceptionHandlers.empty();
+			// unwinds to the frame with the closest handler and jumps to its catch, which is where Execute carries on
+			// (or throws a VMError when nothing catches it)
 			Throw(Pop());
-			if(wasEmpty) // we are in a different frame, so exit it
-				return ExecutionReturnCode::rc_throw;
 			break;
 		} case TOpCode::ITER_PREPARE: {
 			assert(!m_oStack.empty());
@@ -284,7 +255,7 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			Push(Value{ bloop::BloopInt{ 0 } });
 			break;
 		} case TOpCode::ITER_NEXT: {
-			const auto target = FetchOperand();
+			const auto target = FetchTarget();
 			assert(m_oStack.size() >= 2u);
 
 			const auto index = m_oStack[m_oStack.size() - 1u].i;
@@ -329,6 +300,10 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			const Value value = Pop();
 			Push(Value{ static_cast<bloop::BloopBool>(!value.IsTruthy()) });
 			break;
+		} case TOpCode::BITWISE_NOT: {
+			Value value = Pop();
+			Push(~value);
+			break;
 		} case TOpCode::NEG: {
 			Value index = Pop();
 			Push(-index);
@@ -340,6 +315,61 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 	return ExecutionReturnCode::rc_continue;
 }
 #define NOMINMAX
+// a call to a script function only pushes its frame: Execute carries on in it, and RETURN comes back here.
+// Natives are called right away
+VM::ExecutionReturnCode VM::CallOp() {
+	const auto argc = FetchOperand();
+
+	Value callee = Pop();
+
+	if (!callee.IsCallable())
+		ThrowError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not callable"), callee.TypeToString()));
+
+	switch (callee.obj->type) {
+	case Object::Type::ot_function:
+		CheckArgumentCount(argc, callee.obj->function->m_uParamCount);
+		PushFrame(callee.obj->function);
+		break;
+
+	case Object::Type::ot_closure:
+		CheckArgumentCount(argc, callee.obj->closure.function->m_uParamCount);
+
+		// the frame roots the closure object for the duration of the call
+		PushFrame(callee.obj);
+		break;
+	case Object::Type::ot_nativefunction: {
+		const auto* native = callee.obj->nativeFunction;
+		if (native->m_uParamCount != bloop::VARIADIC_PARAMETER_COUNT)
+			CheckArgumentCount(argc, native->m_uParamCount);
+
+		// the arguments stay on the stack during the call, so they remain GC roots
+		// (and get updated in place if the native allocates). The stack never reallocates.
+		assert(m_oStack.size() >= argc);
+		const auto base = m_oStack.size() - argc;
+		const auto result = native->m_pFunction(*this, std::span<const Value>(m_oStack.data() + base, argc));
+
+		m_oStack.resize(base);
+		Push(result);
+		break;
+	}
+	default:
+		assert(false);
+		break;
+	}
+	return ExecutionReturnCode::rc_continue;
+}
+
+void VM::ThrowError(const bloop::BloopString& message) {
+	throw exception::VMError(message);
+}
+
+bloop::BloopOffset VM::FetchTarget() {
+	bloop::BloopOffset value;
+	std::memcpy(&value, &*m_pCurrentFrame->m_pIp, sizeof(value));
+	m_pCurrentFrame->m_pIp += sizeof(value);
+	return value;
+}
+
 bloop::BloopIndex VM::FetchOperand() {
 	auto* p = &*m_pCurrentFrame->m_pIp;
 
@@ -348,4 +378,4 @@ bloop::BloopIndex VM::FetchOperand() {
 
 	m_pCurrentFrame->m_pIp += sizeof(value);
 	return value;
-}
+}

@@ -57,6 +57,18 @@ UpValue* GC::CaptureUpValue(Value* slot) {
 
     return up;
 }
+UpValue* GC::NewClosedUpValue(const Value* source) {
+    assert(source);
+    auto* h = AllocOld(sizeof(UpValue), GCKind::upvalue);
+
+    // read after the allocation: it may have moved the value
+    auto* up = new (h->template GetValue<void>()) UpValue{ .location = nullptr, .closed = *source, .next = nullptr };
+    up->location = &up->closed;
+
+    // the upvalue is old, the value may be young
+    WriteBarrier(up, up->closed);
+    return up;
+}
 void GC::CloseUpValues(Value* lastSlot)
 {
     assert(lastSlot != nullptr && "CloseUpValues called with null lastSlot");

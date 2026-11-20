@@ -55,6 +55,9 @@ namespace {
 			: m_refMetadata(metadata), m_oRootDirectory(Normalize(rootDirectory)) {
 			if (!options.m_oImportRoot.empty())
 				m_oImportRoot = Normalize(options.m_oImportRoot);
+
+			m_refMetadata.m_oNatives = bloop::standard::g_Natives;
+			m_refMetadata.m_oNatives.insert(m_refMetadata.m_oNatives.end(), options.m_oHostModules.begin(), options.m_oHostModules.end());
 		}
 
 		[[nodiscard]] std::unique_ptr<bloop::ast::Program> Compile(const fs::path& path, const bloop::BloopString& name,
@@ -214,6 +217,9 @@ namespace {
 			}
 
 			resolver.EndProgram(program.get());
+
+			for (const auto& [name, symbol] : main.m_oExports)
+				m_refMetadata.m_oExports[name] = symbol->m_uSlot;
 
 			m_pCurrent = nullptr;
 			bloop::bytecode::BuildByteCode(program.get(), m_refMetadata);

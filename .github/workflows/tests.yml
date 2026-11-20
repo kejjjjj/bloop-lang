@@ -2,8 +2,6 @@ name: tests
 
 on:
   push:
-  pull_request:
-  workflow_dispatch:
 
 # a newer push to the same branch cancels the runs that are still going
 concurrency:

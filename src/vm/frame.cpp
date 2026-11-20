@@ -27,18 +27,35 @@ const bloop::bc::InstrDebugRef& CallFrame::GetCurrentPosition(VM& vm) const {
 	return *(it - 1);
 }
 
+void VM::StartFrame(CallFrame& frame) {
+	auto& bytecode = m_refMetaData.m_oVMData.m_oChunks[frame.m_pChunk->m_uMetadata].m_oByteCode;
+	frame.m_pIpBase = bytecode.data();
+	frame.m_pIp = frame.m_pIpBase;
+	frame.m_pIpEnd = frame.m_pIpBase + bytecode.size();
+	m_pCurrentFrame = &frame;
+}
+void VM::CheckNativeStack() const {
+	if (!m_oLimits.m_uStackBytes || !m_uStackBase)
+		return;
+
+	// the stack grows down on every platform bloop runs on
+	const auto here = NativeStackAddress();
+
+	if (here < m_uStackBase && m_uStackBase - here > m_oLimits.m_uStackBytes)
+		ThrowError(bloop::fmt::format(BLOOPTEXT("stack overflow: native functions calling script functions go too deep ({} calls used more than {} bytes of the native stack)"), m_oFrames.size(), m_oLimits.m_uStackBytes));
+}
 void VM::PushFrame(Function* fn) {
 	const auto frameBase = m_oStack.size() - fn->m_uParamCount;
 	const auto needed = fn->m_uParamCount + fn->m_uLocalCount;
 
 	if (m_oStack.size() + static_cast<bloop::BloopUInt>(needed) >= BLOOP_MAX_STACK)
-		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} stack values"), BLOOP_MAX_STACK));
+		ThrowError(bloop::fmt::format(BLOOPTEXT("exceeded {} stack values"), BLOOP_MAX_STACK));
 
 	if (m_oFrames.size() >= BLOOP_MAX_FRAMES)
-		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} call frames"), BLOOP_MAX_FRAMES));
+		ThrowError(bloop::fmt::format(BLOOPTEXT("exceeded {} call frames"), BLOOP_MAX_FRAMES));
 
 	m_oStack.resize(frameBase + fn->m_uLocalCount);
-	m_pCurrentFrame = &m_oFrames.emplace_back(fn, frameBase);
+	StartFrame(m_oFrames.emplace_back(fn, frameBase)); // (m_oFrames never reallocates: it's reserved)
 }
 void VM::PushFrame(Object* closureObject) {
 	auto* closure = &closureObject->closure;
@@ -46,13 +63,13 @@ void VM::PushFrame(Object* closureObject) {
 	const auto needed = closure->function->m_uParamCount + closure->function->m_uLocalCount;
 
 	if (m_oStack.size() + static_cast<bloop::BloopUInt>(needed) > BLOOP_MAX_STACK)
-		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} stack values"), BLOOP_MAX_STACK));
+		ThrowError(bloop::fmt::format(BLOOPTEXT("exceeded {} stack values"), BLOOP_MAX_STACK));
 
 	if (m_oFrames.size() >= BLOOP_MAX_FRAMES)
-		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} call frames"), BLOOP_MAX_FRAMES));
+		ThrowError(bloop::fmt::format(BLOOPTEXT("exceeded {} call frames"), BLOOP_MAX_FRAMES));
 
 	m_oStack.resize(frameBase + closure->function->m_uLocalCount);
-	m_pCurrentFrame = &m_oFrames.emplace_back(closureObject, frameBase);
+	StartFrame(m_oFrames.emplace_back(closureObject, frameBase));
 }
 
 void VM::PopFrame() {
@@ -111,18 +128,23 @@ bloop::BloopString VM::FormatStackTraceMessage(const bc::InstrDebugRef& ref)
 		return msg;
 
 	const auto& lineData = m_refMetaData.m_oLineMap[line - 1u];
-	
+
 	const auto trimmed = trim(bloop::BloopString(lineData));
 	msg += trimmed + '\n';
 
+	// the lexer's column starts at 1 and counts a tab as 4, so walk the line to find the character it points at
+	const auto leading = std::min(lineData.find_first_not_of(BLOOPTEXT("\n\r\t ")), lineData.length());
+	std::size_t index{};
+	for (std::size_t column = 1u; index < lineData.length() && column < offset; index++)
+		column += lineData[index] == '\t' ? 4u : 1u;
+
+	// the caret goes under that character in the trimmed line
 	bloop::BloopSize visualCol{};
-	for (const auto i : std::views::iota(0u, offset - (lineData.length() - trimmed.length()))) {
-		const auto c = lineData[i];
-		visualCol += c == '\t' ? 8u - (visualCol % 8u) : 1u;
-	}
+	for (auto i = leading; i < index && i - leading < trimmed.length(); i++)
+		visualCol += lineData[i] == '\t' ? 8u - (visualCol % 8u) : 1u;
 
 	msg += bloop::BloopString(visualCol, ' ');
 	msg += '^';
 
 	return msg;
-}
+}

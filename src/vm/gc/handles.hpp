@@ -1,4 +1,6 @@
 #pragma once
+#include <memory>
+#include <utility>
 
 #include "vm/gc/gc.hpp"
 #include "vm/value.hpp"
@@ -72,4 +74,69 @@ namespace bloop::vm
 		GC& m_refGC;
 		bloop::BloopSize m_uBase;
 	};
+
+	// A root that the host owns: it keeps a value alive (and up to date when the GC moves it)
+	// across calls into the script, until the handle is destroyed or reset. Move-only.
+	// Safe to destroy after the VM is gone (it's just empty then). Make them with GC::MakePersistent
+	class Persistent {
+	public:
+		Persistent() = default;
+		Persistent(std::shared_ptr<PersistentTable> table, bloop::BloopSize index) noexcept
+			: m_pTable(std::move(table)), m_uIndex(index) {}
+		~Persistent() { Reset(); }
+
+		Persistent(Persistent&& other) noexcept : m_pTable(std::move(other.m_pTable)), m_uIndex(other.m_uIndex) {}
+		Persistent& operator=(Persistent&& other) noexcept {
+			if (this != &other) {
+				Reset();
+				m_pTable = std::move(other.m_pTable);
+				m_uIndex = other.m_uIndex;
+			}
+			return *this;
+		}
+		Persistent(const Persistent&) = delete;
+		Persistent& operator=(const Persistent&) = delete;
+
+		// false when empty, or when the VM is gone
+		[[nodiscard]] bool IsValid() const noexcept { return m_pTable && m_pTable->m_bAlive; }
+
+		// the current value (undefined if invalid). Only valid until the next allocation, like any Value
+		[[nodiscard]] Value Get() const noexcept { return IsValid() ? m_pTable->m_oValues[m_uIndex] : Value{}; }
+
+		// true if both hold the same value (the same object for objects)
+		[[nodiscard]] bool Holds(const Value& value) const noexcept {
+			if (!IsValid())
+				return false;
+			const auto& mine = m_pTable->m_oValues[m_uIndex];
+			if (mine.type != value.type)
+				return false;
+			return mine.type == Value::Type::t_object ? mine.obj == value.obj : Value(mine).IsEqual(value);
+		}
+
+		void Reset() noexcept {
+			if (IsValid()) {
+				m_pTable->m_oValues[m_uIndex] = Value{};
+				m_pTable->m_oFree.push_back(m_uIndex);
+			}
+			m_pTable.reset();
+		}
+
+	private:
+		std::shared_ptr<PersistentTable> m_pTable;
+		bloop::BloopSize m_uIndex{};
+	};
+
+	inline Persistent GC::MakePersistent(const Value& value) {
+		auto& table = *m_pPersistent;
+		bloop::BloopSize index{};
+		if (table.m_oFree.empty()) {
+			index = table.m_oValues.size();
+			table.m_oValues.push_back(value);
+		} else {
+			index = table.m_oFree.back();
+			table.m_oFree.pop_back();
+			table.m_oValues[index] = value;
+		}
+		return Persistent(m_pPersistent, index);
+	}
 }

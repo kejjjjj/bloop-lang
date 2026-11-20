@@ -54,6 +54,7 @@ BLOOP_OP(PROPERTY_SET)
 BLOOP_OP(MAKE_CLOSURE)
 BLOOP_OP(CAPTURE_LOCAL)
 BLOOP_OP(CAPTURE_UPVALUE)
+BLOOP_OP(CAPTURE_GLOBAL) // (only after MAKE_CLOSURE) slot: a new closed upvalue with the global's current value
 
 BLOOP_OP(POP)
 
@@ -62,6 +63,7 @@ BLOOP_OP(INCR)
 BLOOP_OP(DECR)
 BLOOP_OP(NEG)
 BLOOP_OP(NOT) // [value] -> [!value] (a boolean)
+BLOOP_OP(BITWISE_NOT) // [value] -> [~value] (integers)
 
 BLOOP_OP(TRY) //catch_ip, base, catch_var
 BLOOP_OP(TRY_END)

@@ -40,6 +40,22 @@ namespace bloop::ast {
 		}
 	};
 
+	// ~value: flips the bits of an integer
+	struct BitwiseNot final : Prefix {
+		BitwiseNot(const bloop::CodePosition& cp) : Prefix(bloop::EPunctuation::p_tilde, cp) {}
+
+		void Resolve(TResolver& resolver) override {
+			left->Resolve(resolver);
+		}
+		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+			left->EmitByteCode(builder, true);
+			Emit(builder, TOpCode::BITWISE_NOT);
+
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
+		}
+	};
+
 	struct PrefixIncrement final : Prefix {
 
 		PrefixIncrement(const bloop::CodePosition& cp) : Prefix(EPunctuation::p_increment, cp) {}

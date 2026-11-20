@@ -1,8 +1,27 @@
 #pragma once
 
 #include "ast/ast.hpp"
+#include "bytecode/exception.hpp"
+
+#include <optional>
+#include <vector>
 
 namespace bloop::ast {
+
+	// emits the value that an if/while condition tests (it stays on the stack for JZ).
+	// the condition is an expression, or a declaration with an initializer: if (const x = f())
+	inline void EmitCondition(TBCBuilder& builder, Statement& condition) {
+		if (auto* expression = dynamic_cast<ExpressionStatement*>(&condition)) {
+			expression->m_pExpression->EmitByteCode(builder, true);
+			return;
+		}
+		if (auto* declaration = dynamic_cast<VariableDeclaration*>(&condition); declaration && declaration->m_pExpression) {
+			declaration->m_pExpression->m_pExpression->EmitByteCode(builder, true); // the assignment, its value is the assigned value
+			return;
+		}
+		throw bloop::exception::ByteCodeError(BLOOPTEXT("the condition doesn't have a value"), condition.m_oApproximatePosition);
+	}
+
 
 	struct WhileStatement : BlockStatement {
 		WhileStatement(const bloop::CodePosition& cp) : BlockStatement(cp) {}
@@ -20,8 +39,7 @@ namespace bloop::ast {
 		void EmitByteCode(TBCBuilder& builder) override {
 
 			const auto loopStart = builder.m_uOffset;
-			m_pCondition->EmitByteCode(builder);
-			Omit(builder); //remove the pop
+			EmitCondition(builder, *m_pCondition);
 
 			const auto jumpExit = EmitJump(builder, TOpCode::JZ); //get the beginning of the loop
 			builder.m_oLoops.push_back({});
@@ -66,8 +84,8 @@ namespace bloop::ast {
 
 		void EmitByteCode(TBCBuilder& builder) override {
 
-			std::vector<bloop::BloopIndex> m_oBlockEndJmps;
-			std::optional<bloop::BloopIndex> nextJump;
+			std::vector<bloop::BloopOffset> m_oBlockEndJmps;
+			std::optional<bloop::BloopOffset> nextJump;
 
 			const auto jumpRequired = m_oIf.size() > 1u || m_pElse;
 
@@ -77,8 +95,7 @@ namespace bloop::ast {
 					PatchJump(builder, *nextJump, builder.m_uOffset);
 					nextJump = std::nullopt;
 				}
-				block->m_pCondition->EmitByteCode(builder);
-				Omit(builder); //remove the pop
+				EmitCondition(builder, *block->m_pCondition);
 
 				nextJump = EmitJump(builder, TOpCode::JZ);
 				block->m_pBody->EmitByteCode(builder);
@@ -140,10 +157,12 @@ namespace bloop::ast {
 
 			const auto loopStart = builder.m_uOffset;
 
-			if (m_pCondition)
+			// for (;;) has no condition: nothing to test, only break leaves the loop
+			std::optional<bloop::BloopOffset> jumpExit;
+			if (m_pCondition) {
 				m_pCondition->EmitByteCode(builder, true);
-
-			const auto jumpExit = EmitJump(builder, TOpCode::JZ); //get the beginning of the loop
+				jumpExit = EmitJump(builder, TOpCode::JZ);
+			}
 			builder.m_oLoops.push_back({});
 			BlockStatement::EmitByteCode(builder);
 
@@ -153,7 +172,8 @@ namespace bloop::ast {
 				m_pOnEnd->EmitByteCode(builder);
 
 			EmitJump(builder, TOpCode::JMP, loopStart); //jump back to the beginning of the loop
-			PatchJump(builder, jumpExit, builder.m_uOffset); //patch the JZ statement to jump past the end of the loop
+			if (jumpExit)
+				PatchJump(builder, *jumpExit, builder.m_uOffset); //patch the JZ statement to jump past the end of the loop
 
 			for (const auto& _break : builder.m_oLoops.back().m_oBreakStatements)
 				PatchJump(builder, _break, builder.m_uOffset); // make every break statement jump to the end
@@ -187,6 +207,10 @@ namespace bloop::ast {
 
 			auto* symbol = resolver.DeclareSymbol(m_sName, false);
 			symbol->m_bIsConst = m_bIsConst;
+
+			// at the top level the element is a global, which a closure would read when it's called (after the loop
+			// has moved on). Capturing its value when the closure is created gives every iteration its own binding
+			symbol->m_bCapturedByValue = resolver.m_oFunctions.empty();
 			m_oElement = resolver.ResolveIdentifier(m_sName);
 			assert(m_oElement.m_eKind == ResolvedIdentifier::Kind::Local || m_oElement.m_eKind == ResolvedIdentifier::Kind::Global);
 

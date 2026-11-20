@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <vector>
+#include <functional>
 
 namespace bloop::standard {
 
@@ -32,6 +33,9 @@ namespace bloop::standard {
 
 		// std.process.args
 		std::vector<bloop::BloopString> m_oArguments;
+
+		// where std.console.log writes (a line without the newline). Empty: std::cout
+		std::function<void(bloop::BloopStringView)> m_fnPrint;
 
 		[[nodiscard]] static Environment Unrestricted() {
 			Environment env;

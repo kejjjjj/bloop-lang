@@ -16,6 +16,8 @@ std::unique_ptr<BinaryExpression> CPrefixOperation::ToExpression()
 		return std::make_unique<bloop::ast::Negation>(m_oDeclPos);
 	case Type::o_logical_not:
 		return std::make_unique<bloop::ast::LogicalNot>(m_oDeclPos);
+	case Type::o_bitwise_not:
+		return std::make_unique<bloop::ast::BitwiseNot>(m_oDeclPos);
 	case Type::o_increment:
 		return std::make_unique<bloop::ast::PrefixIncrement>(m_oDeclPos);
 	case Type::o_decrement:
@@ -43,6 +45,9 @@ bloop::EStatus CParserPrefix::Parse() {
 		switch (punct->m_ePunctuation) {
 		case EPunctuation::p_sub: 
 			m_oPrefixes.emplace_back(std::make_unique<CPrefixOperation>(CPrefixOperation::Type::o_negation));
+			break;
+		case EPunctuation::p_tilde:
+			m_oPrefixes.emplace_back(std::make_unique<CPrefixOperation>(CPrefixOperation::Type::o_bitwise_not));
 			break;
 		case EPunctuation::p_exclamation:
 			m_oPrefixes.emplace_back(std::make_unique<CPrefixOperation>(CPrefixOperation::Type::o_logical_not));

@@ -1,5 +1,7 @@
 #include "vm/gc/gc.hpp"
 #include "vm/gc/trace.hpp"
+#include "vm/exception.hpp"
+#include "utils/fmt.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -10,7 +12,12 @@ using namespace bloop::vm;
 GC::GC(VM* vm) : m_pVM(vm), m_oMinorSpace(NURSERY_SIZE), m_oMajorSpace(MAJOR_CHUNK_SIZE) {
 	m_oTempRoots.reserve(BLOOP_MAX_FRAMES);
 }
-GC::~GC() = default;
+GC::~GC() {
+	// handles that outlive the VM become empty
+	m_pPersistent->m_bAlive = false;
+	m_pPersistent->m_oValues.clear();
+	m_pPersistent->m_oFree.clear();
+}
 
 GCHeader* GC::AllocHeader(bloop::BloopSize payloadSize, GCKind kind) {
 
@@ -35,6 +42,7 @@ GCHeader* GC::AllocHeader(bloop::BloopSize payloadSize, GCKind kind) {
 	if (!mem && CanCollect()) {
 		MinorGC();
 		MaybeMajorGC();
+		CheckHeapLimit(0u); // the minor GC promoted objects into the old generation
 		mem = m_oMinorSpace.TryAlloc(total);
 	}
 
@@ -59,6 +67,8 @@ GCHeader* GC::AllocOld(bloop::BloopSize payloadSize, GCKind kind) {
 	if (CanCollect())
 		MaybeMajorGC();
 
+	CheckHeapLimit(sizeof(GCHeader) + payloadSize);
+
 	auto* h = m_oMajorSpace.Alloc(payloadSize);
 	h->kind = kind;
 	m_oStats.bytesPretenured += h->TotalSize();
@@ -68,6 +78,17 @@ GCHeader* GC::AllocOld(bloop::BloopSize payloadSize, GCKind kind) {
 		Remember(h);
 
 	return h;
+}
+void GC::CheckHeapLimit(bloop::BloopSize extra) {
+	if (!m_uHeapLimit || m_oMajorSpace.AllocatedBytes() + extra <= m_uHeapLimit)
+		return;
+
+	// maybe it's mostly garbage
+	if (CanCollect())
+		MajorGC();
+
+	if (m_oMajorSpace.AllocatedBytes() + extra > m_uHeapLimit)
+		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("out of memory: the script needs more than {} bytes"), m_uHeapLimit));
 }
 void GC::MaybeMajorGC() {
 	if (m_oMajorSpace.AllocatedBytes() >= m_uNextMajorAt)

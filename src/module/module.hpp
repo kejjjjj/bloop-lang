@@ -5,6 +5,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <vector>
 
 namespace bloop::ast {
 	struct Program;
@@ -17,6 +18,9 @@ namespace bloop::module {
 		// empty: no limit. A host that runs untrusted scripts should set this, 
 		// otherwise an import can read any file that the process can read
 		std::filesystem::path m_oImportRoot;
+
+		// the host's own native modules: globals next to std (see bloop.hpp)
+		std::vector<bloop::standard::NativeDef> m_oHostModules;
 	};
 
 	// lexes, parses, resolves and builds the bytecode of a file and every module it imports (recursively).

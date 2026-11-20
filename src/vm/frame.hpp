@@ -23,6 +23,7 @@ namespace bloop::vm
 		Chunk* m_pChunk{};
 		bloop::BloopByte* m_pIp{};
 		bloop::BloopByte* m_pIpBase{};
+		bloop::BloopByte* m_pIpEnd{}; // reaching the end of the chunk is a return
 		bloop::BloopSize m_uBase{};
 		std::vector<ExceptionHandler> m_oExceptionHandlers;
 
@@ -30,4 +31,4 @@ namespace bloop::vm
 
 		ChunkType m_eChunkType{ ChunkType::ct_chunk };
 	};
-}
+}

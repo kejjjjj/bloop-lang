@@ -136,6 +136,10 @@ namespace bloop::vm
 				onSlot(obj);
 		}
 
+		// (free slots are undefined)
+		for (auto& v : m_pPersistent->m_oValues)
+			visit(v);
+
 		// the callee gets popped off the stack before the call, so the frame keeps it alive
 		for (auto& frame : vm.m_oFrames) {
 			if (frame.m_eChunkType == CallFrame::ChunkType::ct_closure) {

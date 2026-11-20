@@ -387,6 +387,17 @@ Value Value::operator-() {
 
     throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" can't be negated"), TypeToString()));
 }
+Value Value::operator~() {
+    switch (type) {
+    case VT::t_uint:
+        return ~u;
+    case VT::t_int:
+        return ~i;
+    default:
+        break;
+    }
+    throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" isn't an integer"), TypeToString()));
+}
 Value Value::operator++() {
     if(!IsArithmetic())
         throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not arithmetic"), TypeToString()));

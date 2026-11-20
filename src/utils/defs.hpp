@@ -44,6 +44,10 @@ namespace bloop {
 	using BloopIndex = bloop::BloopUInt64;
 #endif
 
+	// a position in a chunk's bytecode (jump targets): 32 bits, so a chunk isn't limited
+	// to 64KB even though the other operands (BloopIndex) are 16 bits
+	using BloopOffset = bloop::BloopUInt32;
+
 #define BLOOP_MAX_STACK 0xffffu
 #define BLOOP_MAX_FRAMES 0x400u
 

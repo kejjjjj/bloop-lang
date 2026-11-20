@@ -89,6 +89,10 @@ Value VM::Run() {
 	//	//throw exception::VMError(BLOOPTEXT("couldn't find the entry function: " + entryFuncName));
 	//}
 
+	m_uInstructionsUsed = 0u;
+
+	m_uStackBase = NativeStackAddress();
+
 	try {
 		if (m_refMetaData.m_bDebugOutput)
 			Benchmark("glob+main", [&]() { RunGlobal(); });
@@ -102,91 +106,125 @@ Value VM::Run() {
 		m_oExitCode = exit.m_iCode;
 		return Value{};
 	} catch (exception::VMError& ex) {
-		m_bFailed = true;
-		const auto positions = StackTrace();
-		bloop::BloopString msg = BLOOPTEXT("\nruntime error\n\n");
-
-		msg += bloop::fmt::format(BLOOPTEXT("\n{}\n\n"), ex.what());
-
-		for (const auto& src : positions)
-			msg += FormatStackTraceMessage(src) + '\n';
-
-		std::cout << msg << '\n';
+		ReportError(ex);
 		Push({});
 	}
 
 	return m_oStack.size() ? m_oStack.front() : Value{};
 }
+void VM::ReportError(const std::exception& error) {
+	m_bFailed = true;
+	const auto positions = StackTrace();
+	m_oStack.clear();
 
-VM::ExecutionReturnCode VM::RunFrame() {
-	ExecutionReturnCode returnCode{};
+	bloop::BloopString msg = BLOOPTEXT("\nruntime error\n\n");
+	msg += bloop::fmt::format(BLOOPTEXT("\n{}\n\n"), error.what());
 
-	auto& chunk = m_refMetaData.m_oVMData.m_oChunks[m_pCurrentFrame->m_pChunk->m_uMetadata];
-	m_pCurrentFrame->m_pIpBase = chunk.m_oByteCode.data();
-	m_pCurrentFrame->m_pIp = m_pCurrentFrame->m_pIpBase;
-	const auto end = m_pCurrentFrame->m_pIp + chunk.m_oByteCode.size();
-
-	while (m_pCurrentFrame->m_pIp != end) {
-		returnCode = InterpretOpCode(static_cast<bloop::bytecode::EOpCode>(*m_pCurrentFrame->m_pIp++));
-
-		if (returnCode != ExecutionReturnCode::rc_continue) {
-			break;
+	// deep recursion: the first and the last calls are enough
+	constexpr bloop::BloopSize shown = 16u;
+	for (bloop::BloopSize i = 0; i < positions.size(); i++) {
+		if (positions.size() > shown * 2u && i == shown) {
+			msg += bloop::fmt::format(BLOOPTEXT("... ({} more calls)\n\n"), positions.size() - shown * 2u);
+			i = positions.size() - shown;
 		}
+		msg += FormatStackTraceMessage(positions[i]) + '\n';
 	}
 
-	return returnCode;
+	m_sError = msg;
+
+	if (m_bPrintErrors)
+		std::cout << msg << '\n';
+}
+void VM::SetLimits(const Limits& limits) {
+	m_oLimits = limits;
+	m_oGC.SetHeapLimit(limits.m_uHeapBytes);
+}
+std::optional<Value> VM::CallFromHost(const Value& callee, std::span<const Value> args) {
+	assert(!IsRunning());
+
+	m_uInstructionsUsed = 0u;
+	m_bFailed = false;
+	m_sError.clear();
+
+	m_uStackBase = NativeStackAddress();
+
+	try {
+		auto result = Call(callee, args);
+		m_oStack.clear();
+		return result;
+	} catch (exception::ExitRequest& exit) {
+		[[maybe_unused]] const auto positions = StackTrace();
+		m_oStack.clear();
+		m_oExitCode = exit.m_iCode;
+	} catch (exception::VMError& ex) {
+		ReportError(ex);
+	}
+	return std::nullopt;
+}
+
+void VM::Execute(bloop::BloopSize stopDepth) {
+	assert(m_oFrames.size() > stopDepth);
+
+	for (;;) {
+		auto* frame = m_pCurrentFrame;
+
+		// falling off the end of a chunk returns undefined
+		if (frame->m_pIp == frame->m_pIpEnd) {
+			Push(Value{});
+			if (ReturnFromFrame(stopDepth))
+				return;
+			continue;
+		}
+
+		// a script that the host doesn't trust can't run forever
+		if (m_oLimits.m_uInstructions && ++m_uInstructionsUsed > m_oLimits.m_uInstructions)
+			ThrowError(bloop::fmt::format(BLOOPTEXT("the script ran too long (more than {} instructions)"), m_oLimits.m_uInstructions));
+
+		const auto op = static_cast<bloop::bytecode::EOpCode>(*frame->m_pIp++);
+
+		// CALL pushes a frame (or runs a native) and the loop carries on in the callee
+		const auto returnCode = op == bloop::bytecode::EOpCode::CALL ? CallOp() : InterpretOpCode(op);
+
+		if (returnCode == ExecutionReturnCode::rc_continue)
+			continue;
+
+		if (returnCode == ExecutionReturnCode::rc_return)
+			Push(Value{});
+
+		if (ReturnFromFrame(stopDepth))
+			return;
+	}
+}
+bool VM::ReturnFromFrame(bloop::BloopSize stopDepth) {
+	// the return value is on top of the stack, where it stays a root until the frame is gone
+	const auto base = m_oFrames.back().m_uBase;
+	m_oGC.CloseUpValues(m_oStack.data() + base); // (doesn't allocate)
+
+	const Value ret = m_oStack.back();
+	PopFrame(); // the stack goes back to where the caller put the arguments
+	Push(ret);
+
+	return m_oFrames.size() == stopDepth;
 }
 void VM::RunGlobal() {
-	m_pCurrentFrame = &m_oFrames.emplace_back(&m_oGlobalChunk, 0u);
+	StartFrame(m_oFrames.emplace_back(&m_oGlobalChunk, 0u));
 
-	for (bloop::BloopSize i{}; const auto& native : bloop::standard::g_Natives) {
+	assert(!m_refMetaData.m_oNatives.empty()); // filled by the resolver
+	for (bloop::BloopSize i{}; const auto& native : m_refMetaData.m_oNatives) {
 		m_oGlobals[i++] = bloop::standard::FromDefinitionToObject(m_oHeap, native, m_oEnvironment);
 	}
 
-	const auto returnCode = RunFrame();
-
-	Value ret;
-	if (returnCode == ExecutionReturnCode::rc_return_value)
-		ret = Pop();
-
-	m_oFrames.clear();
-	m_pCurrentFrame = nullptr;
-
-	// returning from inside a loop can leave temporaries behind (a ranged for keeps its iterator on the stack)
-	m_oStack.clear();
-	Push(ret);
+	// returning from inside a loop can leave temporaries behind (a ranged for keeps its iterator on the stack),
+	// but returning pops everything above the frame's base, which is 0: the stack ends up with just the value
+	Execute(0u);
+	assert(m_oStack.size() == 1u && m_oFrames.empty() && !m_pCurrentFrame);
 }
-void VM::RunFunction(Function* fn) {
-	PushFrame(fn);
-	const auto returnCode = RunFrame();
-
-	if (returnCode == ExecutionReturnCode::rc_throw)
-		return;
-
-	Value ret;
-	if (returnCode == ExecutionReturnCode::rc_return_value)
-		ret = Pop();
-
-	m_oGC.CloseUpValues(m_oStack.data() + m_oFrames.back().m_uBase);
-	PopFrame();
-	Push(ret);
+void VM::CheckArgumentCount(bloop::BloopSize argc, bloop::BloopSize paramCount) {
+	// strict: a script function has to get exactly as many arguments as it has parameters
+	if (argc != paramCount)
+		ThrowError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, paramCount));
 }
-void VM::RunClosure(Object* closure)
-{
-	PushFrame(closure);
-	const auto returnCode = RunFrame();
 
-	if (returnCode == ExecutionReturnCode::rc_throw)
-		return;
-
-	Value ret;
-	if (returnCode == ExecutionReturnCode::rc_return_value)
-		ret = Pop();
-
-	m_oGC.CloseUpValues(m_oStack.data() + m_oFrames.back().m_uBase);
-	PopFrame();
-	Push(ret);
-}
 void VM::Exit(bloop::BloopInt code) {
 	throw exception::ExitRequest{ code };
 }
@@ -195,6 +233,9 @@ Value VM::Call(const Value& callee, std::span<const Value> args) {
 
 	if (!callee.IsCallable())
 		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("a value of type \"{}\" is not callable"), callee.TypeToString()));
+
+	// this is the one place where calls recurse in C++ (a native calling a script function calling a native...)
+	CheckNativeStack();
 
 	if (m_oStack.size() + args.size() + 1u >= BLOOP_MAX_STACK)
 		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} stack values"), BLOOP_MAX_STACK));
@@ -215,17 +256,18 @@ Value VM::Call(const Value& callee, std::span<const Value> args) {
 		Push(arg);
 
 	auto* obj = callee.obj;
+	const auto depth = m_oFrames.size();
 
 	switch (obj->type) {
 	case Object::Type::ot_function:
-		if (obj->function->m_uParamCount != argc)
-			throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, obj->function->m_uParamCount));
-		RunFunction(obj->function);
+		CheckArgumentCount(argc, obj->function->m_uParamCount);
+		PushFrame(obj->function);
+		Execute(depth); // returns when the callee does
 		break;
 	case Object::Type::ot_closure:
-		if (obj->closure.function->m_uParamCount != argc)
-			throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, obj->closure.function->m_uParamCount));
-		RunClosure(obj); // the frame keeps the closure alive
+		CheckArgumentCount(argc, obj->closure.function->m_uParamCount);
+		PushFrame(obj); // the frame keeps the closure alive
+		Execute(depth);
 		break;
 	case Object::Type::ot_nativefunction: {
 		const auto* native = obj->nativeFunction;
@@ -241,7 +283,7 @@ Value VM::Call(const Value& callee, std::span<const Value> args) {
 		break;
 	}
 
-	// RunFunction / RunClosure leave the return value on the stack
+	// the callee's return leaves its value where the arguments were
 	assert(m_oStack.size() == base + 1u);
 	return Pop();
 }

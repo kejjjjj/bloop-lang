@@ -10,6 +10,9 @@
 #include <algorithm>
 #include <type_traits>
 #include <iterator>
+#include <limits>
+#include <cassert>
+#include <utility>
 
 using namespace bloop::bytecode;
 
@@ -31,106 +34,53 @@ bloop::BloopIndex CByteCodeBuilder::AddConstant(bloop::ConstantData c) {
 	m_oConstants.emplace_back(c);
 	return static_cast<bloop::BloopIndex>(idx);
 }
+void CByteCodeBuilder::Add(Instruction ins, CodePosition pos) {
+	CSingularByteCode bc{ .ins = ins, .loc = { m_uOffset, pos } };
+	const auto size = bc.GetBytes();
+
+	if (static_cast<bloop::BloopUInt>(m_uOffset) + size >= std::numeric_limits<bloop::BloopOffset>::max())
+		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode chunk has more than {} bytes"), std::numeric_limits<bloop::BloopOffset>::max()), pos);
+	if (m_oByteCode.size() >= std::numeric_limits<bloop::BloopOffset>::max())
+		throw exception::ByteCodeError(BLOOPTEXT("too many instructions in a chunk"), pos);
+
+	m_oByteCode.emplace_back(std::move(bc));
+	m_uOffset += size;
+}
 void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex arg, bloop::BloopIndex arg2, bloop::BloopIndex arg3, CodePosition pos) {
-	m_oByteCode.emplace_back(CSingularByteCode{ 
-		.ins = Instr3{
-			.op = opcode, 
-			.arg = arg, 
-			.arg2 = arg2,
-			.arg3 = arg3
-		}, 
-		.loc = { 
-			m_uOffset, 
-			pos 
-		}
-	});
-
-	constexpr auto offset = 1 + sizeof(bloop::BloopIndex) * 3;
-
-	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset >= bloop::INVALID_SLOT)
-		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode chunk has more than {} bytes"), bloop::INVALID_SLOT), pos);
-
-	m_uOffset += offset;
+	Add(Instr3{ .op = opcode, .arg = arg, .arg2 = arg2, .arg3 = arg3 }, pos);
 }
 void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex arg, bloop::BloopIndex arg2, CodePosition pos) {
-	m_oByteCode.emplace_back(CSingularByteCode{ 
-		.ins = Instr2{
-			.op = opcode, 
-			.arg = arg, 
-			.arg2 = arg2 
-		}, 
-		.loc = { 
-			m_uOffset, 
-			pos 
-		} 
-	});
-	constexpr auto offset = 1 + sizeof(bloop::BloopIndex) * 2;
-
-	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset >= bloop::INVALID_SLOT)
-		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode chunk has more than {} bytes"), bloop::INVALID_SLOT), pos);
-
-	m_uOffset += offset;
-
+	Add(Instr2{ .op = opcode, .arg = arg, .arg2 = arg2 }, pos);
 }
 void CByteCodeBuilder::Emit(EOpCode opcode, bloop::BloopIndex idx, CodePosition pos) {
-	m_oByteCode.emplace_back(CSingularByteCode{ 
-		.ins = Instr1{
-			.op = opcode, 
-			.arg = idx 
-		}, 
-		.loc = { 
-			m_uOffset, 
-			pos 
-		} 
-	});
-	
-	constexpr auto offset = 1 + sizeof(bloop::BloopIndex);
-
-	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset >= bloop::INVALID_SLOT)
-		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode chunk has more than {} bytes"), bloop::INVALID_SLOT), pos);
-
-	m_uOffset += offset;
-
+	Add(Instr1{ .op = opcode, .arg = idx }, pos);
 }
 void CByteCodeBuilder::Emit(EOpCode opcode, CodePosition pos) {
-	m_oByteCode.emplace_back(CSingularByteCode{ .ins = Instr0{.op = opcode }, .loc = { m_uOffset, pos } });
-
-	constexpr auto offset = 1;
-
-	if (static_cast<bloop::BloopUInt>(m_uOffset) + offset >= bloop::INVALID_SLOT)
-		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode chunk has more than {} bytes"), bloop::INVALID_SLOT), pos);
-
-	m_uOffset += offset;
+	Add(Instr0{ .op = opcode }, pos);
 }
-void CByteCodeBuilder::Omit() {
-
-	if (m_oByteCode.empty())
-		return;
-
-	const auto size = m_oByteCode.back().GetBytes();
-	m_oByteCode.pop_back();
-	m_uOffset -= size;
+bloop::BloopOffset CByteCodeBuilder::EmitJump(EOpCode opcode, CodePosition pos) {
+	const auto idx = static_cast<bloop::BloopOffset>(m_oByteCode.size());
+	Add(InstrJump{ .op = opcode, .target = 0u }, pos);
+	return idx;
 }
-bloop::BloopIndex CByteCodeBuilder::EmitJump(EOpCode opcode, CodePosition pos) {
-	auto idx = m_oByteCode.size();
-	Emit(opcode, 0, pos);
-	return static_cast<bloop::BloopIndex>(idx);
+void CByteCodeBuilder::EmitJump(EOpCode opcode, bloop::BloopOffset target, CodePosition pos) {
+	Add(InstrJump{ .op = opcode, .target = target }, pos);
 }
-void CByteCodeBuilder::EmitJump(EOpCode opcode, bloop::BloopIndex offset, CodePosition pos) {
-	Emit(opcode, offset, pos);
+void CByteCodeBuilder::PatchJump(bloop::BloopOffset src, bloop::BloopOffset dst) {
+	std::get<InstrJump>(m_oByteCode[src].ins).target = dst;
 }
-void CByteCodeBuilder::PatchJump(bloop::BloopIndex src, bloop::BloopIndex dst) {
-	std::get<1>(m_oByteCode[src].ins).arg = dst;
+bloop::BloopOffset CByteCodeBuilder::EmitTry(EOpCode opcode, bloop::BloopIndex catchVar, CodePosition pos) {
+	const auto idx = static_cast<bloop::BloopOffset>(m_oByteCode.size());
+	Add(InstrJumpArg{ .op = opcode, .target = 0u, .arg = catchVar }, pos);
+	return idx;
 }
-bloop::BloopIndex CByteCodeBuilder::EmitTry(EOpCode opcode, bloop::BloopIndex catchVar, CodePosition pos) {
-	auto idx = m_oByteCode.size();
-	Emit(opcode, 0u, catchVar, pos);
-	return static_cast<bloop::BloopIndex>(idx);
-}
-void CByteCodeBuilder::PatchTry(bloop::BloopIndex src, bloop::BloopIndex dst) {
-	std::get<2>(m_oByteCode[src].ins).arg = dst;
+void CByteCodeBuilder::PatchTry(bloop::BloopOffset src, bloop::BloopOffset dst) {
+	std::get<InstrJumpArg>(m_oByteCode[src].ins).target = dst;
 }
 void CByteCodeBuilder::EmitCapture(const bc::Capture& capture, CodePosition pos) {
+	if (capture.m_bIsGlobal)
+		return Emit(EOpCode::CAPTURE_GLOBAL, capture.m_uSlot, pos);
+
 	if (capture.m_bIsLocal) {
 		return Emit(EOpCode::CAPTURE_LOCAL, capture.m_uSlot, pos);
 	}
@@ -154,7 +104,7 @@ bloop::bc::Chunk CByteCodeBuilder::Finalize() {
 
 void CByteCodeBuilder::Print() {
 
-	bloop::BloopIndex ip{};
+	bloop::BloopOffset ip{};
 	std::ranges::for_each(m_oByteCode, [&](CSingularByteCode& c) {
 		std::cout << std::dec << static_cast<bloop::BloopInt>(ip) << ": " << c.ToString() << '\n';
 		ip += c.GetBytes();
@@ -172,6 +122,7 @@ namespace {
 	template <typename Instr>
 	inline void EncodeInstruction(std::vector<bloop::BloopByte>& out, const Instr& i) {
 		out.push_back(static_cast<bloop::BloopByte>(i.op));
+		if constexpr (requires { i.target; })  WriteLE(out, i.target);
 		if constexpr (requires { i.arg; })  WriteLE(out, i.arg);
 		if constexpr (requires { i.arg2; }) WriteLE(out, i.arg2);
 		if constexpr (requires { i.arg3; }) WriteLE(out, i.arg3);
@@ -189,9 +140,7 @@ std::vector<bloop::BloopByte> CByteCodeBuilder::Encode() {
 		}, bc.ins);
 	}
 
-	if(out.size() >= bloop::INVALID_SLOT)
-		throw exception::ByteCodeError(bloop::fmt::format(BLOOPTEXT("bytecode has more than {} bytes"), bloop::INVALID_SLOT));
-
+	assert(out.size() == m_uOffset);
 	return out;
 }
 

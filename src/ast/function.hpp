@@ -76,12 +76,15 @@ namespace bloop::ast {
 
 			const auto AddLocal = [&] { 
 				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopIndex>(m_uNextUpValues->size());
-				m_oCaptures.push_back({symbol->m_uSlot, true });
+				if (symbol->m_bCapturedByValue)
+					m_oCaptures.push_back({ .m_uSlot = symbol->m_uSlot, .m_bIsLocal = false, .m_bIsGlobal = true });
+				else
+					m_oCaptures.push_back({ .m_uSlot = symbol->m_uSlot, .m_bIsLocal = true });
 			};
 
 			const auto AddUpvalue = [&](bloop::BloopIndex slot) {
 				(*m_uNextUpValues)[symbol] = static_cast<bloop::BloopIndex>(m_uNextUpValues->size());
-				m_oCaptures.push_back({ slot, false });
+				m_oCaptures.push_back({ .m_uSlot = slot, .m_bIsLocal = false });
 			};
 
 			if (prevFunc) {

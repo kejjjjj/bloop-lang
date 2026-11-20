@@ -25,6 +25,9 @@ namespace bloop::resolver {
 			bloop::BloopIndex m_uSlot{};
 			bloop::BloopBool m_bIsConst{};
 			bloop::BloopBool m_bIsFunction{};
+			// a global that functions capture by value instead of reading the global:
+			// the element of a ranged for at the top level, so that closures keep their iteration's value
+			bloop::BloopBool m_bCapturedByValue{};
 		};
 
 		struct Scope {

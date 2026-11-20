@@ -29,3 +29,36 @@ TEST_CASE("runtime error in a single line script") {
 	REQUIRE(output.find("at [1, ") != std::string::npos);
 	REQUIRE(output.find("return [1][5];") != std::string::npos);
 }
+
+namespace {
+	// the line under the shown source line, which has the caret
+	std::string CaretLine(const std::string& output, const std::string& sourceLine) {
+		const auto at = output.find(sourceLine + '\n');
+		if (at == std::string::npos)
+			return "<source line not found>";
+		const auto begin = at + sourceLine.length() + 1u;
+		return output.substr(begin, output.find('\n', begin) - begin);
+	}
+}
+
+// the lexer counts a tab as 4 columns, and the caret used that column as a character index,
+// which read past the end of indented lines (an assertion in MSVC debug builds)
+TEST_CASE("runtime error carets on indented lines") {
+	const auto [ret0, plain] = RunCaptured("let a = [1];\nreturn a[5];");
+	const auto expected = CaretLine(plain, "return a[5];");
+	REQUIRE(expected.find('^') != std::string::npos);
+
+	for (const std::string indent : { "\t", "\t\t\t", "    ", " \t  \t", "\t\t\t\t\t\t\t\t\t\t" }) {
+		for (const std::string ending : { "", "   ", "\t\t", "\r", " \t\r" }) {
+			const auto [ret, output] = RunCaptured("let a = [1];\n" + indent + "return a[5];" + ending + "\n");
+			INFO(output);
+			REQUIRE(ret.has_value());
+			REQUIRE(output.find("out of bounds index [5]") != std::string::npos);
+			REQUIRE(CaretLine(output, "return a[5];") == expected);
+		}
+	}
+	// an error inside a line, after tabs in the middle of it
+	const auto [ret1, inner] = RunCaptured("let a = [1];\n\tlet\tb = 1;\treturn a[5];");
+	INFO(inner);
+	REQUIRE(inner.find("let\tb = 1;\treturn a[5];") != std::string::npos);
+}

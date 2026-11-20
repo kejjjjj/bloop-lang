@@ -1,0 +1,12 @@
+// an example mod: spawns things through the host's game module
+
+let spawned = 0;
+
+export fn on_update(frame, dt) {
+	if (frame % 2 === 0)
+		spawned = game.spawn("crate " + std.string.from(frame));
+
+	return { frame: frame, spawned: spawned, dt: dt };
+}
+
+std.console.log("loaded into ", game.name);

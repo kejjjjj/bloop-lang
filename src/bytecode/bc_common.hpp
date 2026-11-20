@@ -10,9 +10,10 @@ namespace bloop::bc
     struct Capture {
         bloop::BloopIndex m_uSlot{};
         bloop::BloopBool m_bIsLocal{};
+        bloop::BloopBool m_bIsGlobal{}; // a copy of the global's current value (see Symbol::m_bCapturedByValue)
     };
 	struct InstrDebugRef {
-		bloop::BloopIndex m_uByteOffset{};
+		bloop::BloopOffset m_uByteOffset{};
 		bloop::CodePosition m_oPosition;
 	};
 

@@ -36,17 +36,14 @@ namespace bloop::ast {
 		inline void Emit(TBCBuilder& builder, TOpCode insn, bloop::BloopIndex arg, bloop::BloopIndex arg2, bloop::BloopIndex arg3) const {
 			builder.Emit(insn, arg, arg2, arg3, { m_oApproximatePosition });
 		}
-		inline void Omit(TBCBuilder& builder) {
-			builder.Omit();
-		}
-		[[nodiscard]] inline bloop::BloopIndex EmitJump(TBCBuilder& builder, TOpCode opcode) {
+		[[nodiscard]] inline bloop::BloopOffset EmitJump(TBCBuilder& builder, TOpCode opcode) {
 			return builder.EmitJump(opcode, {m_oApproximatePosition});
 		}
-		inline void EmitJump(TBCBuilder& builder, TOpCode opcode, bloop::BloopIndex offset) {
-			builder.EmitJump(opcode, offset, { m_oApproximatePosition });
+		inline void EmitJump(TBCBuilder& builder, TOpCode opcode, bloop::BloopOffset target) {
+			builder.EmitJump(opcode, target, { m_oApproximatePosition });
 
 		}
-		inline void PatchJump(TBCBuilder& builder, bloop::BloopIndex src, bloop::BloopIndex dst) {
+		inline void PatchJump(TBCBuilder& builder, bloop::BloopOffset src, bloop::BloopOffset dst) {
 			builder.PatchJump(src, dst);
 		}
 
@@ -270,8 +267,7 @@ namespace bloop::ast {
 
 			PatchJump(builder, toEnd, builder.m_uOffset);
 
-			// one POP after both branches (instead of one in each): loop and if conditions are emitted
-			// as statements and then their last instruction (the POP) is removed
+			// one POP after both branches instead of one in each
 			if (!want_value)
 				Emit(builder, TOpCode::POP);
 		}

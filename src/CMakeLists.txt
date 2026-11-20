@@ -11,9 +11,9 @@ if (MSVC AND POLICY CMP0141)
     set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>")
 endif()
 
-file(GLOB_RECURSE PROJECT_SOURCES
+# everything except main.cpp is the library that a host program links to (see bloop.hpp)
+file(GLOB_RECURSE LIBRARY_SOURCES
     CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/lexer/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/ast/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/parser/*.cpp"
@@ -22,21 +22,24 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/vm/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/std/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/module/*.cpp"
-
+    "${CMAKE_CURRENT_SOURCE_DIR}/embed/*.cpp"
 )
 
-add_executable(bloop ${PROJECT_SOURCES})
+add_library(bloop_lib STATIC ${LIBRARY_SOURCES})
 
-target_include_directories(bloop PRIVATE
+# the headers need C++20, so a host that links to the library gets it too
+target_compile_features(bloop_lib PUBLIC cxx_std_20)
+
+# a host adds this directory to its include path and includes "bloop.hpp"
+target_include_directories(bloop_lib PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
+add_executable(bloop "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
+target_link_libraries(bloop PRIVATE bloop_lib)
+
 set_target_properties(bloop PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-)
-
-target_compile_definitions(bloop PRIVATE
-    $<$<CONFIG:Debug>:DEBUG_MODE=1>
 )
 
 #if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
@@ -44,20 +47,24 @@ target_compile_definitions(bloop PRIVATE
 #    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 #endif()
 
-if (MSVC)
-    target_compile_options(bloop PRIVATE
-        /W4 /WX
-        /wd4514 /wd4626 /wd4820 /wd5267 /wd4351 /wd5045 /wd4371 /wd4324
-        $<$<CONFIG:Debug>:/Od /Zi /RTC1>
-        $<$<CONFIG:RelWithDebInfo>:/O2 /Zi /MD>
-        $<$<CONFIG:Release>:/O2>
+foreach(target bloop_lib bloop)
+    target_compile_definitions(${target} PRIVATE
+        $<$<CONFIG:Debug>:DEBUG_MODE=1>
     )
-else()
-    target_compile_options(bloop PRIVATE
-        -Wall -Wextra -Werror -pedantic
-        $<$<CONFIG:Debug>:-O0 -g>
-        $<$<CONFIG:Release>:-O3>
-    )
-endif()
 
-
+    if (MSVC)
+        target_compile_options(${target} PRIVATE
+            /W4 /WX
+            /wd4514 /wd4626 /wd4820 /wd5267 /wd4351 /wd5045 /wd4371 /wd4324
+            $<$<CONFIG:Debug>:/Od /Zi /RTC1>
+            $<$<CONFIG:RelWithDebInfo>:/O2 /Zi /MD>
+            $<$<CONFIG:Release>:/O2>
+        )
+    else()
+        target_compile_options(${target} PRIVATE
+            -Wall -Wextra -Werror -pedantic
+            $<$<CONFIG:Debug>:-O0 -g>
+            $<$<CONFIG:Release>:-O3>
+        )
+    endif()
+endforeach()

@@ -65,6 +65,7 @@ namespace bloop::vm {
         [[nodiscard]] Value operator>>(Value b);
 
         [[nodiscard]] Value operator&(Value b);
+        [[nodiscard]] Value operator~(); // integers only
         [[nodiscard]] Value operator|(Value b);
         [[nodiscard]] Value operator^(Value b);
 

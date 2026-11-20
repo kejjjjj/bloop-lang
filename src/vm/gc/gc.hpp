@@ -5,6 +5,7 @@
 #include "vm/gc/major.hpp"
 
 #include <vector>
+#include <memory>
 #include <cassert>
 #include <utility>
 #include <new>
@@ -94,6 +95,16 @@ namespace bloop::vm
 	//
 	// Any allocation can move every young object. C++ code holding an Object* across an
 	// allocation has to keep it reachable (and re-read it) through PushTempRoot / TempRoot.
+	// the values that the host keeps between calls (see Persistent in handles.hpp). Shared with the handles,
+	// so a handle that outlives its VM notices it (m_bAlive) instead of touching freed memory
+	class Persistent;
+
+	struct PersistentTable {
+		std::vector<Value> m_oValues;
+		std::vector<bloop::BloopSize> m_oFree;
+		bloop::BloopBool m_bAlive{ true };
+	};
+
 	class GC {
 		BLOOP_NONCOPYABLE(GC);
 		friend class VM;
@@ -124,6 +135,13 @@ namespace bloop::vm
 
 		void MinorGC();
 		void MajorGC();
+
+		// a root that lives until the handle is destroyed (handles.hpp)
+		[[nodiscard]] Persistent MakePersistent(const Value& value); // defined in handles.hpp
+		[[nodiscard]] const std::shared_ptr<PersistentTable>& Persistents() const noexcept { return m_pPersistent; }
+
+		// 0: no limit. Allocating past the limit (after a full collection) is a runtime error
+		void SetHeapLimit(bloop::BloopSize bytes) noexcept { m_uHeapLimit = bytes; }
 
 		// Low level rooting, prefer RootScope / Local (vm/gc/handles.hpp).
 		// Temp roots get updated when objects move, so always re-read pointers after an allocation.
@@ -168,6 +186,9 @@ namespace bloop::vm
 		[[nodiscard]] GCHeader* AllocOld(bloop::BloopSize payloadSize, GCKind kind);
 		[[nodiscard]] inline bool CanCollect() const noexcept { return !m_bCollecting && !m_uPretenure; }
 		void MaybeMajorGC();
+		// throws a runtime error if the old generation would hold more than the heap limit (after a major GC).
+		// only called where an allocation starts, which is a safe point for the GC (and so for unwinding)
+		void CheckHeapLimit(bloop::BloopSize extra);
 
 		void Remember(GCHeader* h);
 
@@ -198,6 +219,8 @@ namespace bloop::vm
 #endif
 
 		[[maybe_unused]] UpValue* CaptureUpValue(Value* slot);
+		// an upvalue that's closed from the start, holding the value of *source (a root) after the allocation
+		[[nodiscard]] UpValue* NewClosedUpValue(const Value* source);
 		void CloseUpValues(Value* lastSlot);
 		void WriteUpValue(UpValue* uv, const Value& value);
 
@@ -215,6 +238,8 @@ namespace bloop::vm
 		MajorSpace m_oMajorSpace;
 
 		bloop::BloopSize m_uNextMajorAt{ MAJOR_MIN_THRESHOLD };
+		bloop::BloopSize m_uHeapLimit{};
+		std::shared_ptr<PersistentTable> m_pPersistent{ std::make_shared<PersistentTable>() };
 		bloop::BloopSize m_uPretenure{};
 		bloop::BloopBool m_bCollecting{};
 		bloop::BloopBool m_bTenureAll{};

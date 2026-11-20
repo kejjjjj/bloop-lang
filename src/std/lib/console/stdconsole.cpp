@@ -1,6 +1,7 @@
 #include "std/lib/console/stdconsole.hpp"
 #include "std/bind.hpp"
 #include "vm/value.hpp"
+#include "vm/vm.hpp"
 
 #include <iostream>
 
@@ -8,13 +9,16 @@ using namespace bloop::vm;
 using namespace bloop::standard;
 
 namespace {
-	void Log(NativeArgs args) {
+	void Log(VM& vm, NativeArgs args) {
 		bloop::BloopString str;
 
 		for (const auto& arg : args)
 			str += arg.ValueToString();
 
-		std::cout << str << '\n';
+		if (const auto& print = vm.GetEnvironment().m_fnPrint)
+			print(str);
+		else
+			std::cout << str << '\n';
 	}
 }
 

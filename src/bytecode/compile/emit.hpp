@@ -6,6 +6,7 @@
 #include <vector>
 #include <variant>
 #include <type_traits>
+#include <string>
 
 namespace bloop::ast {
 	struct AbstractSyntaxTree;
@@ -32,25 +33,35 @@ namespace bloop::bytecode
 		bloop::BloopIndex arg2;
 		bloop::BloopIndex arg3;
 	};
-	using Instruction = std::variant<Instr0, Instr1, Instr2, Instr3>;
+	// JMP, JZ, ITER_NEXT
+	struct InstrJump {
+		EOpCode op;
+		bloop::BloopOffset target;
+	};
+	// TRY: where the catch block starts, the catch variable
+	struct InstrJumpArg {
+		EOpCode op;
+		bloop::BloopOffset target;
+		bloop::BloopIndex arg;
+	};
+	using Instruction = std::variant<Instr0, Instr1, Instr2, Instr3, InstrJump, InstrJumpArg>;
 
 	struct CSingularByteCode {		
 		Instruction ins;
 		bc::InstrDebugRef loc; // for runtime error messages
 
-		[[nodiscard]] bloop::BloopIndex GetBytes() const {
-			bloop::BloopIndex result{};
-			std::visit([&](auto&& i) {
-				
-				result = 1u;
-				if (std::is_same_v<Instr1, std::decay_t<decltype(i)>>)
-					result = 1u + sizeof(bloop::BloopIndex);
-				else if (std::is_same_v<Instr2, std::decay_t<decltype(i)>>)
-					result = 1u + sizeof(bloop::BloopIndex) * 2;
-				else if (std::is_same_v<Instr3, std::decay_t<decltype(i)>>)
-					result = 1u + sizeof(bloop::BloopIndex) * 3;
-				}, ins);
+		template<typename Instr>
+		[[nodiscard]] static constexpr bloop::BloopOffset SizeOf() noexcept {
+			bloop::BloopOffset result = 1u;
+			if constexpr (requires(Instr i) { i.target; }) result += sizeof(bloop::BloopOffset);
+			if constexpr (requires(Instr i) { i.arg; })    result += sizeof(bloop::BloopIndex);
+			if constexpr (requires(Instr i) { i.arg2; })   result += sizeof(bloop::BloopIndex);
+			if constexpr (requires(Instr i) { i.arg3; })   result += sizeof(bloop::BloopIndex);
 			return result;
+		}
+
+		[[nodiscard]] bloop::BloopOffset GetBytes() const {
+			return std::visit([](auto&& i) { return SizeOf<std::decay_t<decltype(i)>>(); }, ins);
 		}
 
 		[[nodiscard]] EOpCode GetOpCode() {
@@ -66,7 +77,11 @@ namespace bloop::bytecode
 			std::visit([&](auto&& i) {
 				res = stringConversionTable[i.op];
 
-				if constexpr (std::is_same_v<std::decay_t<decltype(i)>, Instr1>) {
+				if constexpr (std::is_same_v<std::decay_t<decltype(i)>, InstrJump>) {
+					res += BLOOPTEXT(", -> ") + std::to_string(i.target);
+				} else if constexpr (std::is_same_v<std::decay_t<decltype(i)>, InstrJumpArg>) {
+					res += BLOOPTEXT(", -> ") + std::to_string(i.target) + BLOOPTEXT(" ") + std::to_string(i.arg);
+				} else if constexpr (std::is_same_v<std::decay_t<decltype(i)>, Instr1>) {
 					res += BLOOPTEXT(", ") + std::to_string(i.arg);
 				} else if constexpr (std::is_same_v<std::decay_t<decltype(i)>, Instr2>) {
 					res += BLOOPTEXT(", ") + std::to_string(i.arg) 
@@ -85,8 +100,8 @@ namespace bloop::bytecode
 
 	//contains the instruction offsets
 	struct LoopContext {
-		std::vector<bloop::BloopIndex> m_oBreakStatements;
-		std::vector<bloop::BloopIndex> m_oContinueStatements;
+		std::vector<bloop::BloopOffset> m_oBreakStatements;
+		std::vector<bloop::BloopOffset> m_oContinueStatements;
 	};
 
 	struct CByteCodeBuilder {
@@ -101,14 +116,13 @@ namespace bloop::bytecode
 		void Emit(EOpCode opcode, bloop::BloopIndex idx, CodePosition pos);
 		void Emit(EOpCode opcode, CodePosition pos);
 
-		void Omit();
+		// jumps: a 32-bit target (a byte offset in this chunk)
+		[[nodiscard]] bloop::BloopOffset EmitJump(EOpCode opcode, CodePosition pos); //returns the index of the instruction in m_oByteCode
+		void EmitJump(EOpCode opcode, bloop::BloopOffset target, CodePosition pos);
+		void PatchJump(bloop::BloopOffset src, bloop::BloopOffset dst);
 
-		[[nodiscard]] bloop::BloopIndex EmitJump(EOpCode opcode, CodePosition pos); //returns the index of m_oByteCode
-		void EmitJump(EOpCode opcode, bloop::BloopIndex offset, CodePosition pos);
-		void PatchJump(bloop::BloopIndex src, bloop::BloopIndex dst);
-
-		[[nodiscard]] bloop::BloopIndex EmitTry(EOpCode opcode, bloop::BloopIndex catchVar, CodePosition pos); //returns the index of m_oByteCode
-		void PatchTry(bloop::BloopIndex src, bloop::BloopIndex dst);
+		[[nodiscard]] bloop::BloopOffset EmitTry(EOpCode opcode, bloop::BloopIndex catchVar, CodePosition pos); //returns the index of the instruction in m_oByteCode
+		void PatchTry(bloop::BloopOffset src, bloop::BloopOffset dst);
 
 
 		void EmitCapture(const bc::Capture& capture, CodePosition pos);
@@ -124,7 +138,7 @@ namespace bloop::bytecode
 
 		std::vector<bloop::ConstantData> m_oConstants;
 		std::vector<CSingularByteCode> m_oByteCode;
-		bloop::BloopIndex m_uOffset{};
+		bloop::BloopOffset m_uOffset{}; // the size of the bytecode so far
 		bloop::BloopBool m_bIsLambda{};
 
 		std::vector<LoopContext> m_oLoops;
@@ -132,6 +146,8 @@ namespace bloop::bytecode
 		bloop::metadata::Metadata& m_refMetadata;
 
 	private:
+		void Add(Instruction ins, CodePosition pos);
+
 		std::vector<bloop::BloopIndex> m_oFunctions; // references metadata
 	};
 

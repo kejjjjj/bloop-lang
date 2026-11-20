@@ -15,6 +15,7 @@ namespace bloop::parser {
 			o_error,
 			o_negation,
 			o_logical_not,
+			o_bitwise_not,
 			o_increment,
 			o_decrement
 		};

@@ -95,9 +95,12 @@ void Resolver::ImportSymbol(const bloop::BloopString& name, const Symbol& export
 
 
 void Resolver::InjectNatives() {
-	for (const auto& stdObj : bloop::standard::g_Natives) {
+	if (m_refMetadata.m_oNatives.empty())
+		m_refMetadata.m_oNatives = bloop::standard::g_Natives;
+
+	for (const auto& stdObj : m_refMetadata.m_oNatives) {
 		if(ResolveSymbol(stdObj.m_sName))
-			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the native \"{}\" is already defined"), stdObj.m_sName));
+			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("the native module \"{}\" is defined more than once"), stdObj.m_sName));
 
 		DeclareSymbol(stdObj.m_sName, true, true);
 	}
@@ -163,8 +166,19 @@ ResolvedIdentifier Resolver::ResolveIdentifier(const bloop::BloopString& name) {
 	if (auto* sym = ResolveLocal(name))
 		return { ResolvedIdentifier::Kind::Local, sym->m_uSlot, sym->m_bIsConst };
 
-	if (auto* sym = ResolveGlobal(name))
+	if (auto* sym = ResolveGlobal(name)) {
+		if (sym->m_bCapturedByValue && !m_oFunctions.empty()) {
+			// every function between the top level and here captures it
+			auto t = std::list<FunctionContext>(m_oFunctions.begin(), m_oFunctions.end());
+			t.front().m_pCurrentFunction->PropagateCaptureInward(nullptr, t, sym);
+			return ResolvedIdentifier{
+				ResolvedIdentifier::Kind::Upvalue,
+				m_oFunctions.back().m_pCurrentFunction->m_uNextUpValues->at(sym),
+				sym->m_bIsConst
+			};
+		}
 		return { ResolvedIdentifier::Kind::Global, sym->m_uSlot, sym->m_bIsConst };
+	}
 
 	if (auto* sym = ResolveOuter(name)) {
 
