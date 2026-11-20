@@ -54,6 +54,7 @@ namespace bloop::parser {
 		[[nodiscard]] std::unique_ptr<IOperand> ParseParentheses(std::optional<PairMatcher>&);
 		[[nodiscard]] std::unique_ptr<IOperand> ParseArray();
 		[[nodiscard]] std::unique_ptr<IOperand> ParseObject();
+		[[nodiscard]] std::unique_ptr<IOperand> ParseTemplate();
 
 		[[nodiscard]] std::unique_ptr<BinaryExpression> UnaryToAST(std::vector<std::unique_ptr<IPostfix>>& src) const noexcept;
 

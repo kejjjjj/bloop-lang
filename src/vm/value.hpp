@@ -83,6 +83,9 @@ namespace bloop::vm {
         Value* location{}; //stack slot or &closed
         Value closed; //when stack slot goes out of scope
         UpValue* next{};
+        // the suspended coroutine whose saved stack `location` points into (null: the VM's stack, or closed).
+        // The upvalue keeps it alive, and writes through the upvalue need its write barrier
+        Object* owner{};
 
         [[nodiscard]] inline bool IsClosed() const { return location == &closed; }
         [[nodiscard]] inline bool IsOpen()   const { return location != &closed && location != nullptr; }

@@ -53,8 +53,8 @@ namespace bloop::standard {
 
 	struct NativeField {
 
-		NativeField(const bloop::BloopString& name, const NativeFunction& fn)
-			: m_sName(name), m_eType(NativeObjectPropertyType::method), m_oData(fn) {}
+		NativeField(const bloop::BloopString& name, const NativeFunction& fn, Permission permission = Permission::none)
+			: m_sName(name), m_eType(NativeObjectPropertyType::method), m_oData(fn), m_ePermission(permission) {}
 		NativeField(const bloop::BloopString& name, ConstantData constant)
 			: m_sName(name), m_eType(NativeObjectPropertyType::property), m_oData(constant) {}
 		NativeField(const bloop::BloopString& name, const NativeDef& def, Permission permission = Permission::none)
@@ -90,4 +90,4 @@ namespace bloop::standard {
 	[[nodiscard]] NativeDef IncludeStandardLibrary();
 	extern std::vector<NativeDef> g_Natives;
 	
-}
+}

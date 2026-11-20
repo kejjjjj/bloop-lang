@@ -73,8 +73,14 @@ void VM::Throw(Value value) {
         }
     }
 
+    // nothing in the coroutine caught it: the coroutine ends, and the exception goes on where it was resumed
+    if (m_bCoroutineBoundary) {
+        m_oTransfer = value;
+        throw exception::CoroutineUnwind{};
+    }
+
     if (m_uThrowBoundary)
         throw exception::VMError(bloop::fmt::format(BLOOPTEXT("uncaught exception in a function called by a native function: {}"), value.ValueToString()));
 
     throw exception::VMError(bloop::fmt::format(BLOOPTEXT("uncaught exception: {}"), value.ValueToString()));
-}
+}

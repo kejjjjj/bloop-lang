@@ -78,6 +78,8 @@ bloop::BloopString Object::TypeToString() const {
 		return BLOOPTEXT("function");
 	case VT::ot_closure:
 		return BLOOPTEXT("closure");
+	case VT::ot_coroutine:
+		return BLOOPTEXT("coroutine");
 	}
 
 	throw exception::VMError(BLOOPTEXT("type is not convertible to a string"));
@@ -147,6 +149,8 @@ bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object
 		return BLOOPTEXT("function");
 	case VT::ot_closure:
 		return BLOOPTEXT("closure");
+	case VT::ot_coroutine:
+		return BLOOPTEXT("coroutine");
 	}
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to a string"), TypeToString()));
 

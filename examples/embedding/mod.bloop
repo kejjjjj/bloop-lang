@@ -1,12 +1,27 @@
-// an example mod: spawns things through the host's game module
+// an example mod: spawns things through the host's game module, and runs a task that waits
+
+import spawn from "tasks.bloop";
+import wait from "tasks.bloop";
+import update from "tasks.bloop";
+import count from "tasks.bloop";
 
 let spawned = 0;
 
 export fn on_update(frame, dt) {
+	update(dt);
+
 	if (frame % 2 === 0)
 		spawned = game.spawn("crate " + std.string.from(frame));
 
-	return { frame: frame, spawned: spawned, dt: dt };
+	return { frame: frame, spawned: spawned, dt: dt, tasks: count() };
 }
+
+// a little scene: it waits between its steps, the game keeps running meanwhile
+spawn(() => {
+	game.spawn("door");
+	std.console.log("the door opens");
+	wait(0.03);
+	std.console.log("guard: who's there?");
+});
 
 std.console.log("loaded into ", game.name);

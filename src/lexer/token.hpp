@@ -25,6 +25,11 @@ namespace bloop {
 		#include "token_keywords.def"
 		#undef BLOOP_X
 
+		// `text ${a} text ${b} text`: the text before the first substitution, between two, and after the last.
+		// The lexer puts each substitution's tokens between ( and ) tokens. (Without substitutions it's a tt_string)
+		tt_template_head,
+		tt_template_middle,
+		tt_template_tail,
 	};
 	namespace token {
 		[[nodiscard]] constexpr auto IsConstant(ETokenType t) {
@@ -47,6 +52,10 @@ namespace bloop {
 			#define BLOOP_X(name) { ETokenType::tt_##name, BLOOPTEXT(#name) },
 			#include "token_keywords.def"
 			#undef BLOOP_X
+
+			{ ETokenType::tt_template_head,   BLOOPTEXT("template string") },
+			{ ETokenType::tt_template_middle, BLOOPTEXT("template string") },
+			{ ETokenType::tt_template_tail,   BLOOPTEXT("template string") },
 		};
 
 		inline bloop::BloopString TokenName(ETokenType t) {
@@ -98,4 +107,4 @@ namespace bloop {
 		EPunctuation m_ePunctuation{};
 		EOperatorPriority m_ePriority{};
 	};
-}
+}

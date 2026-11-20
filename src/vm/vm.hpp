@@ -11,10 +11,12 @@
 #include "vm/gc/gc.hpp"
 #include "vm/heap/heap.hpp"
 #include "std/environment.hpp"
+#include "utils/random.hpp"
 
 #include <optional>
 #include <exception>
 #include <cstdint>
+#include <chrono>
 #if defined(_MSC_VER)
 #include <intrin.h>
 #endif
@@ -25,6 +27,7 @@ namespace bloop::bytecode {
 
 namespace bloop::vm {
 	struct CallFrame;
+	struct CoroutineState;
 
 	// where the C++ stack is right now (the frame, not a local: sanitizers can move locals off the stack)
 	[[nodiscard]] inline std::uintptr_t NativeStackAddress() noexcept {
@@ -67,6 +70,10 @@ namespace bloop::vm {
 		// whether the script was terminated by a runtime error
 		[[nodiscard]] bool Failed() const noexcept { return m_bFailed; }
 		[[nodiscard]] const bloop::standard::Environment& GetEnvironment() const noexcept { return m_oEnvironment; }
+		// (std.time.now counts from here)
+		[[nodiscard]] std::chrono::steady_clock::time_point GetCreationTime() const noexcept { return m_oCreationTime; }
+		// std.math.random's generator (seeded with Environment::m_oRandomSeed)
+		[[nodiscard]] bloop::Random& GetRandom() noexcept { return m_oRandom; }
 
 		// ends the script from a native function (throws, Run() returns undefined and GetExitCode() has the code)
 		void Exit(bloop::BloopInt code);
@@ -113,18 +120,37 @@ namespace bloop::vm {
 		[[nodiscard]] GC& GetGC() noexcept { return m_oGC; }
 		[[nodiscard]] Heap& GetHeap() noexcept { return m_oHeap; }
 
+		// ---- coroutines (vm/coroutine.cpp), for std.coroutine ----
+
+		// runs a suspended coroutine until it yields (returns the yielded value) or returns (returns its value).
+		// The first resume passes `args` to its function, the later ones pass at most one value: the result of
+		// the yield it's paused in. An exception that the coroutine doesn't catch ends it and gets thrown again
+		// where it was resumed. Only for natives (it may RaiseFromNative)
+		[[nodiscard]] Value ResumeCoroutine(Object* coroutine, std::span<const Value> args);
+		// pauses the running coroutine once the native that calls this returns, and gives `value` to its resumer.
+		// A runtime error outside of a coroutine, or inside a callback that a native function is running
+		void YieldCoroutine(const Value& value);
+		// the running coroutine (null: the main script)
+		[[nodiscard]] Object* RunningCoroutine() const noexcept { return m_pCoroutine; }
+
+		// makes the native that calls this throw `value` as a script exception (one that a try can catch)
+		// when it returns. The native's return value is ignored then
+		void RaiseFromNative(const Value& value);
+
 	private:
 		enum class ExecutionReturnCode : bloop::BloopByte {
 			rc_continue,
 			rc_return,
-			rc_return_value
+			rc_return_value,
+			rc_yield // the running coroutine yielded
 		};
 
 		void RunGlobal();
 		// runs the frames until the frame count drops back to stopDepth, which leaves the return value of
 		// the last one on the stack. Script functions calling each other stay in this loop (CALL pushes a frame,
-		// RETURN pops it), so they don't use the C++ stack. Only VM::Call (natives calling into the script) nests it
-		void Execute(bloop::BloopSize stopDepth);
+		// RETURN pops it), so they don't use the C++ stack. Only VM::Call (natives calling into the script) and
+		// resuming a coroutine nest it. Returns true when the coroutine that it runs yielded instead
+		[[nodiscard]] bool Execute(bloop::BloopSize stopDepth);
 		// pops the current frame and pushes its return value for the caller. True when that was the last frame to run
 		[[nodiscard]] bool ReturnFromFrame(bloop::BloopSize stopDepth);
 
@@ -141,6 +167,11 @@ namespace bloop::vm {
 		[[nodiscard]] std::vector<Value> BuildConstants(const std::vector<bloop::ConstantData>& constants);
 		[[nodiscard]] ExecutionReturnCode InterpretOpCode(bloop::bytecode::EOpCode op);
 		[[nodiscard]] ExecutionReturnCode CallOp();
+		// after a native returns: a yield or an exception that it asked for (rc_yield or rc_continue), or nothing
+		[[nodiscard]] std::optional<ExecutionReturnCode> HandleNativeSignal();
+		// moves a yielding coroutine off the stacks into its state, and back
+		void SuspendCoroutine(CoroutineState& state, bloop::BloopSize stackBase, bloop::BloopSize frameBase);
+		void RestoreCoroutine(CoroutineState& state, bloop::BloopSize stackBase);
 		// (out of line, so the messages' temporaries don't grow the callers' stack frames)
 		[[noreturn]] static void ThrowError(const bloop::BloopString& message);
 		[[nodiscard]] bloop::BloopIndex FetchOperand();
@@ -162,8 +193,19 @@ namespace bloop::vm {
 		std::vector<Value> m_oGlobals;
 		CallFrame* m_pCurrentFrame{};
 		bloop::BloopSize m_uThrowBoundary{}; // a throw never unwinds the frames below this (they belong to a native's caller)
+		bloop::BloopBool m_bCoroutineBoundary{}; // ...and they belong to a coroutine's resumer: the exception goes there
+
+		// coroutines
+		Object* m_pCoroutine{}; // the running one (null: the main script). Rooted by the resume call's arguments
+		// a value on its way out of a native (a yielded value, an exception) or out of a coroutine (GC root)
+		Value m_oTransfer;
+		enum class NativeSignal : bloop::BloopByte { none, yield, raise } m_eNativeSignal{ NativeSignal::none };
+		// VM::Call and coroutine resumes in progress: each one nests the dispatch loop in C++
+		bloop::BloopSize m_uCallNesting{};
 
 		bloop::standard::Environment m_oEnvironment;
+		std::chrono::steady_clock::time_point m_oCreationTime{ std::chrono::steady_clock::now() };
+		bloop::Random m_oRandom;
 		std::optional<bloop::BloopInt> m_oExitCode;
 		bool m_bFailed{};
 		bool m_bPrintErrors{ true };

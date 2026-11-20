@@ -31,6 +31,9 @@ namespace bloop::lexer {
 		[[nodiscard]] bloop::EStatus ReadHex(bloop::CToken& token);
 
 		[[nodiscard]] bloop::EStatus ReadString(bloop::CToken& token, bloop::BloopChar quote);
+		// at a ` (a new template string), or at the } that closes a substitution (the rest of the template)
+		[[nodiscard]] std::unique_ptr<bloop::CToken> ReadTemplate(bool start);
+		[[nodiscard]] std::unique_ptr<bloop::CToken> MakePunctuation(bloop::EPunctuation punctuation, const bloop::CodePosition& position) const;
 		[[nodiscard]] bloop::BloopChar ReadEscapeCharacter();
 		[[nodiscard]] bloop::BloopChar ReadHexCharacter();
 
@@ -47,7 +50,12 @@ namespace bloop::lexer {
 		bloop::BloopStringView m_sSource;
 
 		std::vector<std::unique_ptr<bloop::CToken>> m_oTokens;
+		// tokens that ReadToken made in addition to the one it returned (template strings make several at once)
+		std::vector<std::unique_ptr<bloop::CToken>> m_oPendingTokens;
+		// one per substitution (${ ... }) that's open: the number of { inside it that aren't closed yet,
+		// so that only its own } ends it
+		std::vector<bloop::BloopSize> m_oTemplateBraces;
 
 		bloop::metadata::Metadata& m_refMetadata;
 	};
-}
+}

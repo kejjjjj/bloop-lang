@@ -300,6 +300,24 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			const Value value = Pop();
 			Push(Value{ static_cast<bloop::BloopBool>(!value.IsTruthy()) });
 			break;
+		} case TOpCode::CONCAT: {
+			// template strings: the values become text like std.string.from, and one string is allocated for all of it
+			const auto count = FetchOperand();
+			assert(m_oStack.size() >= count);
+			const auto base = m_oStack.size() - count;
+
+			bloop::BloopString text;
+			for (auto i = base; i < m_oStack.size(); i++) {
+				const auto& v = m_oStack[i];
+				if (v.IsString())
+					text.append(v.obj->string.data, static_cast<std::size_t>(v.obj->string.len));
+				else
+					text += v.ValueToString();
+			}
+
+			m_oStack.resize(base);
+			Push(m_oHeap.AllocString(text.data(), text.size()));
+			break;
 		} case TOpCode::BITWISE_NOT: {
 			Value value = Pop();
 			Push(~value);
@@ -349,6 +367,11 @@ VM::ExecutionReturnCode VM::CallOp() {
 		const auto result = native->m_pFunction(*this, std::span<const Value>(m_oStack.data() + base, argc));
 
 		m_oStack.resize(base);
+
+		// std.coroutine.yield, or an exception that the native raised
+		if (const auto signal = HandleNativeSignal())
+			return *signal;
+
 		Push(result);
 		break;
 	}
@@ -359,6 +382,22 @@ VM::ExecutionReturnCode VM::CallOp() {
 	return ExecutionReturnCode::rc_continue;
 }
 
+std::optional<VM::ExecutionReturnCode> VM::HandleNativeSignal() {
+	switch (std::exchange(m_eNativeSignal, NativeSignal::none)) {
+	case NativeSignal::none:
+		return std::nullopt;
+	case NativeSignal::yield:
+		// the yielded value stays in m_oTransfer for the resumer. When the coroutine gets resumed,
+		// the resumer pushes the result of this call (the value it was resumed with)
+		return ExecutionReturnCode::rc_yield;
+	case NativeSignal::raise: {
+		const auto value = std::exchange(m_oTransfer, Value{});
+		Throw(value); // unwinds to the closest handler (doesn't allocate), or throws a VMError
+		return ExecutionReturnCode::rc_continue;
+	}
+	}
+	return std::nullopt;
+}
 void VM::ThrowError(const bloop::BloopString& message) {
 	throw exception::VMError(message);
 }

@@ -42,6 +42,9 @@ namespace bloop::vm
 		[[nodiscard]] Object* AllocObject(bloop::BloopIndex numValues);
 		[[nodiscard]] Object* AllocClosure(Function* function, bloop::BloopIndex numVals);
 		[[nodiscard]] Object* AllocNativeFunction(const bloop::standard::NativeFunction* function);
+		// a suspended coroutine that will run `callee` (a script function or closure, which must be a root).
+		// Coroutines are always old: they never move, and the GC frees their state when they die
+		[[nodiscard]] Object* AllocCoroutine(const Value& callee);
 
 		[[nodiscard]] Object* StringConcat(Object* a, Object* b);
 
@@ -60,4 +63,4 @@ namespace bloop::vm
 
 		GC* m_pGC{};
 	};
-}
+}

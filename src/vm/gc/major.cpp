@@ -1,6 +1,7 @@
 #include "vm/gc/major.hpp"
 #include "vm/gc/gc.hpp"
 #include "vm/gc/trace.hpp"
+#include "vm/heap/coroutine.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -222,6 +223,7 @@ void GC::MajorGC() {
 	MarkRoots();
 	DrainMarkStack();
 
+	FreeDeadCoroutines(); // (before the sweep clears the marks)
 	m_oMajorSpace.Sweep();
 
 	// next major collection when the old generation has doubled
@@ -232,6 +234,14 @@ void GC::MajorGC() {
 #if defined(BLOOP_GC_VERIFY) && !defined(NDEBUG)
 	assert(Verify() && "heap verification failed after a major GC");
 #endif
+}
+void GC::FreeDeadCoroutines() {
+	std::erase_if(m_oCoroutines, [](CoroutineState* state) {
+		if (GCHeader::GetHeader(state->m_pOwner)->marked)
+			return false;
+		delete state;
+		return true;
+	});
 }
 void GC::MarkRoots() {
 	ForEachRoot([this](Object*& slot) { MarkHeader(GCHeader::GetHeader(slot)); });

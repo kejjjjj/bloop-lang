@@ -1,5 +1,6 @@
 #include "vm/heap/heap.hpp"
 #include "vm/heap/dvalue.hpp"
+#include "vm/heap/coroutine.hpp"
 #include "vm/gc/handles.hpp"
 #include "vm/vm.hpp"
 #include "std/native.hpp"
@@ -126,6 +127,18 @@ Object* Heap::AllocClosure(Function* function, bloop::BloopIndex numVals) {
 }
 Object* Heap::AllocNativeFunction(const bloop::standard::NativeFunction* function) {
 	return Allocate<Object>(function);
+}
+Object* Heap::AllocCoroutine(const Value& callee) {
+	// the object first: the allocation may collect, and a state without an owner must not be in the registry yet
+	auto* h = m_pGC->AllocOld(sizeof(Object), GCKind::object); // (remembers it: the callee may be young)
+	auto* obj = new (h->GetValue<void>()) Object(static_cast<CoroutineState*>(nullptr));
+
+	auto* state = new CoroutineState();
+	state->m_pOwner = obj;
+	state->m_oCallee = callee; // read after the allocation, which may have moved it
+	obj->coroutine = state;
+	m_pGC->m_oCoroutines.push_back(state);
+	return obj;
 }
 Object* Heap::StringConcat(Object* a, Object* b)
 {

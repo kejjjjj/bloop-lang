@@ -656,3 +656,91 @@ TEST_CASE("deep recursion in a plain script") {
 	REQUIRE(ret->type == Value::Type::t_undefined);
 	REQUIRE(bloop::test::TEST_GetLastVM()->Failed());
 }
+
+// coroutines that stay suspended between the host's calls: a scheduler driven by the host's frames
+TEST_CASE("embedding | coroutines across host calls") {
+	ScriptOptions options;
+	options.m_oLimits.m_uInstructions = 100'000;
+	auto script = Start(R"(
+		let tasks = [];
+		let log = [];
+		export fn spawn_task(name, waits) {
+			std.array.push(tasks, std.coroutine.create(() => {
+				for (let i = 0; i < waits; i++) { std.array.push(log, name + std.string.from(i)); std.coroutine.yield(0); }
+				return name;
+			}));
+		}
+		export fn spawn_runaway() { std.array.push(tasks, std.coroutine.create(() => { std.coroutine.yield(0); let spin = 0; while (true) { spin++; } })); }
+		export fn spawn_failing() { std.array.push(tasks, std.coroutine.create(() => { std.coroutine.yield(0); return [][1]; })); }
+		export fn tick() {
+			for (const t : tasks) {
+				if (std.coroutine.status(t) !== "dead")
+					std.coroutine.resume(t);
+			}
+			tasks = std.array.filter(tasks, (t) => std.coroutine.status(t) !== "dead");
+			return std.length(tasks);
+		}
+		export fn take_log() { const l = log; log = []; return std.array.join(l, ","); }
+		export fn make() { return std.coroutine.create(() => 1); }
+	)", options);
+
+	REQUIRE(script.Call("spawn_task", { "a", 2 }).Ok());
+	REQUIRE(script.Call("spawn_task", { "b", 3 }).Ok());
+
+	REQUIRE(script.Call("tick").m_oValue == HostValue(2));
+	REQUIRE(script.Call("take_log").m_oValue == HostValue("a0,b0"));
+	REQUIRE(script.Call("tick").m_oValue == HostValue(2));
+	REQUIRE(script.Call("tick").m_oValue == HostValue(1)); // a is done
+	REQUIRE(script.Call("tick").m_oValue == HostValue(0));
+	REQUIRE(script.Call("take_log").m_oValue == HostValue("a1,b1,b2"));
+
+	// a task that never yields again uses up the call's budget: that call fails and ends the task,
+	// and the script keeps working
+	REQUIRE(script.Call("spawn_runaway").Ok());
+	REQUIRE(script.Call("spawn_task", { "c", 3 }).Ok());
+	REQUIRE(script.Call("tick").m_oValue == HostValue(2));
+	auto result = script.Call("tick");
+	REQUIRE(result.m_eStatus == Result::Status::runtime_error);
+	REQUIRE(result.m_sError.find("ran too long") != std::string::npos);
+	REQUIRE(script.Call("tick").m_oValue == HostValue(1)); // only c is left, and it carries on
+	REQUIRE(script.Call("tick").m_oValue == HostValue(1)); // (its third yield)
+	REQUIRE(script.Call("tick").m_oValue == HostValue(0)); // it returns
+	REQUIRE(script.Call("take_log").m_oValue == HostValue("c0,c1,c2"));
+
+	// same for a runtime error inside a task
+	REQUIRE(script.Call("spawn_failing").Ok());
+	REQUIRE(script.Call("tick").m_oValue == HostValue(1));
+	REQUIRE(script.Call("tick").m_eStatus == Result::Status::runtime_error);
+	REQUIRE(script.Call("tick").m_oValue == HostValue(0));
+
+	// yielding outside of a coroutine still works as an error after all that
+	REQUIRE(script.Call("spawn_task", { "d", 1 }).Ok());
+	REQUIRE(script.Call("tick").m_oValue == HostValue(1));
+	REQUIRE(script.Call("tick").m_oValue == HostValue(0));
+
+	// a coroutine is an opaque value for the host
+	const auto made = script.Call("make");
+	REQUIRE(made.Ok());
+	REQUIRE(made.m_oValue.TypeName() == std::string("coroutine"));
+}
+
+TEST_CASE("embedding | events drive coroutines") {
+	ScriptOptions options;
+	options.m_sEventsModule = "events";
+	auto script = Start(R"(
+		let seen = [];
+		const listener = std.coroutine.create(() => {
+			while (true) {
+				const damage = std.coroutine.yield(0);
+				std.array.push(seen, damage);
+			}
+		});
+		std.coroutine.resume(listener);
+		events.on("hit", (damage) => { std.coroutine.resume(listener, damage); });
+		export fn total() { return std.array.accumulate(seen, (sum, x) => sum + x, 0); }
+	)", options);
+
+	for (auto i = 1; i <= 10; i++)
+		REQUIRE(script.Emit("hit", { i }).Ok());
+	REQUIRE(script.Call("total").m_oValue == HostValue(55));
+}

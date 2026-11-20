@@ -8,6 +8,8 @@
 #include "vm/heap/dvalue.hpp"
 
 #include <cassert>
+#include <chrono>
+#include <random>
 #include <ranges>
 #include <utility>
 
@@ -36,6 +38,10 @@ std::vector<Value> VM::BuildConstants(const std::vector<bloop::ConstantData>& co
 }
 VM::VM(bloop::metadata::Metadata& metadata, bloop::standard::Environment environment)
 	: m_oEnvironment(std::move(environment)), m_oHeap(&m_oGC), m_oGC(this), m_refMetaData(metadata) {
+
+	m_oRandom.Seed(m_oEnvironment.m_oRandomSeed ? *m_oEnvironment.m_oRandomSeed
+		: (static_cast<std::uint64_t>(std::random_device{}()) << 32u) ^ std::random_device{}()
+		  ^ static_cast<std::uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count()));
 	
 	assert(metadata.m_oVMData.m_pGlobalChunk);
 	m_oGlobalChunk.m_oConstants = BuildConstants(metadata.m_oVMData.m_pGlobalChunk->m_oConstants);
@@ -145,6 +151,8 @@ std::optional<Value> VM::CallFromHost(const Value& callee, std::span<const Value
 	m_uInstructionsUsed = 0u;
 	m_bFailed = false;
 	m_sError.clear();
+	m_eNativeSignal = NativeSignal::none;
+	m_oTransfer = Value{};
 
 	m_uStackBase = NativeStackAddress();
 
@@ -162,7 +170,7 @@ std::optional<Value> VM::CallFromHost(const Value& callee, std::span<const Value
 	return std::nullopt;
 }
 
-void VM::Execute(bloop::BloopSize stopDepth) {
+bool VM::Execute(bloop::BloopSize stopDepth) {
 	assert(m_oFrames.size() > stopDepth);
 
 	for (;;) {
@@ -172,7 +180,7 @@ void VM::Execute(bloop::BloopSize stopDepth) {
 		if (frame->m_pIp == frame->m_pIpEnd) {
 			Push(Value{});
 			if (ReturnFromFrame(stopDepth))
-				return;
+				return false;
 			continue;
 		}
 
@@ -188,11 +196,15 @@ void VM::Execute(bloop::BloopSize stopDepth) {
 		if (returnCode == ExecutionReturnCode::rc_continue)
 			continue;
 
+		// (only the loop of the coroutine itself gets here: yield checks that)
+		if (returnCode == ExecutionReturnCode::rc_yield)
+			return true;
+
 		if (returnCode == ExecutionReturnCode::rc_return)
 			Push(Value{});
 
 		if (ReturnFromFrame(stopDepth))
-			return;
+			return false;
 	}
 }
 bool VM::ReturnFromFrame(bloop::BloopSize stopDepth) {
@@ -216,7 +228,8 @@ void VM::RunGlobal() {
 
 	// returning from inside a loop can leave temporaries behind (a ranged for keeps its iterator on the stack),
 	// but returning pops everything above the frame's base, which is 0: the stack ends up with just the value
-	Execute(0u);
+	[[maybe_unused]] const auto yielded = Execute(0u);
+	assert(!yielded);
 	assert(m_oStack.size() == 1u && m_oFrames.empty() && !m_pCurrentFrame);
 }
 void VM::CheckArgumentCount(bloop::BloopSize argc, bloop::BloopSize paramCount) {
@@ -241,12 +254,20 @@ Value VM::Call(const Value& callee, std::span<const Value> args) {
 		throw exception::VMError(bloop::fmt::format(BLOOPTEXT("exceeded {} stack values"), BLOOP_MAX_STACK));
 
 	// throws inside the callee must not unwind into the frame of the native that called it
+	// (and a coroutine can't yield from in here: the native's C++ frames are in between)
 	struct BoundaryGuard {
 		VM& vm;
 		bloop::BloopSize previous;
-		~BoundaryGuard() { vm.m_uThrowBoundary = previous; }
-	} guard{ *this, m_uThrowBoundary };
+		bloop::BloopBool previousCoroutine;
+		~BoundaryGuard() {
+			vm.m_uThrowBoundary = previous;
+			vm.m_bCoroutineBoundary = previousCoroutine;
+			vm.m_uCallNesting--;
+		}
+	} guard{ *this, m_uThrowBoundary, m_bCoroutineBoundary };
 	m_uThrowBoundary = m_oFrames.size();
+	m_bCoroutineBoundary = false;
+	m_uCallNesting++;
 
 	const auto argc = args.size();
 	const auto base = m_oStack.size();
@@ -257,17 +278,18 @@ Value VM::Call(const Value& callee, std::span<const Value> args) {
 
 	auto* obj = callee.obj;
 	const auto depth = m_oFrames.size();
+	bool yielded{}; // (never: a yield in here is an error, see VM::YieldCoroutine)
 
 	switch (obj->type) {
 	case Object::Type::ot_function:
 		CheckArgumentCount(argc, obj->function->m_uParamCount);
 		PushFrame(obj->function);
-		Execute(depth); // returns when the callee does
+		yielded = Execute(depth); // returns when the callee does
 		break;
 	case Object::Type::ot_closure:
 		CheckArgumentCount(argc, obj->closure.function->m_uParamCount);
 		PushFrame(obj); // the frame keeps the closure alive
-		Execute(depth);
+		yielded = Execute(depth);
 		break;
 	case Object::Type::ot_nativefunction: {
 		const auto* native = obj->nativeFunction;
@@ -276,12 +298,19 @@ Value VM::Call(const Value& callee, std::span<const Value> args) {
 
 		const auto result = native->m_pFunction(*this, std::span<const Value>(m_oStack.data() + base, argc));
 		m_oStack.resize(base);
+
+		// it asked to throw: nothing above it to catch it in here, so this ends up as an uncaught exception
+		if (HandleNativeSignal())
+			return Value{};
 		return result;
 	}
 	default:
 		assert(false);
 		break;
 	}
+
+	assert(!yielded);
+	(void)yielded;
 
 	// the callee's return leaves its value where the arguments were
 	assert(m_oStack.size() == base + 1u);

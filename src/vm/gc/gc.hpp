@@ -33,6 +33,7 @@ namespace bloop::vm
 	class VM;
 	struct Value;
 	struct UpValue;
+	struct CoroutineState;
 
 	// object:  an Object
 	// upvalue: an UpValue (always in the old generation)
@@ -170,6 +171,8 @@ namespace bloop::vm
 		[[nodiscard]] inline const MajorSpace& OldSpace() const noexcept { return m_oMajorSpace; }
 		[[nodiscard]] inline bloop::BloopSize NurseryUsed() const noexcept { return m_oMinorSpace.Used(); }
 		[[nodiscard]] inline bloop::BloopSize RememberedSetSize() const noexcept { return m_oRememberedSet.size(); }
+		// coroutine states that haven't been freed yet (their objects die in a major GC)
+		[[nodiscard]] inline bloop::BloopSize CoroutineCount() const noexcept { return m_oCoroutines.size(); }
 
 		// while one of these is alive, everything gets allocated into the old generation
 		// and nothing gets collected (used while the VM builds its constants)
@@ -207,6 +210,8 @@ namespace bloop::vm
 		void MarkRoots();
 		void MarkHeader(GCHeader* h);
 		void DrainMarkStack();
+		// after marking: frees the states of the coroutine objects that weren't marked (they're always old)
+		void FreeDeadCoroutines();
 
 		template<typename OnSlot>
 		void ForEachRoot(OnSlot&& onSlot); // defined in trace.hpp
@@ -228,6 +233,7 @@ namespace bloop::vm
 		void CheckUpValueList();
 #endif
 		UpValue* m_pOpenUpValues{};
+		std::vector<CoroutineState*> m_oCoroutines; // owned (see Heap::AllocCoroutine)
 
 		VM* m_pVM{};
 		std::vector<Object*> m_oTempRoots;

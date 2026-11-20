@@ -7,6 +7,7 @@
 #include "vm/frame.hpp"
 #include "vm/value.hpp"
 #include "vm/heap/dvalue.hpp"
+#include "vm/heap/coroutine.hpp"
 
 namespace bloop::vm::detail
 {
@@ -23,9 +24,12 @@ namespace bloop::vm::detail
 
 		if (h->kind == GCKind::upvalue) {
 			auto* uv = h->template GetValue<UpValue>();
-			// an open upvalue points into the stack, which is a root anyway
+			// an open upvalue points into the stack, which is a root anyway,
+			// or into a suspended coroutine, which it has to keep alive
 			if (uv->IsClosed())
 				visit(uv->closed);
+			else if (uv->owner)
+				onSlot(uv->owner); // (old, it doesn't move)
 			return;
 		}
 
@@ -61,6 +65,28 @@ namespace bloop::vm::detail
 					onUpValue(obj->closure.upvalues[i]);
 			}
 			break;
+		case Object::Type::ot_coroutine: {
+			auto* co = obj->coroutine;
+			if (!co)
+				break; // (still being allocated)
+
+			visit(co->m_oCallee);
+
+			// a suspended coroutine's stack and frames (empty while it runs: then they're on the VM's stacks)
+			for (auto& v : co->m_oStack)
+				visit(v);
+
+			for (auto& frame : co->m_oFrames) {
+				if (frame.m_eChunkType == CallFrame::ChunkType::ct_closure) {
+					onSlot(frame.m_pCallee);
+					frame.m_pClosure = &frame.m_pCallee->closure;
+				}
+			}
+
+			for (auto* uv = co->m_pOpenUpValues; uv; uv = uv->next)
+				onUpValue(uv);
+			break;
+		}
 		case Object::Type::ot_string:
 		case Object::Type::ot_function:
 		case Object::Type::ot_nativefunction:
@@ -99,6 +125,7 @@ namespace bloop::vm::detail
 		case Object::Type::ot_closure: fix(obj->closure.upvalues); break;
 		case Object::Type::ot_function:
 		case Object::Type::ot_nativefunction:
+		case Object::Type::ot_coroutine: // (never moves anyway)
 			break;
 		}
 	}
@@ -119,6 +146,8 @@ namespace bloop::vm
 
 		for (auto& v : vm.m_oStack)
 			visit(v);
+
+		visit(vm.m_oTransfer);
 
 		for (auto& v : vm.m_oGlobals)
 			visit(v);

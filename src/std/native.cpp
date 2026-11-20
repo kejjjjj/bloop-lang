@@ -9,6 +9,9 @@
 #include "lib/array/stdarray.hpp"
 #include "lib/string/stdstring.hpp"
 #include "lib/object/stdobject.hpp"
+#include "lib/coroutine/stdcoroutine.hpp"
+#include "lib/time/stdtime.hpp"
+#include "lib/math/stdmath.hpp"
 #include "lib/json/stdjson.hpp"
 #include "lib/fs/stdfs.hpp"
 #include "lib/process/stdprocess.hpp"
@@ -48,6 +51,9 @@ NativeDef bloop::standard::IncludeStandardLibrary() {
 			NativeField(BLOOPTEXT("string"), bloop::standard::GetStringDefinitions()),
 			NativeField(BLOOPTEXT("object"), bloop::standard::GetObjectDefinitions()),
 			NativeField(BLOOPTEXT("json"), bloop::standard::GetJsonDefinitions()),
+			NativeField(BLOOPTEXT("coroutine"), bloop::standard::GetCoroutineDefinitions()),
+			NativeField(BLOOPTEXT("time"), bloop::standard::GetTimeDefinitions()),
+			NativeField(BLOOPTEXT("math"), bloop::standard::GetMathDefinitions()),
 			// these reach outside of the VM, so they only exist when the VM's environment allows them
 			NativeField(BLOOPTEXT("fs"), bloop::standard::GetFileSystemDefinitions(), Permission::file_system),
 			NativeField(BLOOPTEXT("process"), bloop::standard::GetProcessDefinitions(), Permission::process),

@@ -148,11 +148,11 @@ void GC::CheckUpValueList() {
         char* stack_top = reinterpret_cast<char*>(m_pVM->m_oStack.data() + m_pVM->m_oStack.size());
         for (UpValue* u = m_pOpenUpValues; u; u = u->next) {
             if (reinterpret_cast<char*>(u->location) >= stack_top) {
-                std::fprintf(stderr, "!!! DANGLING open upvalue %p >= stack top %p\n", u->location, stack_top);
+                std::fprintf(stderr, "!!! DANGLING open upvalue %p >= stack top %p\n", static_cast<void*>(u->location), static_cast<void*>(stack_top));
                 std::fflush(stderr);
                 std::abort();
             }
         }
     }
 }
-#endif
+#endif

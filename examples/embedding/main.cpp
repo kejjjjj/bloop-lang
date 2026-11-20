@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
+	// (the mod's waiting task finishes on the third frame: 3 x 0.016 seconds > its wait(0.03))
 	for (auto frame = 0; frame < 3; frame++) {
 		if (!mod.HasFunction("on_update"))
 			break;

@@ -48,8 +48,16 @@ CLexer::CLexer(bloop::BloopStringView buffer, bloop::metadata::Metadata& metadat
 CLexer::~CLexer() = default;
 
 void CLexer::Parse() {
-	while (auto&& token = ReadToken())
+	while (auto&& token = ReadToken()) {
 		m_oTokens.emplace_back(std::forward<decltype(token)>(token));
+
+		for (auto& pending : m_oPendingTokens)
+			m_oTokens.emplace_back(std::move(pending));
+		m_oPendingTokens.clear();
+	}
+
+	if (!m_oTemplateBraces.empty())
+		throw exception::LexerError(BLOOPTEXT("a ${ in a template string isn't closed with }"), m_oParserPosition);
 
 	// lines are recorded when their '\n' is reached, so the last line still needs to be added
 	m_refMetadata.m_oLineMap.push_back(bloop::BloopStringView(m_oLineStart, m_oScriptEnd));
@@ -95,6 +103,12 @@ std::unique_ptr<bloop::CToken> CLexer::ReadToken()
 
 	token.m_oSourcePosition = m_oParserPosition;
 
+	// template strings: `text ${expression} text`
+	if (*m_oScriptPos == '`')
+		return ReadTemplate(true);
+	if (*m_oScriptPos == '}' && !m_oTemplateBraces.empty() && m_oTemplateBraces.back() == 0u)
+		return ReadTemplate(false);
+
 	if (IsDigit(*m_oScriptPos) || (*m_oScriptPos == '.' && IsDigit(*(std::next(m_oScriptPos))))) {
 		if (ReadNumber(token) != bloop::EStatus::success) {
 			return nullptr;
@@ -108,8 +122,16 @@ std::unique_ptr<bloop::CToken> CLexer::ReadToken()
 			return nullptr;
 		}
 	} else {
-		if (auto punc = ReadPunctuation())
+		if (auto punc = ReadPunctuation()) {
+			// inside a substitution, only the } that matches its ${ ends it
+			if (!m_oTemplateBraces.empty()) {
+				if (punc->IsOperator(EPunctuation::p_curlybracket_open))
+					m_oTemplateBraces.back()++;
+				else if (punc->IsOperator(EPunctuation::p_curlybracket_close))
+					m_oTemplateBraces.back()--; // (not 0: that } would have ended the substitution)
+			}
 			return punc;
+		}
 
 		throw exception::LexerError(BLOOPTEXT("a token without a definition"), m_oParserPosition);
 	}
@@ -374,6 +396,104 @@ bloop::EStatus CLexer::ReadString(bloop::CToken& token, bloop::BloopChar quote)
 
 	return bloop::EStatus::success;
 }
+std::unique_ptr<bloop::CToken> CLexer::MakePunctuation(bloop::EPunctuation punctuation, const bloop::CodePosition& position) const {
+	for (const auto& p : punctuations) {
+		if (p.m_ePunctuation == punctuation) {
+			auto token = std::make_unique<CPunctuationToken>(p);
+			token->m_oSourcePosition = position;
+			return token;
+		}
+	}
+	assert(false);
+	return nullptr;
+}
+
+// `a ${x} b ${y} c` becomes: head "a", (, x's tokens, ), middle " b ", (, y's tokens, ), tail " c".
+// The parser parses each substitution like an expression in parentheses
+std::unique_ptr<bloop::CToken> CLexer::ReadTemplate(bool start) {
+	auto& [line, column] = m_oParserPosition;
+	const auto position = m_oParserPosition;
+
+	std::unique_ptr<bloop::CToken> closing;
+	if (!start) {
+		// the } ends the substitution
+		m_oTemplateBraces.pop_back();
+		closing = MakePunctuation(EPunctuation::p_par_close, position);
+	}
+
+	m_oScriptPos++; // ` or }
+	column++;
+
+	auto text = std::make_unique<bloop::CToken>();
+	text->m_oSourcePosition = position;
+	bool substitution{};
+
+	while (true) {
+		if (EndOfBuffer())
+			throw exception::LexerError(BLOOPTEXT("the template string doesn't end (a ` is missing)"), position);
+
+		const auto c = *m_oScriptPos;
+
+		if (c == '`') {
+			m_oScriptPos++;
+			column++;
+			break;
+		}
+
+		if (c == '$' && std::next(m_oScriptPos) != m_oScriptEnd && *std::next(m_oScriptPos) == '{') {
+			m_oScriptPos += 2;
+			column += 2u;
+			substitution = true;
+			break;
+		}
+
+		// template strings can span lines (a \r\n is a \n, like in js)
+		if (c == '\r' && std::next(m_oScriptPos) != m_oScriptEnd && *std::next(m_oScriptPos) == '\n') {
+			m_oScriptPos++;
+			continue;
+		}
+		if (c == '\n') {
+			m_refMetadata.m_oLineMap.push_back(bloop::BloopStringView(m_oLineStart, m_oScriptPos));
+			line++;
+			column = size_t(1);
+			m_oLineStart = std::next(m_oScriptPos);
+			text->m_sSource.push_back('\n');
+			m_oScriptPos++;
+			continue;
+		}
+
+		column += (c == '\t' ? 4 : 1);
+
+		if (c == '\\')
+			text->m_sSource.push_back(ReadEscapeCharacter()); // (leaves the position at the escaped character)
+		else
+			text->m_sSource.push_back(c);
+
+		m_oScriptPos++;
+	}
+
+	if (start && !substitution)
+		text->m_eTokenType = ETokenType::tt_string; // `no substitutions` is just a string
+	else if (start)
+		text->m_eTokenType = ETokenType::tt_template_head;
+	else
+		text->m_eTokenType = substitution ? ETokenType::tt_template_middle : ETokenType::tt_template_tail;
+
+	if (substitution)
+		m_oTemplateBraces.push_back(0u);
+
+	// whatever comes after the token that this returns
+	if (closing) {
+		m_oPendingTokens.push_back(std::move(text));
+		if (substitution)
+			m_oPendingTokens.push_back(MakePunctuation(EPunctuation::p_par_open, m_oParserPosition));
+		return closing;
+	}
+
+	if (substitution)
+		m_oPendingTokens.push_back(MakePunctuation(EPunctuation::p_par_open, m_oParserPosition));
+	return text;
+}
 bloop::BloopChar CLexer::ReadEscapeCharacter()
 {
 	auto& [line, column] = m_oParserPosition;
@@ -401,6 +521,7 @@ bloop::BloopChar CLexer::ReadEscapeCharacter()
 	case '\"': c = '\"'; break;
 	case '\?': c = '\?'; break;
 	case '`': c = '`'; break;
+	case '$': c = '$'; break; // (a template string's "\${" is text, not a substitution)
 	default:
 		throw exception::LexerError(BLOOPTEXT("unexpected escape character"), m_oParserPosition);
 	}

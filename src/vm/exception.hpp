@@ -15,4 +15,8 @@ namespace bloop::exception {
     struct ExitRequest {
         bloop::BloopInt m_iCode{};
     };
-}
+
+    // (internal) an exception that nothing inside a coroutine caught has unwound the coroutine's frames.
+    // The VM rethrows it as a script exception where the coroutine was resumed
+    struct CoroutineUnwind {};
+}

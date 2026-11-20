@@ -38,6 +38,8 @@ bloop::EStatus CParserOperand::Parse([[maybe_unused]]std::optional<PairMatcher>&
 		m_pOperand = ParseObject();
 	} else if (token->Type() == ETokenType::tt_name) {
 		m_pOperand = ParseIdentifier();
+	} else if (token->Type() == ETokenType::tt_template_head) {
+		m_pOperand = ParseTemplate();
 	} else {
 		throw exception::ParserError(BLOOPTEXT("unsupported: ") + token->Source(), token->GetCodePosition());
 	}
@@ -111,4 +113,4 @@ std::unique_ptr<BinaryExpression> CParserOperand::UnaryToAST(std::vector<std::un
 	}
 
 	return root;
-}
+}

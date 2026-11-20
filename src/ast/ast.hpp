@@ -308,6 +308,30 @@ namespace bloop::ast {
 		std::vector<std::unique_ptr<Expression>> m_pInitializers;
 	};
 
+	// `text ${expression} text`: every part converted to a string (like std.string.from), joined into one string
+	struct TemplateExpression : Expression {
+
+		TemplateExpression(std::vector<std::unique_ptr<Expression>>&& parts, const bloop::CodePosition& cp)
+			: Expression(cp), m_oParts(std::move(parts)) {}
+
+		void Resolve(TResolver& resolver) override {
+			for (auto& part : m_oParts)
+				part->Resolve(resolver);
+		}
+
+		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+			for (auto& part : m_oParts)
+				part->EmitByteCode(builder, true);
+
+			Emit(builder, TOpCode::CONCAT, static_cast<bloop::BloopIndex>(m_oParts.size()));
+
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
+		}
+
+		std::vector<std::unique_ptr<Expression>> m_oParts;
+	};
+
 	struct ObjectExpression : Expression {
 
 		struct KV {
@@ -384,4 +408,4 @@ namespace bloop::ast {
 		[[nodiscard]] constexpr bool IsConst() const noexcept override { return true; }
 	};
 
-}
+}

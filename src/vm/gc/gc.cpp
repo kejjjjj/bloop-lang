@@ -1,5 +1,6 @@
 #include "vm/gc/gc.hpp"
 #include "vm/gc/trace.hpp"
+#include "vm/heap/coroutine.hpp"
 #include "vm/exception.hpp"
 #include "utils/fmt.hpp"
 
@@ -17,6 +18,9 @@ GC::~GC() {
 	m_pPersistent->m_bAlive = false;
 	m_pPersistent->m_oValues.clear();
 	m_pPersistent->m_oFree.clear();
+
+	for (auto* state : m_oCoroutines)
+		delete state;
 }
 
 GCHeader* GC::AllocHeader(bloop::BloopSize payloadSize, GCKind kind) {
@@ -115,6 +119,8 @@ void GC::WriteUpValue(UpValue* uv, const Value& value) {
 	*uv->location = value;
 	if (uv->IsClosed())
 		WriteBarrier(uv, value);
+	else if (uv->owner)
+		WriteBarrier(uv->owner, value); // it points into a suspended coroutine's saved stack
 }
 
 /***********************************************************************

@@ -1,0 +1,37 @@
+// the game's task scheduler, written in bloop on top of std.coroutine (a game would ship this with its
+// modding api). A task is a function that can wait without stopping the game: every update runs the tasks
+// whose wait is over, until they wait again or finish.
+//
+//   import spawn from "tasks.bloop";
+//   import wait from "tasks.bloop";
+//   spawn(() => { door.open(); wait(2.0); guard.say("who's there?"); });
+
+let tasks = [];
+let now = 0.0;
+
+// runs f as a task, starting with the next update
+export fn spawn(f) {
+	std.array.push(tasks, { co: std.coroutine.create(f), wake: now });
+}
+
+// pauses the running task for `seconds` of game time
+export fn wait(seconds) {
+	std.coroutine.yield(seconds);
+}
+
+// advances the game time by dt and runs the tasks that are due (the game calls this every frame)
+export fn update(dt) {
+	now += dt;
+	for (const task : tasks) {
+		if (std.coroutine.status(task.co) === "dead" || now < task.wake)
+			continue;
+
+		const seconds = std.coroutine.resume(task.co);
+		task.wake = now + (seconds === undefined ? 0.0 : seconds);
+	}
+	tasks = std.array.filter(tasks, (task) => std.coroutine.status(task.co) !== "dead");
+}
+
+export fn count() {
+	return std.length(tasks);
+}
