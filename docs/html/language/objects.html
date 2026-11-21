@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Objects - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../language/index.html">Language</a> <span class="sep">&rsaquo;</span> Objects</div>
+<h1>Objects</h1>
+<div class="navbar"><a href="../language/index.html">Language</a> <a href="../language/basics.html">Basic concepts</a> <a href="../language/types.html">Types</a> <a href="../language/variables.html">Variables</a> <a href="../language/operators.html">Operators</a> <a href="../language/conditions.html">Conditions</a> <a href="../language/control-flow.html">Control flow</a> <a href="../language/functions.html">Functions</a> <a href="../language/strings.html">Strings</a> <a class="here" href="../language/objects.html">Objects</a> <a href="../language/arrays.html">Arrays</a> <a href="../language/modules.html">Modules</a> <a href="../language/exceptions.html">Exceptions</a> <a href="../language/errors.html">Errors</a> <a href="../language/coroutines.html">Coroutines and tasks</a></div>
+<div id="body">
+<h2 id="object-literals">Object literals</h2>
+<div class="code"><pre><span class="kw">const</span> point = { name: <span class="st">&quot;A&quot;</span>, size: <span class="nu">10</span>, position: { x: <span class="nu">1.0</span>, y: <span class="nu">2.0</span> } };
+<a href="../std/console.html#std-console-log">std.console.log</a>(point.name, <span class="st">&quot; &quot;</span>, point[<span class="st">&quot;size&quot;</span>], <span class="st">&quot; &quot;</span>, point.position.x);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>A 10 1.000000</pre></div>
+<p>An object is properties, each a <a href="../language/basics.html#identifiers">name</a> (a <a href="../language/types.html#strings">string</a>) and a <a href="../language/types.html">value</a>, kept in the order they were added. An object is <a href="../language/types.html#arrays-and-objects">shared</a>: assigning it or passing it doesn't copy it. Property names in a <a href="../language/basics.html">literal</a> are names (or strings in quotes: <code>{ &quot;with space&quot;: 1 }</code>).</p>
+<h2 id="properties">Properties</h2>
+<ul><li><code>o.name</code> or <code>o[&quot;name&quot;]</code> reads a property. A property that isn't there is a <a href="../language/errors.html">runtime error</a> (&quot;unknown property&quot;): <a href="../std/object.html#std-object-has">std.object.has</a> checks first, <a href="../std/object.html#std-object-get">std.object.get</a> gives undefined instead.</li><li><code>o.name = value</code> or <code>o[key] = value</code> sets a property, adding it when it isn't there.</li><li><a href="../std/object.html#std-object-remove">std.object.remove</a> removes one, <a href="../std/object.html#std-object-keys">std.object.keys</a> and <a href="../std/object.html#std-object-keys">std.object.values</a> list them (in order), <a href="../std/index.html#std-length">std.length</a>(o) counts them.</li></ul>
+<div class="code"><pre><span class="kw">const</span> scores = {};
+scores[<span class="st">&quot;ada&quot;</span>] = <span class="nu">3</span>;
+scores.grace = <span class="nu">5</span>;
+<span class="kw">for</span> (<span class="kw">const</span> name : <a href="../std/object.html#std-object-keys">std.object.keys</a>(scores))
+	<a href="../std/console.html#std-console-log">std.console.log</a>(name, <span class="st">&quot;: &quot;</span>, scores[name]);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>ada: 3
+grace: 5</pre></div>
+<h2 id="methods">Methods</h2>
+<p>Objects can hold <a href="../language/functions.html">functions</a>, and <code>o.f(x)</code> calls one. There's no <code>this</code>: a <a href="../language/functions.html#declaring">function</a> that needs the object takes it as a <a href="../language/functions.html#declaring">parameter</a>.</p>
+<div class="code"><pre><span class="kw">const</span> counter = { count: <span class="nu">0</span>, add: (c, amount) =&gt; { c.count += amount; } };
+counter.add(counter, <span class="nu">2</span>);
+<a href="../std/console.html#std-console-log">std.console.log</a>(counter.count);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>2</pre></div>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/language/objects.txt</code>.</div></div>
+</body>
+</html>

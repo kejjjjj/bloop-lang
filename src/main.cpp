@@ -2,6 +2,8 @@
 #include "ast/ast.hpp"
 #include "vm/vm.hpp"
 #include "metadata/metadata.hpp"
+#include "vm/tasks.hpp"
+#include "std/lib/task/stdtask.hpp"
 
 #include <iostream>
 #include <thread>
@@ -40,6 +42,21 @@ int main(int argc, char** argv) {
 			bloop::vm::VM vm(metadata, std::move(environment));
 
 			auto ret = vm.Run();
+
+			// std.task: the tasks that the script started keep running until they're all done
+			// (or one of them fails, or calls std.process.exit)
+			bool failed{};
+			while (!vm.GetExitCode() && !vm.Failed() && !failed && !vm.GetTasks().Empty()) {
+				if (const auto next = bloop::standard::NextTaskTime(vm); next && *next > vm.Now())
+					std::this_thread::sleep_for(std::chrono::duration<double>(*next - vm.Now()));
+
+				bloop::standard::RunDueTasks(vm, [&](const std::optional<bloop::vm::Value>& result) {
+					failed = !result;
+					return !failed;
+				});
+			}
+			if (failed && !vm.GetExitCode())
+				return 1;
 
 			if (const auto exitCode = vm.GetExitCode())
 				return static_cast<int>(*exitCode);

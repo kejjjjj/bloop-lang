@@ -64,7 +64,7 @@ static bloop::ast::BinaryExpression* SeekASTLeftBranch(bloop::ast::BinaryExpress
 	auto end = src;
 
 	while (end->left) {
-		end = dynamic_cast<bloop::ast::BinaryExpression*>(end->left.get());
+		end = bloop::ast::AsBinary(end->left.get());
 	}
 	assert(end);
 	return end;
@@ -88,7 +88,7 @@ std::unique_ptr<ASTExpression> CParserOperand::ToExpression() {
 	if (!entry) //no prefixes nor postfixes
 		return GetOperand()->ToExpression();
 
-	SeekASTLeftBranch(dynamic_cast<bloop::ast::BinaryExpression*>(entry.get()))->left = GetOperand()->ToExpression();
+	SeekASTLeftBranch(bloop::ast::AsBinary(entry.get()))->left = GetOperand()->ToExpression();
 	return entry;
 }
 std::unique_ptr<BinaryExpression> CParserOperand::UnaryToAST(std::vector<std::unique_ptr<IPostfix>>& src) const noexcept {
@@ -113,4 +113,4 @@ std::unique_ptr<BinaryExpression> CParserOperand::UnaryToAST(std::vector<std::un
 	}
 
 	return root;
-}
+}

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>std.array - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../std/index.html">Standard library</a> <span class="sep">&rsaquo;</span> std.array</div>
+<h1>std.array</h1>
+<div class="navbar"><a href="../std/index.html">Standard library</a> <a href="../std/console.html">std.console</a> <a class="here" href="../std/array.html">std.array</a> <a href="../std/string.html">std.string</a> <a href="../std/object.html">std.object</a> <a href="../std/math.html">std.math</a> <a href="../std/json.html">std.json</a> <a href="../std/time.html">std.time</a> <a href="../std/task.html">std.task</a> <a href="../std/coroutine.html">std.coroutine</a> <a href="../std/fs.html">std.fs</a> <a href="../std/process.html">std.process</a></div>
+<div id="body">
+<p><a href="../language/functions.html">Functions</a> for <a href="../language/arrays.html">arrays</a>. The ones that change the <a href="../language/arrays.html">array</a> change it in place (arrays are <a href="../language/types.html#arrays-and-objects">shared</a>: everybody who has it sees the change); the ones that make something new say so.</p>
+<p>Callbacks get <code>(element, index)</code>; a callback with fewer <a href="../language/functions.html#declaring">parameters</a> gets only the first ones: <code>(x) =&gt; x * 2</code> works.</p>
+<table class="wikitable"><tr><th><a href="../language/functions.html#declaring">Function</a></th><th></th></tr><tr><td><a href="#std-array-create">std.array.create</a></td><td>a new array of a given length</td></tr><tr><td><a href="#std-array-push">std.array.push</a>, <a href="#std-array-push-front">std.array.push_front</a></td><td>add to the end / the front</td></tr><tr><td><a href="#std-array-pop">std.array.pop</a>, <a href="#std-array-pop-front">std.array.pop_front</a></td><td>take from the end / the front</td></tr><tr><td><a href="#std-array-insert">std.array.insert</a>, <a href="#std-array-remove">std.array.remove</a></td><td>add / take at an index</td></tr><tr><td><a href="#std-array-resize">std.array.resize</a>, <a href="#std-array-fill">std.array.fill</a></td><td>change the length, set many <a href="../language/arrays.html">elements</a></td></tr><tr><td><a href="#std-array-slice">std.array.slice</a>, <a href="#std-array-concat">std.array.concat</a></td><td>copies of parts, two joined</td></tr><tr><td><a href="#std-array-index-of">std.array.index_of</a>, <a href="#std-array-contains">std.array.contains</a></td><td>find a <a href="../language/types.html">value</a></td></tr><tr><td><a href="#std-array-find">std.array.find</a>, <a href="#std-array-find">std.array.find_last</a>, <a href="#std-array-find-index">std.array.find_index</a>, <a href="#std-array-find-index">std.array.find_last_index</a></td><td>find by a callback</td></tr><tr><td><a href="#std-array-transform">std.array.transform</a>, <a href="#std-array-filter">std.array.filter</a>, <a href="#std-array-accumulate">std.array.accumulate</a></td><td>new arrays and values from callbacks</td></tr><tr><td><a href="#std-array-all">std.array.all</a>, <a href="#std-array-any">std.array.any</a>, <a href="#std-array-for-each">std.array.for_each</a></td><td>test or visit every element</td></tr><tr><td><a href="#std-array-reverse">std.array.reverse</a>, <a href="#std-array-sort">std.array.sort</a></td><td>order</td></tr><tr><td><a href="#std-array-join">std.array.join</a></td><td>the elements as one <a href="../language/types.html#strings">string</a></td></tr></table>
+<h2 id="std-array-create">std.array.create</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.create(count, fill) -&gt; array</code></td><td class="dcl-note">fill is optional</td></tr></table>
+<table class="params"><tr><td class="par-name"><code>count</code></td><td class="par-dash">-</td><td>the length</td></tr><tr><td class="par-name"><code>fill</code></td><td class="par-dash">-</td><td>every <a href="../language/arrays.html">element</a>'s <a href="../language/types.html">value</a> (undefined if left out)</td></tr></table>
+<h2 id="std-array-push">std.array.push</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.push(array, values...) -&gt; int</code></td><td class="dcl-note"></td></tr></table>
+<p>Adds the <a href="../language/types.html">values</a> to the end, in order. Returns the new length.</p>
+<div class="code"><pre><span class="kw">const</span> list = [<span class="nu">1</span>];
+<a href="#std-array-push">std.array.push</a>(list, <span class="nu">2</span>, <span class="nu">3</span>);
+<a href="../std/console.html#std-console-log">std.console.log</a>(list);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>[ 1, 2, 3 ]</pre></div>
+<h2 id="std-array-push-front">std.array.push_front</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.push_front(array, values...) -&gt; int</code></td><td class="dcl-note"></td></tr></table>
+<p>Adds the <a href="../language/types.html">values</a> to the front (in the given order: <code>push_front(a, 1, 2)</code> makes <code>a</code> start with <code>1, 2</code>). Returns the new length.</p>
+<h2 id="std-array-pop">std.array.pop</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.pop(array)</code></td><td class="dcl-note"></td></tr></table>
+<p>Removes the last <a href="../language/arrays.html">element</a> and returns it; <a href="../language/types.html#undefined">undefined</a> for an empty <a href="../language/arrays.html">array</a>.</p>
+<h2 id="std-array-pop-front">std.array.pop_front</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.pop_front(array)</code></td><td class="dcl-note"></td></tr></table>
+<p>Removes the first <a href="../language/arrays.html">element</a> and returns it; undefined for an empty <a href="../language/arrays.html">array</a>.</p>
+<h2 id="std-array-insert">std.array.insert</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.insert(array, index, value) -&gt; int</code></td><td class="dcl-note"></td></tr></table>
+<table class="params"><tr><td class="par-name"><code>index</code></td><td class="par-dash">-</td><td>where: the <a href="../language/types.html">value</a> goes before the <a href="../language/arrays.html">element</a> at <code>index</code>; the length appends</td></tr></table>
+<p>Returns the new length. An index outside <code>0</code> to the length is a <a href="../language/errors.html">runtime error</a>.</p>
+<h2 id="std-array-remove">std.array.remove</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.remove(array, index)</code></td><td class="dcl-note"></td></tr></table>
+<p>Removes the <a href="../language/arrays.html">element</a> at <code>index</code> and returns it. An index outside the <a href="../language/arrays.html">array</a> is a <a href="../language/errors.html">runtime error</a>.</p>
+<h2 id="std-array-resize">std.array.resize</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.resize(array, count, fill) -&gt; array</code></td><td class="dcl-note">fill is optional</td></tr></table>
+<p>Makes the <a href="../language/arrays.html">array</a> <code>count</code> long: cut at the end, or new <a href="../language/arrays.html">elements</a> set to <code>fill</code> (undefined if left out). Returns the array.</p>
+<h2 id="std-array-fill">std.array.fill</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.fill(array, value, start, end) -&gt; array</code></td><td class="dcl-note">start and end are optional</td></tr></table>
+<p>Sets the <a href="../language/arrays.html">elements</a> from <code>start</code> up to (not including) <code>end</code> to <a href="../language/types.html"><code>value</code></a>: all of them without <code>start</code> and <code>end</code>. Returns the <a href="../language/arrays.html">array</a>.</p>
+<h2 id="std-array-slice">std.array.slice</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.slice(array, start, end) -&gt; array</code></td><td class="dcl-note">start and end are optional</td></tr></table>
+<p>A new <a href="../language/arrays.html">array</a> with the <a href="../language/arrays.html">elements</a> from <code>start</code> up to (not including) <code>end</code>. Negative indexes count from the end (<code>-1</code> is the last); out of range ones are clamped. Without <code>end</code>: to the end; without both: a copy.</p>
+<div class="code"><pre><a href="../std/console.html#std-console-log">std.console.log</a>(<a href="#std-array-slice">std.array.slice</a>([<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>, <span class="nu">4</span>], <span class="nu">1</span>, <span class="nu">3</span>), <span class="st">&quot; &quot;</span>, <a href="#std-array-slice">std.array.slice</a>([<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>, <span class="nu">4</span>], -<span class="nu">2</span>));</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>[ 2, 3 ] [ 3, 4 ]</pre></div>
+<h2 id="std-array-concat">std.array.concat</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.concat(a, b) -&gt; array</code></td><td class="dcl-note"></td></tr></table>
+<p>A new <a href="../language/arrays.html">array</a>: the <a href="../language/arrays.html">elements</a> of <code>a</code>, then the elements of <code>b</code>.</p>
+<h2 id="std-array-index-of">std.array.index_of</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.index_of(array, value) -&gt; int</code></td><td class="dcl-note"></td></tr></table>
+<p>The index of the first <a href="../language/arrays.html">element</a> that is strictly equal (<code>===</code>) to <a href="../language/types.html"><code>value</code></a>, or <code>-1</code>.</p>
+<h2 id="std-array-contains">std.array.contains</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.contains(array, value) -&gt; boolean</code></td><td class="dcl-note"></td></tr></table>
+<p>Whether an <a href="../language/arrays.html">element</a> is strictly equal (<code>===</code>) to <a href="../language/types.html"><code>value</code></a>.</p>
+<h2 id="std-array-find">std.array.find</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.find(array, callback)</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.array.find_last(array, callback)</code></td><td class="dcl-note"></td></tr></table>
+<p>The first (last) <a href="../language/arrays.html">element</a> for which <code>callback(element, index)</code> is true, or undefined.</p>
+<div class="code"><pre><span class="kw">const</span> people = [{ name: <span class="st">&quot;Ada&quot;</span>, age: <span class="nu">36</span> }, { name: <span class="st">&quot;Grace&quot;</span>, age: <span class="nu">85</span> }];
+<span class="kw">const</span> old = <a href="#std-array-find">std.array.find</a>(people, (p) =&gt; p.age &gt; <span class="nu">50</span>);
+<a href="../std/console.html#std-console-log">std.console.log</a>(old.name);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>Grace</pre></div>
+<h2 id="std-array-find-index">std.array.find_index</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.find_index(array, callback) -&gt; int</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.array.find_last_index(array, callback) -&gt; int</code></td><td class="dcl-note"></td></tr></table>
+<p>The index of the first (last) <a href="../language/arrays.html">element</a> for which <code>callback(element, index)</code> is true, or <code>-1</code>.</p>
+<h2 id="std-array-transform">std.array.transform</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.transform(array, callback) -&gt; array</code></td><td class="dcl-note"></td></tr></table>
+<p>A new <a href="../language/arrays.html">array</a> with <code>callback(element, index)</code> for every <a href="../language/arrays.html">element</a> (JavaScript's map).</p>
+<div class="code"><pre><a href="../std/console.html#std-console-log">std.console.log</a>(<a href="#std-array-transform">std.array.transform</a>([<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>], (x, i) =&gt; x * <span class="nu">10</span> + i));</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>[ 10, 21, 32 ]</pre></div>
+<h2 id="std-array-filter">std.array.filter</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.filter(array, callback) -&gt; array</code></td><td class="dcl-note"></td></tr></table>
+<p>A new <a href="../language/arrays.html">array</a> with the <a href="../language/arrays.html">elements</a> for which <code>callback(element, index)</code> is true.</p>
+<h2 id="std-array-accumulate">std.array.accumulate</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.accumulate(array, callback, initial)</code></td><td class="dcl-note">initial is optional</td></tr></table>
+<p>Folds the <a href="../language/arrays.html">array</a> into one <a href="../language/types.html">value</a> (JavaScript's reduce): the result starts as <code>initial</code> and becomes <code>callback(result, element, index)</code> for every <a href="../language/arrays.html">element</a>. Without <code>initial</code>, it starts as the first element (and the callback isn't called for it).</p>
+<div class="code"><pre><a href="../std/console.html#std-console-log">std.console.log</a>(<a href="#std-array-accumulate">std.array.accumulate</a>([<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>, <span class="nu">4</span>], (sum, x) =&gt; sum + x, <span class="nu">0</span>));</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>10</pre></div>
+<h2 id="std-array-all">std.array.all</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.all(array, callback) -&gt; boolean</code></td><td class="dcl-note"></td></tr></table>
+<p>Whether <code>callback(element, index)</code> is true for every <a href="../language/arrays.html">element</a> (true for an empty <a href="../language/arrays.html">array</a>).</p>
+<h2 id="std-array-any">std.array.any</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.any(array, callback) -&gt; boolean</code></td><td class="dcl-note"></td></tr></table>
+<p>Whether <code>callback(element, index)</code> is true for any <a href="../language/arrays.html">element</a> (false for an empty <a href="../language/arrays.html">array</a>).</p>
+<h2 id="std-array-for-each">std.array.for_each</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.for_each(array, callback)</code></td><td class="dcl-note"></td></tr></table>
+<p>Calls <code>callback(element, index)</code> for every <a href="../language/arrays.html">element</a>. A <a href="../language/control-flow.html#ranged-for">ranged for</a> does the same without a <a href="../language/functions.html#declaring">function</a>.</p>
+<h2 id="std-array-reverse">std.array.reverse</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.reverse(array) -&gt; array</code></td><td class="dcl-note"></td></tr></table>
+<p>Reverses the order in place; returns the <a href="../language/arrays.html">array</a>.</p>
+<h2 id="std-array-sort">std.array.sort</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.sort(array, comparator) -&gt; array</code></td><td class="dcl-note">comparator is optional</td></tr></table>
+<p>Sorts in place and returns the <a href="../language/arrays.html">array</a>. Without a comparator the <a href="../language/arrays.html">elements</a> must be all <a href="../language/types.html#numbers">numbers</a> or all <a href="../language/types.html#strings">strings</a>, and go in ascending order. With one, <code>comparator(a, b)</code> returns a negative number when <code>a</code> goes before <code>b</code>, a positive one when after, <code>0</code> when it doesn't matter. The sort is stable (equal elements keep their order).</p>
+<div class="code"><pre><span class="kw">const</span> words = [<span class="st">&quot;pear&quot;</span>, <span class="st">&quot;fig&quot;</span>, <span class="st">&quot;banana&quot;</span>];
+<a href="#std-array-sort">std.array.sort</a>(words, (a, b) =&gt; <a href="../std/index.html#std-length">std.length</a>(a) - <a href="../std/index.html#std-length">std.length</a>(b));
+<a href="../std/console.html#std-console-log">std.console.log</a>(words);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>[ fig, pear, banana ]</pre></div>
+<h2 id="std-array-join">std.array.join</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.array.join(array, separator) -&gt; string</code></td><td class="dcl-note">separator is optional</td></tr></table>
+<p>The <a href="../language/arrays.html">elements</a> as text (as <a href="../std/string.html#std-string-from">std.string.from</a> gives them), with <code>separator</code> between them (<code>&quot;,&quot;</code> if left out).</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/std/array.txt</code>.</div></div>
+</body>
+</html>

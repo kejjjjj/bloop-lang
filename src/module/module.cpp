@@ -33,12 +33,19 @@ namespace {
 		bool m_bLoaded{}; // false while its imports are still being loaded
 	};
 
-	[[nodiscard]] std::shared_ptr<const bloop::BloopString> ReadFile(const fs::path& path) {
-		std::ifstream file(path, std::ios::binary);
-		if (!file)
-			return nullptr;
-
-		auto source = bloop::BloopString(std::istreambuf_iterator<bloop::BloopChar>(file), std::istreambuf_iterator<bloop::BloopChar>());
+	[[nodiscard]] std::shared_ptr<const bloop::BloopString> ReadFile(const fs::path& path, const CompileOptions& options) {
+		bloop::BloopString source;
+		if (options.m_fnReadFile) {
+			auto contents = options.m_fnReadFile(path);
+			if (!contents)
+				return nullptr;
+			source = std::move(*contents);
+		} else {
+			std::ifstream file(path, std::ios::binary);
+			if (!file)
+				return nullptr;
+			source = bloop::BloopString(std::istreambuf_iterator<bloop::BloopChar>(file), std::istreambuf_iterator<bloop::BloopChar>());
+		}
 
 		// the utf-8 byte order mark that some editors add
 		if (source.starts_with("\xEF\xBB\xBF"))
@@ -52,7 +59,7 @@ namespace {
 	class CModuleCompiler {
 	public:
 		CModuleCompiler(bloop::metadata::Metadata& metadata, const fs::path& rootDirectory, const CompileOptions& options)
-			: m_refMetadata(metadata), m_oRootDirectory(Normalize(rootDirectory)) {
+			: m_refMetadata(metadata), m_oRootDirectory(Normalize(rootDirectory)), m_oOptions(options) {
 			if (!options.m_oImportRoot.empty())
 				m_oImportRoot = Normalize(options.m_oImportRoot);
 
@@ -74,8 +81,13 @@ namespace {
 				if (m_refMetadata.m_oSourceFiles.size() <= 1u)
 					throw;
 
-				if (ex.m_oPosition)
-					throw bloop::exception::CompileError(bloop::fmt::format(BLOOPTEXT("{}\nat: {}"), ex.m_sMessage, m_refMetadata.FormatPosition(*ex.m_oPosition)));
+				if (ex.m_oPosition) {
+					bloop::exception::CompileError error(bloop::fmt::format(BLOOPTEXT("{}\nat: {}"), ex.m_sMessage, m_refMetadata.FormatPosition(*ex.m_oPosition)));
+					// (the position stays: lines are counted across all files, Metadata::FindSourceFile says whose)
+					error.m_sMessage = ex.m_sMessage;
+					error.m_oPosition = ex.m_oPosition;
+					throw error;
+				}
 
 				if (m_pCurrent)
 					throw bloop::exception::CompileError(bloop::fmt::format(BLOOPTEXT("{}\nin: {}"), ex.m_sMessage, m_pCurrent->m_sName));
@@ -123,7 +135,7 @@ namespace {
 			unit.m_pCode = Parse(unit, std::move(source));
 
 			for (const auto& stmt : unit.m_pCode->m_oStatements) {
-				auto* statement = dynamic_cast<bloop::ast::ImportStatement*>(stmt.get());
+				auto* statement = stmt->AsImport();
 				if (!statement)
 					break; // imports always come first
 
@@ -160,7 +172,7 @@ namespace {
 				return *existing; // already loaded (and it'll run only once)
 			}
 
-			auto source = ReadFile(path);
+			auto source = ReadFile(path, m_oOptions);
 			if (!source) {
 				throw bloop::exception::CompileError(bloop::fmt::format(BLOOPTEXT("couldn't open the module \"{}\" ({})"), 
 					statement.m_sPath, path.generic_string()), statement.m_oApproximatePosition);
@@ -229,6 +241,7 @@ namespace {
 		bloop::metadata::Metadata& m_refMetadata;
 		fs::path m_oRootDirectory;
 		fs::path m_oImportRoot; // empty: anywhere
+		const CompileOptions& m_oOptions; // (outlives the compiler: the caller's)
 
 		std::vector<std::unique_ptr<Module>> m_oModules;
 		std::vector<Module*> m_oOrder; // dependencies before the modules that import them
@@ -238,11 +251,11 @@ namespace {
 }
 
 std::unique_ptr<bloop::ast::Program> bloop::module::CompileFile(const fs::path& path, bloop::metadata::Metadata& metadata, const CompileOptions& options) {
-	auto source = ReadFile(path);
+	const auto normalized = Normalize(path);
+	auto source = ReadFile(normalized, options);
 	if (!source)
 		throw bloop::exception::CompileError(bloop::fmt::format(BLOOPTEXT("couldn't open \"{}\""), path.generic_string()));
 
-	const auto normalized = Normalize(path);
 	CModuleCompiler compiler(metadata, normalized.parent_path(), options);
 	return compiler.Compile(normalized, normalized.filename().generic_string(), std::move(source));
 }

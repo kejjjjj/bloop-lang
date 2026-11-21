@@ -1,0 +1,100 @@
+title: std.math
+path: Standard library / std.math
+defines: std.math
+group: std
+order: 5
+---
+abs, min, max, clamp and sign keep their argument's type (an int stays an int). floor, ceil, round and trunc give an
+int, so the result can index an array. Everything else gives a double, with the usual IEEE results (`sqrt(-1)` is
+nan).
+
+# Constants {=std.math.pi, std.math.tau, std.math.e, std.math.inf}
+
+| Name | Value |
+| `std.math.pi` | 3.14159... |
+| `std.math.tau` | 2 pi |
+| `std.math.e` | 2.71828... |
+| `std.math.inf` | infinity |
+
+# std.math.abs {=std.math.abs, std.math.sign}
+
+decl std.math.abs(x)
+decl std.math.sign(x)  // -1, 0 or 1
+
+# std.math.min {=std.math.min, std.math.max}
+
+decl std.math.min(values...)
+decl std.math.max(values...)
+
+The smallest or largest of one or more numbers.
+
+# std.math.clamp {=std.math.clamp}
+
+decl std.math.clamp(x, low, high)
+
+`x`, but at least `low` and at most `high`.
+
+# std.math.floor {=std.math.floor, std.math.ceil, std.math.round, std.math.trunc}
+
+decl std.math.floor(x) -> int  // down
+decl std.math.ceil(x) -> int  // up
+decl std.math.round(x) -> int  // to the nearest, halves away from zero
+decl std.math.trunc(x) -> int  // towards zero
+
+A double that doesn't fit in an int is a runtime error.
+
+# Powers and logarithms {=std.math.sqrt, std.math.cbrt, std.math.pow, std.math.exp, std.math.log, std.math.log2, std.math.log10, std.math.hypot}
+
+decl std.math.sqrt(x) -> double
+decl std.math.cbrt(x) -> double
+decl std.math.pow(base, exponent) -> double
+decl std.math.exp(x) -> double  // e to the x
+decl std.math.log(x) -> double  // natural logarithm
+decl std.math.log2(x) -> double
+decl std.math.log10(x) -> double
+decl std.math.hypot(x, y) -> double  // the square root of x * x + y * y
+
+# Trigonometry {=std.math.sin, std.math.cos, std.math.tan, std.math.asin, std.math.acos, std.math.atan, std.math.atan2, std.math.to_radians, std.math.to_degrees}
+
+decl std.math.sin(x) -> double
+decl std.math.cos(x) -> double
+decl std.math.tan(x) -> double
+decl std.math.asin(x) -> double
+decl std.math.acos(x) -> double
+decl std.math.atan(x) -> double
+decl std.math.atan2(y, x) -> double  // the angle of the point (x, y)
+decl std.math.to_radians(degrees) -> double
+decl std.math.to_degrees(radians) -> double
+
+Angles in radians.
+
+# std.math.lerp {=std.math.lerp}
+
+decl std.math.lerp(a, b, t) -> double
+
+`a + (b - a) * t`: `a` at `t = 0`, `b` at `t = 1`.
+
+# std.math.is_nan {=std.math.is_nan, std.math.is_finite}
+
+decl std.math.is_nan(x) -> boolean
+decl std.math.is_finite(x) -> boolean
+
+# Random numbers {=std.math.random, std.math.random_int, std.math.seed}
+
+decl std.math.random() -> double  // in [0, 1)
+decl std.math.random_int(low, high) -> int  // in [low, high], both included
+decl std.math.seed(seed)
+
+Every script has its own generator. The same seed gives the same numbers again: a script that has to repeat a run
+(a replay, a generated world) seeds it. The program running the script may seed it first; otherwise every run is
+different.
+
+```
+std.math.seed(7);
+const first = std.math.random_int(1, 6);
+std.math.seed(7);
+std.console.log(first == std.math.random_int(1, 6));
+```
+```output
+true
+```

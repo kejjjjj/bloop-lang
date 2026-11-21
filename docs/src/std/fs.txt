@@ -1,0 +1,65 @@
+title: std.fs
+path: Standard library / std.fs
+defines: std.fs
+group: std
+order: 10
+---
+Files and directories. Only when the program running the script allows it (a [[permission]]): the standalone
+interpreter does. Paths are relative to the working directory, or to a root directory the program sets
+(and then a path outside of it is a runtime error). What can fail on its own (a missing file, no access) returns
+[[undefined]] or `false`.
+
+```
+std.fs.make_dir("out");
+std.fs.write("out/notes.txt", "first line\n");
+std.fs.append("out/notes.txt", "second line\n");
+std.console.log(std.fs.read("out/notes.txt"), std.fs.list("out"));
+```
+```output
+first line
+second line
+[ notes.txt ]
+```
+
+# std.fs.read {=std.fs.read}
+
+decl std.fs.read(path)  // a string, or undefined
+
+The file's contents, or undefined if it can't be read.
+
+# std.fs.write {=std.fs.write, std.fs.append}
+
+decl std.fs.write(path, text) -> boolean  // replaces the file
+decl std.fs.append(path, text) -> boolean  // adds to its end
+
+Create the file if it isn't there. Return whether it worked.
+
+# std.fs.exists {=std.fs.exists, std.fs.is_file, std.fs.is_dir}
+
+decl std.fs.exists(path) -> boolean
+decl std.fs.is_file(path) -> boolean
+decl std.fs.is_dir(path) -> boolean
+
+# std.fs.list {=std.fs.list}
+
+decl std.fs.list(path)  // an array, or undefined
+
+The names of what's in a directory (files and directories, sorted), or undefined if it can't be listed.
+
+# std.fs.make_dir {=std.fs.make_dir}
+
+decl std.fs.make_dir(path) -> boolean
+
+Creates the directory, and the ones above it that are missing. Returns whether it exists now.
+
+# std.fs.remove {=std.fs.remove}
+
+decl std.fs.remove(path) -> boolean
+
+Removes a file or an empty directory (never anything with things in it). Returns whether something was removed.
+
+# std.fs.rename {=std.fs.rename}
+
+decl std.fs.rename(from, to) -> boolean
+
+Moves or renames a file or a directory. Returns whether it worked.

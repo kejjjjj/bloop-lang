@@ -128,6 +128,9 @@ Object* Heap::AllocClosure(Function* function, bloop::BloopIndex numVals) {
 Object* Heap::AllocNativeFunction(const bloop::standard::NativeFunction* function) {
 	return Allocate<Object>(function);
 }
+Object* Heap::AllocHandle(const bloop::BloopString* type, bloop::BloopUInt64 id) {
+	return Allocate<Object>(type, id);
+}
 Object* Heap::AllocCoroutine(const Value& callee) {
 	// the object first: the allocation may collect, and a state without an owner must not be in the registry yet
 	auto* h = m_pGC->AllocOld(sizeof(Object), GCKind::object); // (remembers it: the callee may be young)

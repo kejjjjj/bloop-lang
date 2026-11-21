@@ -1,0 +1,115 @@
+title: Operators
+path: Language / Operators
+defines: operator, operators
+group: language
+order: 4
+---
+# Arithmetic {=arithmetic}
+
+| Operator | What it does |
+| `a + b` | addition; two strings: joined (see [[language/strings|strings]]) |
+| `a - b` | subtraction |
+| `a * b` | multiplication |
+| `a / b` | division: ints give an int (rounded towards zero), by an int zero a runtime error; a double in it gives a double |
+| `a % b` | the remainder (the sign of `a`): `7 % 3` is `1`, `-7 % 3` is `-1`; on doubles too |
+| `-a` | negation (not on a uint) |
+| `++a`, `a++` | adds one: before (the new value) or after (the old value) |
+| `--a`, `a--` | subtracts one |
+
+An int and a double: the int becomes a double. A boolean counts as `0` or `1`. Anything else (a string with a number,
+two arrays) is a runtime error: there's no implicit conversion, std.string.from and std.string.parse_int convert.
+
+# Comparison {=comparison, equality}
+
+| Operator | What it does |
+| `a == b`, `a != b` | equal: numbers by value across types (`1 == 1.0`, `1 == true`), strings by content, arrays, objects and functions by identity |
+| `a === b`, `a !== b` | strictly equal: the same type and equal (`1 === 1.0` is false) |
+| `a < b`, `a <= b`, `a > b`, `a >= b` | numbers only |
+
+Comparing a number with a string (`1 == "1"`) is a runtime error, not false. Strings can't be compared with `<`.
+
+# Logic {=logical operators}
+
+| Operator | What it does |
+| `a && b` | true when both are; `b` isn't evaluated when `a` is false |
+| `a \|\| b` | true when either is; `b` isn't evaluated when `a` is true |
+| `!a` | not |
+| `c ? a : b` | `a` when `c` is true, else `b` (only the one chosen is evaluated) |
+
+The operands are [[condition|conditions]], and the result of `&&`, `||` and `!` is always a boolean: `undefined || 5`
+is `true`, not `5`.
+
+# Bits {=bitwise operators}
+
+| Operator | What it does |
+| `a & b`, `a \| b`, `a ^ b` | and, or, exclusive or |
+| `~a` | complement |
+| `a << b`, `a >> b` | shift left, shift right (keeping the sign) |
+
+On ints and uints.
+
+# Assignment {=assignment}
+
+`a = b` assigns and gives the value assigned. `a += b`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`
+combine an operator with assignment. The left side is a variable (not a constant), an element `a[i]` or a property
+`o.p` / `o["p"]`.
+
+# typeof {=typeof}
+
+`typeof value` gives the name of the value's type, as a string:
+
+| Value | `typeof` gives |
+| undefined | `"undefined"` |
+| `true`, `false` | `"boolean"` |
+| `1`, `1u`, `1.5` | `"int"`, `"uint"`, `"double"` (there's no `"number"`) |
+| `"text"` | `"string"` |
+| `[1, 2]` | `"array"` |
+| `{ a: 1 }` | `"object"` |
+| a function, a lambda, a standard function | `"function"` |
+| a coroutine | `"coroutine"` |
+| a [[handle]] | its type's name, like `"task"` |
+
+It's a prefix operator: `typeof a.b[0]` is the type of `a.b[0]`, and
+`typeof x == "int"` is `(typeof x) == "int"`.
+
+```
+fn describe(value) {
+	const type = typeof value;
+	if (type == "int" || type == "uint" || type == "double")
+		return "number";
+	return type;
+}
+
+std.console.log(describe(1.5), ", ", describe([1]), ", ", describe(describe));
+```
+```output
+number, array, function
+```
+
+# Calls, elements, properties
+
+`f(a, b)` calls a function, `a[i]` is an element of an array or a byte of a string, `o.name` and `o["name"]` a property
+of an object (std.array, std.string... are objects too: `std.array.push`).
+
+# Precedence {=precedence}
+
+From the tightest:
+
+| Operators | |
+| `f()` `a[i]` `o.p` `a++` `a--` | postfix |
+| `!` `-` `~` `++a` `--a` `typeof` | prefix |
+| `*` `/` `%` | multiplicative |
+| `+` `-` | additive |
+| `<<` `>>` | shift |
+| `<` `<=` `>` `>=` | relational |
+| `==` `!=` `===` `!==` | equality |
+| `&` | bitwise and |
+| `^` | bitwise exclusive or |
+| `\|` | bitwise or |
+| `&&` | logical and |
+| `\|\|` | logical or |
+| `? :` | conditional |
+| `=` `+=` `-=` ... | assignment (right to left) |
+
+> As in C and JavaScript, the bitwise operators bind looser than the comparisons: `flags & 4 == 4` is
+  `flags & (4 == 4)`. Write `(flags & 4) == 4`.

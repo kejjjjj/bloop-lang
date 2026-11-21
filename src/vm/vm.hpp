@@ -17,6 +17,7 @@
 #include <exception>
 #include <cstdint>
 #include <chrono>
+#include <memory>
 #if defined(_MSC_VER)
 #include <intrin.h>
 #endif
@@ -28,6 +29,7 @@ namespace bloop::bytecode {
 namespace bloop::vm {
 	struct CallFrame;
 	struct CoroutineState;
+	class TaskList;
 
 	// where the C++ stack is right now (the frame, not a local: sanitizers can move locals off the stack)
 	[[nodiscard]] inline std::uintptr_t NativeStackAddress() noexcept {
@@ -72,6 +74,8 @@ namespace bloop::vm {
 		[[nodiscard]] const bloop::standard::Environment& GetEnvironment() const noexcept { return m_oEnvironment; }
 		// (std.time.now counts from here)
 		[[nodiscard]] std::chrono::steady_clock::time_point GetCreationTime() const noexcept { return m_oCreationTime; }
+		// std.time.now(): Environment::m_fnClock, or seconds since the VM was created
+		[[nodiscard]] double Now() const;
 		// std.math.random's generator (seeded with Environment::m_oRandomSeed)
 		[[nodiscard]] bloop::Random& GetRandom() noexcept { return m_oRandom; }
 
@@ -87,10 +91,21 @@ namespace bloop::vm {
 		void SetPrintErrors(bool print) noexcept { m_bPrintErrors = print; }
 		// the message of the last runtime error (with the stack trace)
 		[[nodiscard]] const bloop::BloopString& GetError() const noexcept { return m_sError; }
+		// the last runtime error without the trace, and the trace: where it happened first, then the calls that led there
+		[[nodiscard]] const bloop::BloopString& GetErrorMessage() const noexcept { return m_sErrorMessage; }
+		[[nodiscard]] const std::vector<bc::InstrDebugRef>& GetErrorTrace() const noexcept { return m_oErrorTrace; }
 
 		// calls a script function from the host after Run(): runtime errors and std.process.exit end the call
 		// (not the host). Returns nothing then, see Failed(), GetError() and GetExitCode()
 		[[nodiscard]] std::optional<Value> CallFromHost(const Value& callee, std::span<const Value> args);
+
+		// resumes a suspended coroutine from the host after Run(), like CallFromHost: runtime errors, an exception
+		// that the coroutine doesn't catch and std.process.exit end the call (and the coroutine). Returns what it
+		// yielded or returned, or nothing then. `args` follow the rules of ResumeCoroutine
+		[[nodiscard]] std::optional<Value> ResumeFromHost(Object* coroutine, std::span<const Value> args);
+
+		// std.task's tasks (vm/tasks.hpp)
+		[[nodiscard]] TaskList& GetTasks() noexcept { return *m_pTasks; }
 
 		// whatever the host wants its native functions to reach (a game, a mod...)
 		void SetUserData(void* data) noexcept { m_pUserData = data; }
@@ -136,6 +151,13 @@ namespace bloop::vm {
 		// makes the native that calls this throw `value` as a script exception (one that a try can catch)
 		// when it returns. The native's return value is ignored then
 		void RaiseFromNative(const Value& value);
+
+		// the one string for a handle type's name (HandleData::type points at it, compared by address). It lives as
+		// long as the VM
+		[[nodiscard]] const bloop::BloopString* GetHandleType(bloop::BloopStringView name);
+
+		// the native function being called (read it first thing: calls the native makes change it)
+		[[nodiscard]] const bloop::standard::NativeFunction* GetCalledNative() const noexcept { return m_pCalledNative; }
 
 	private:
 		enum class ExecutionReturnCode : bloop::BloopByte {
@@ -203,6 +225,9 @@ namespace bloop::vm {
 		// VM::Call and coroutine resumes in progress: each one nests the dispatch loop in C++
 		bloop::BloopSize m_uCallNesting{};
 
+		const bloop::standard::NativeFunction* m_pCalledNative{};
+		std::vector<std::unique_ptr<bloop::BloopString>> m_oHandleTypes; // (a few: a linear search is fine)
+
 		bloop::standard::Environment m_oEnvironment;
 		std::chrono::steady_clock::time_point m_oCreationTime{ std::chrono::steady_clock::now() };
 		bloop::Random m_oRandom;
@@ -210,6 +235,9 @@ namespace bloop::vm {
 		bool m_bFailed{};
 		bool m_bPrintErrors{ true };
 		bloop::BloopString m_sError;
+		bloop::BloopString m_sErrorMessage;
+		std::vector<bc::InstrDebugRef> m_oErrorTrace;
+		std::vector<bc::InstrDebugRef> m_oUnwound; // the calls that the exception on its way has left (innermost first)
 		Limits m_oLimits;
 		bloop::BloopUInt m_uInstructionsUsed{}; // since the host's last Run() / CallFromHost()
 		std::uintptr_t m_uStackBase{}; // the C++ stack where the host called Run() / CallFromHost()
@@ -219,6 +247,7 @@ namespace bloop::vm {
 		Heap m_oHeap;
 		GC m_oGC;
 		Chunk m_oGlobalChunk; //executed in the beginning
+		std::unique_ptr<TaskList> m_pTasks; // (after the GC: its persistent handles go first)
 
 		//debugging
 		bloop::metadata::Metadata& m_refMetaData;

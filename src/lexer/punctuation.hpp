@@ -17,8 +17,8 @@ namespace bloop {
 		op_bitwise_or,		//  | 
 		op_bitwise_xor,		//	^
 		op_bitwise_and,		//  & 
-		op_equality,		//	< <= > >=
-		op_relational,		//	== != === !==
+		op_equality,		//	== != === !==
+		op_relational,		//	< <= > >=
 		op_shift,			//  <<>>
 		op_additive,		//	+ -
 		op_multiplicative,	//	* / %
@@ -106,8 +106,8 @@ namespace bloop {
 	};
 
 	constexpr std::array<CPunctuation, static_cast<std::size_t>(EPunctuation::p_num_punctuations) - 1u> punctuations{
-		CPunctuation{BLOOPTEXT("==="), EPunctuation::p_strict_equality, EOperatorPriority::op_relational},
-		CPunctuation{BLOOPTEXT("!=="), EPunctuation::p_strict_unequality, EOperatorPriority::op_relational},
+		CPunctuation{BLOOPTEXT("==="), EPunctuation::p_strict_equality, EOperatorPriority::op_equality},
+		CPunctuation{BLOOPTEXT("!=="), EPunctuation::p_strict_unequality, EOperatorPriority::op_equality},
 
 		CPunctuation{BLOOPTEXT("<<="), EPunctuation::p_assignment_left_shift, EOperatorPriority::op_assignment},
 		CPunctuation{BLOOPTEXT(">>="), EPunctuation::p_assignment_right_shift, EOperatorPriority::op_assignment},
@@ -124,11 +124,11 @@ namespace bloop {
 		CPunctuation{BLOOPTEXT("^="), EPunctuation::p_assignment_bitwise_xor, EOperatorPriority::op_assignment},
 		CPunctuation{BLOOPTEXT("&="), EPunctuation::p_assignment_bitwise_and, EOperatorPriority::op_assignment},
 
-		CPunctuation{BLOOPTEXT("=="), EPunctuation::p_equality, EOperatorPriority::op_relational},
-		CPunctuation{BLOOPTEXT("!="), EPunctuation::p_unequality, EOperatorPriority::op_relational},
+		CPunctuation{BLOOPTEXT("=="), EPunctuation::p_equality, EOperatorPriority::op_equality},
+		CPunctuation{BLOOPTEXT("!="), EPunctuation::p_unequality, EOperatorPriority::op_equality},
 
-		CPunctuation{BLOOPTEXT("<="), EPunctuation::p_less_equal, EOperatorPriority::op_equality},
-		CPunctuation{BLOOPTEXT(">="), EPunctuation::p_greater_equal, EOperatorPriority::op_equality},
+		CPunctuation{BLOOPTEXT("<="), EPunctuation::p_less_equal, EOperatorPriority::op_relational},
+		CPunctuation{BLOOPTEXT(">="), EPunctuation::p_greater_equal, EOperatorPriority::op_relational},
 
 		CPunctuation{BLOOPTEXT("&&"), EPunctuation::p_logical_and, EOperatorPriority::op_logical_and},
 		CPunctuation{BLOOPTEXT("||"), EPunctuation::p_logical_or, EOperatorPriority::op_logical_or},
@@ -143,8 +143,8 @@ namespace bloop {
 		CPunctuation{BLOOPTEXT("+"), EPunctuation::p_add, EOperatorPriority::op_additive},
 		CPunctuation{BLOOPTEXT("-"), EPunctuation::p_sub, EOperatorPriority::op_additive},
 
-		CPunctuation{BLOOPTEXT("<"), EPunctuation::p_less_than, EOperatorPriority::op_equality},
-		CPunctuation{BLOOPTEXT(">"), EPunctuation::p_greater_than, EOperatorPriority::op_equality},
+		CPunctuation{BLOOPTEXT("<"), EPunctuation::p_less_than, EOperatorPriority::op_relational},
+		CPunctuation{BLOOPTEXT(">"), EPunctuation::p_greater_than, EOperatorPriority::op_relational},
 
 		CPunctuation{BLOOPTEXT("%"), EPunctuation::p_modulo, EOperatorPriority::op_multiplicative},
 		CPunctuation{BLOOPTEXT("*"), EPunctuation::p_multiplication, EOperatorPriority::op_multiplicative},

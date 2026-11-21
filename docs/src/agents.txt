@@ -1,0 +1,116 @@
+title: For agents
+path: For agents
+defines: for agents, llms.txt
+---
+This page is for AI agents writing bloop (and for anyone who knows JavaScript). bloop looks like JavaScript, so
+JavaScript habits are where almost every mistake comes from: this page lists them, with the error each one gives.
+
+The whole reference is also available as plain text, which is easier for a program to read than these pages:
+[[llms.txt|llms.txt]] (everything) and [[llms-short.txt|llms-short.txt]] (this page and every standard library
+signature).
+
+# The rules in short
+
+- Statements end with `;`. Blocks use `{ }`.
+- `let` and `const` only. Functions are `fn name(a, b) { ... }` or lambdas `(a, b) => expression` (parentheses
+  always).
+- A name can't be declared again while it's visible: not in an inner block, not as a parameter, not even when the
+  outer name is a global declared above the function.
+- Only booleans, numbers and undefined can be conditions. `0`, `0.0` and undefined are false.
+- `==` compares values of the same kind (numbers and booleans count as one kind). Between other kinds it's an error.
+  `===` compares anything: different types are simply not equal.
+- A function takes exactly as many arguments as it has parameters.
+- Reading a missing property or an index outside of an array is an error.
+- `try`/`catch` catches what `throw` throws. Errors (a missing property, a wrong call...) can't be caught: they stop
+  the script.
+- `std.console.log` prints its arguments with nothing between them.
+- Scripts run with no std.fs, std.process or std.time.sleep unless the program running them allows it (the
+  standalone interpreter `bloop file.bloop` does).
+
+# Not JavaScript
+
+| JavaScript habit | In bloop | What you get |
+| `if (text)`, `if (object)` | `if (text != "")`, `if (object !== undefined)` | `value of type "string" is not convertible to a boolean` |
+| `value \|\| fallback` | `value !== undefined ? value : fallback` | a boolean: `&&` and `\|\|` always give `true` or `false` |
+| `"n = " + 1` | `` `n = ${1}` `` or `"n = " + std.string.from(1)` | `cannot promote from "int" to "object"` |
+| `1 == "1"`, `"a" == true` | compare values of the same kind | `cannot promote from ...` |
+| `text == undefined`, `array == undefined` | `text === undefined` | `cannot promote from "undefined" to "object"` |
+| `"a" < "b"` | `std.array.sort` sorts strings; or compare std.string.get_code_at | `incompatible operands "string" and "string"` |
+| `7 / 2` is 3.5 | `7 / 2` is `3` (two ints divide as ints); write `7.0 / 2` | no error: a wrong number |
+| `object.missing` is undefined | `std.object.has(object, "missing")` first | `unknown property "missing"` |
+| `array[10]` is undefined | check `i < std.length(array)` | `out of bounds index [10]` |
+| `array.length`, `text.length` | `std.length(array)`, `std.length(text)` (bytes) | `a value of type "array" is not an aggregate type` |
+| `array.push(x)`, `text.split(",")` | `std.array.push(array, x)`, `std.string.split(text, ",")` | `a value of type "array" is not an aggregate type` |
+| `f(1)` for `fn f(a, b)` | pass every argument; there are no default parameters | `passed 1 arguments, but expected 2` |
+| `x => x + 1` | `(x) => x + 1` | `unsupported: >` |
+| `{ if: 1 }` | `{ "if": 1 }` (keywords as keys need quotes) | `expected an identifier` |
+| `for (const v of array)` | `for (const v : array)` | `expected "=" or end of statement` |
+| `for (const k in object)` | `for (const k : std.object.keys(object))` | `expected "=" or end of statement` |
+| `null` | `undefined` | `unknown identifier: null` |
+| `typeof x == "number"` | `typeof` gives `"int"`, `"uint"` or `"double"`; `typeof [1]` is `"array"` | no error: never true |
+| a missing `;` | end every statement with `;` | `unexpected end of expression` on the next line |
+| `std.array.sort(a, (x, y) => x < y)` | the comparator returns a number: `(x, y) => x - y` | `the comparator must return a number` |
+| `catch { }` | `catch (e) { }` | `expected a "("` |
+| `console.log(a, b)` prints `a b` | `std.console.log(a, " ", b)` | no error: `ab` |
+| `const f = () => i` in a `for (let i ...)` loop: each gets its own `i` | every closure shares the one `i` | no error: they all see the last value |
+| `[1] == [1]` is false | the same: arrays, objects and functions compare by identity | |
+
+These don't exist: `var`, `function`, `class`, `this`, `new`, `switch`, `do ... while`, `instanceof`,
+`null`, `??`, `?.`, `...` (spread and rest), destructuring, default parameters, getters, regular expressions. Methods are functions in properties that take the object as a parameter: `o.add(o, 2)`.
+
+# Reading an error
+
+A compile error stops the file before anything runs and gives a line and column (`at: 2:13`). A runtime error gives
+the message, `at [line, column]`, the line with a `^` under the spot, and the calls that led there.
+
+| Message | Usually |
+| `identifier "x" already declared` | a parameter or an inner variable reuses a name that's visible there: rename it |
+| `unknown identifier: x` | a typo, a variable used before its declaration, or something JavaScript has and bloop doesn't (`null`, `this`) |
+| `lhs is declared as const` | assigning to a `const` |
+| `unexpected end of expression: x` | a missing `;` before `x`, or syntax bloop doesn't have (`var`, `function`, `do`) |
+| `unsupported: ...` | an operator bloop doesn't have (`??`, `?.`, `x => x` without parentheses) |
+| `expected an identifier` | a keyword used as a name or an object key, or destructuring |
+| `cannot promote from "A" to "B"` | `+` or `==` with values of different kinds: a string and a number, anything and undefined |
+| `value of type "T" is not convertible to a boolean` | a string, array, object or function used as a condition |
+| `unknown property "p"` | the property isn't there: check with std.object.has |
+| `out of bounds index [i]` | the index is past the end (or negative) |
+| `passed N arguments, but expected M` | a call with too few or too many arguments |
+| `is not an aggregate type` | `.something` on a value that isn't an object (`array.length`, `text.split(",")`) |
+| `exceeded 1024 call frames` | recursion too deep |
+| `uncaught exception: v` | a `throw` nothing caught |
+
+The full list is on [[language/errors|Errors]].
+
+# A script that uses the common parts
+
+```
+// counts the words of a text and prints the three most common
+fn count_words(text) {
+	let counts = {};
+	for (const raw : std.string.split(text, " ")) {
+		const word = std.string.to_lower(std.string.trim(raw));
+		if (word == "")
+			continue;
+		counts[word] = std.object.has(counts, word) ? counts[word] + 1 : 1;
+	}
+	return counts;
+}
+
+const counts = count_words("the cat and the dog and the bird");
+let words = std.object.keys(counts);
+std.array.sort(words, (a, b) => counts[b] - counts[a]);
+
+for (const word : std.array.slice(words, 0, 3))
+	std.console.log(`${word}: ${counts[word]}`);
+```
+```output
+the: 3
+and: 2
+cat: 1
+```
+
+# Checking your work
+
+- Run a file with `bloop file.bloop`: a compile error or a runtime error prints where it is.
+- Signatures: every standard function is on its page, and all of them are in [[llms-short.txt|llms-short.txt]].
+- When something works in JavaScript but not here, look it up in the table above before working around it.

@@ -10,6 +10,7 @@ namespace bloop::ast {
 	// import a, b from "path";
 	struct ImportStatement : Statement {
 		ImportStatement(const bloop::CodePosition& cp) : Statement(cp) {}
+		[[nodiscard]] ImportStatement* AsImport() noexcept override { return this; }
 
 		struct Name {
 			bloop::BloopString m_sName;

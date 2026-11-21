@@ -1,3 +1,4 @@
+#include <cmath>
 #include "lexer/lexer.hpp"
 #include "lexer/exception.hpp"
 
@@ -244,6 +245,8 @@ bloop::EStatus CLexer::ReadNumber(bloop::CToken& token)
 		//parse the integer literal after the .
 		if (ReadInteger(token) != bloop::EStatus::success)
 			return bloop::EStatus::failure;
+
+		ReadExponent(token);
 	}
 	else if (IsDigit(*m_oScriptPos)) {
 		token.m_eTokenType = ETokenType::tt_int;
@@ -255,8 +258,9 @@ bloop::EStatus CLexer::ReadNumber(bloop::CToken& token)
 			return bloop::EStatus::success;
 
 		const auto isFloat = *m_oScriptPos == '.';
+		const auto isHex = token.m_sSource == BLOOPTEXT("0") && (*m_oScriptPos == 'x' || *m_oScriptPos == 'X');
 
-		if (token.m_sSource[0] == '0' && (*m_oScriptPos == 'x' || *m_oScriptPos == 'X')) {
+		if (isHex) {
 			m_oScriptPos++; // skip x
 			if (ReadHex(token) != bloop::EStatus::success)
 				return bloop::EStatus::failure;
@@ -272,8 +276,11 @@ bloop::EStatus CLexer::ReadNumber(bloop::CToken& token)
 
 		}
 
+		// 1e6, 2.5e-3: an exponent makes the literal a double
+		const auto hasExponent = !isHex && ReadExponent(token);
+
 		//todo -> suffixes
-		if (!isFloat) {
+		if (!isFloat && !hasExponent && !EndOfBuffer()) {
 			switch (*m_oScriptPos) {
 			case 'u':
 			case 'U':
@@ -291,6 +298,40 @@ bloop::EStatus CLexer::ReadNumber(bloop::CToken& token)
 	column += token.m_sSource.length();
 	return bloop::EStatus::success;
 }
+// e or E, an optional sign and digits after a number's digits; false (reading nothing) when there's no exponent
+bool CLexer::ReadExponent(bloop::CToken& token)
+{
+	auto& [_, column] = m_oParserPosition;
+
+	if (EndOfBuffer() || (*m_oScriptPos != 'e' && *m_oScriptPos != 'E'))
+		return false;
+
+	auto digit = std::next(m_oScriptPos);
+	if (digit != m_oScriptEnd && (*digit == '+' || *digit == '-'))
+		++digit;
+
+	// 2.e or 1em: not an exponent, the e belongs to whatever comes next
+	if (digit == m_oScriptEnd || !IsDigit(*digit)) {
+		column += token.m_sSource.length() + 1;
+		throw exception::LexerError(BLOOPTEXT("expected the exponent's digits after \"e\""), m_oParserPosition);
+	}
+
+	token.m_sSource.push_back('e');
+	++m_oScriptPos;
+	if (*m_oScriptPos == '+' || *m_oScriptPos == '-')
+		token.m_sSource.push_back(*m_oScriptPos++);
+
+	if (ReadInteger(token) != bloop::EStatus::success)
+		throw exception::LexerError(BLOOPTEXT("expected the exponent's digits after \"e\""), m_oParserPosition);
+
+	token.m_eTokenType = ETokenType::tt_double;
+
+	if (!std::isfinite(std::strtod(token.m_sSource.c_str(), nullptr)))
+		throw exception::LexerError(BLOOPTEXT("constant value is out of range"), m_oParserPosition);
+
+	return true;
+}
+
 bloop::EStatus CLexer::ReadInteger(bloop::CToken& token)
 {
 	auto& [_, column] = m_oParserPosition;
@@ -345,12 +386,12 @@ bloop::EStatus CLexer::ReadHex(bloop::CToken& token)
 		auto intValue = std::stoll(hexStr, nullptr, 16);
 		token.m_sSource = std::to_string(intValue);
 	}
-	catch ([[maybe_unused]] std::out_of_range& ex) {
+	catch (std::out_of_range&) {
 		try {
 			const auto uintValue = std::stoull(hexStr, nullptr, 16);
 			token.m_sSource = std::to_string(uintValue);
 		}
-		catch ([[maybe_unused]] std::out_of_range& ex) {
+		catch (std::out_of_range&) {
 			throw exception::LexerError(BLOOPTEXT("constant value is out of range"), m_oParserPosition);
 		}
 	}

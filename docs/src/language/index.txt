@@ -1,0 +1,33 @@
+title: Language
+path: Language
+defines: language, bloop language
+group: language
+order: 0
+---
+A bloop program is a file of statements that run from top to bottom, with functions, closures and modules for
+structure. The syntax is JavaScript's, the rules are stricter: there's no implicit conversion between strings and
+numbers, only booleans, numbers and undefined can be conditions, functions take exactly as many arguments as they have
+parameters, and reading a property or an element that isn't there is an error.
+
+# The pages
+
+| Page | What's in it |
+| [[language/basics|Basic concepts]] | source files, statements, comments, identifiers, keywords, literals |
+| [[language/types|Types]] | the kinds of values, which ones are copied and which ones are shared |
+| [[language/variables|Variables]] | let, const, blocks, globals, no shadowing |
+| [[language/operators|Operators]] | arithmetic, comparison, logic, bits, assignment, precedence |
+| [[language/conditions|Conditions]] | what if, while and the logical operators accept |
+| [[language/control-flow|Control flow]] | if, while, for, ranged for, break, continue, return |
+| [[language/functions|Functions]] | fn, parameters, lambdas, closures, hoisting |
+| [[language/strings|Strings]] | string literals, escapes, template strings |
+| [[language/objects|Objects]] | object literals, properties |
+| [[language/arrays|Arrays]] | array literals, elements |
+| [[language/modules|Modules]] | import, export, how modules run |
+| [[language/exceptions|Exceptions]] | throw, try, catch |
+| [[language/errors|Errors]] | compile errors, runtime errors |
+| [[language/coroutines|Coroutines and tasks]] | functions that pause |
+
+# Keywords
+
+`fn` `let` `const` `if` `else` `while` `for` `return` `break` `continue` `try` `catch` `throw` `import` `export`
+`typeof` `true` `false` `undefined`

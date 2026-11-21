@@ -11,8 +11,8 @@
 
 using namespace bloop::vm;
 using namespace std::string_literals;
-Object::Object(Function* function, UpValue** upVals, bloop::BloopUInt numVals) 
-	: type(Type::ot_closure), closure({ .function = function, .upvalues = upVals, .numValues= numVals }) {}
+Object::Object(Function* fn, UpValue** upVals, bloop::BloopUInt numVals) 
+	: type(Type::ot_closure), closure({ .function = fn, .upvalues = upVals, .numValues= numVals }) {}
 
 Object::Object(Value* values, bloop::BloopInt ucount) : type(Type::ot_array), array({ .values = values, .count = ucount, .capacity = ucount }) {}
 Object::Object(ObjectEntry* entries, bloop::BloopInt ucount, bloop::BloopInt capacity) 
@@ -26,7 +26,13 @@ bool Object::IsAggregate() const {
 }
 bool Object::IsEqual(Object* obj)
 {
+	if (type != obj->type)
+		return false;
+
 	switch (type) {
+	case Type::ot_handle:
+		// two handles to the same thing (the host makes a new one each time it hands one out)
+		return handle.type == obj->handle.type && handle.id == obj->handle.id;
 	case Type::ot_string:
 		if (string.hash != obj->string.hash)
 			return false;
@@ -80,6 +86,8 @@ bloop::BloopString Object::TypeToString() const {
 		return BLOOPTEXT("closure");
 	case VT::ot_coroutine:
 		return BLOOPTEXT("coroutine");
+	case VT::ot_handle:
+		return *handle.type; // the host's name for it: "door"
 	}
 
 	throw exception::VMError(BLOOPTEXT("type is not convertible to a string"));
@@ -151,6 +159,8 @@ bloop::BloopString Object::ValueToStringInternal(std::unordered_set<const Object
 		return BLOOPTEXT("closure");
 	case VT::ot_coroutine:
 		return BLOOPTEXT("coroutine");
+	case VT::ot_handle:
+		return *handle.type + BLOOPTEXT("#") + std::to_string(handle.id);
 	}
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to a string"), TypeToString()));
 

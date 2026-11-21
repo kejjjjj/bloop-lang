@@ -75,7 +75,7 @@ namespace bloop::bytecode
 		[[nodiscard]] bloop::BloopString ToString() const {
 			bloop::BloopString res;
 			std::visit([&](auto&& i) {
-				res = stringConversionTable[i.op];
+				res = stringConversionTable.at(i.op);
 
 				if constexpr (std::is_same_v<std::decay_t<decltype(i)>, InstrJump>) {
 					res += BLOOPTEXT(", -> ") + std::to_string(i.target);

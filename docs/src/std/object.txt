@@ -1,0 +1,46 @@
+title: std.object
+path: Standard library / std.object
+defines: std.object
+group: std
+order: 4
+---
+Functions for [[language/objects|objects]]. Keys are strings, and lists come in the order the properties were added.
+
+# std.object.keys {=std.object.keys, std.object.values}
+
+decl std.object.keys(object) -> array
+decl std.object.values(object) -> array
+
+Every property's name (or value), in order.
+
+```
+const scores = { ada: 3, grace: 5 };
+std.console.log(std.object.keys(scores), " ", std.object.values(scores));
+```
+```output
+[ ada, grace ] [ 3, 5 ]
+```
+
+# std.object.has {=std.object.has}
+
+decl std.object.has(object, key) -> boolean
+
+Whether the object has the property: reading one that it doesn't have (`o.key`) is a runtime error.
+
+# std.object.get {=std.object.get}
+
+decl std.object.get(object, key)
+
+The property's value, or [[undefined]] when it isn't there.
+
+# std.object.set {=std.object.set}
+
+decl std.object.set(object, key, value)
+
+Adds or changes the property, returns the value. The same as `object[key] = value`.
+
+# std.object.remove {=std.object.remove}
+
+decl std.object.remove(object, key) -> boolean
+
+Removes the property; returns whether it was there.

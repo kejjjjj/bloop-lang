@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bloop reference - bloop reference</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="language/index.html">Language</a><a href="std/index.html">Standard library</a><a href="embedding.html">Embedding</a><a href="agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="index.html">bloop</a></div>
+<h1>bloop reference</h1>
+
+<div id="body">
+<p>bloop is a small scripting <a href="language/index.html">language</a> for <a href="embedding.html">embedding</a> in C++ programs: applications, tools, anything that wants to be scripted. It looks like JavaScript, but it's strict: mistakes stop the script with an error that says where, instead of being papered over.</p>
+<div class="code"><pre><span class="kw">fn</span> greet(name) {
+	<span class="kw">return</span> <span class="st">`Hello, ${name}!`</span>;
+}
+
+<span class="kw">const</span> names = [<span class="st">&quot;Ada&quot;</span>, <span class="st">&quot;Grace&quot;</span>];
+<span class="kw">for</span> (<span class="kw">const</span> name : names)
+	<a href="std/console.html#std-console-log">std.console.log</a>(greet(name));</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>Hello, Ada!
+Hello, Grace!</pre></div>
+<div class="boxes"><div class="box"><div class="box-title">Language</div><ul><li><a href="language/basics.html">Basic concepts</a>: source files, <a href="language/basics.html">comments</a>, <a href="language/basics.html">identifiers</a>, <a href="language/basics.html">literals</a></li><li><a href="language/types.html">Types</a>: undefined, <a href="language/types.html#booleans">booleans</a>, <a href="language/types.html#numbers">numbers</a>, <a href="language/types.html#strings">strings</a>, <a href="language/arrays.html">arrays</a>, <a href="language/objects.html">objects</a></li><li><a href="language/variables.html">Variables</a>: let, const, <a href="language/variables.html#scope">scope</a></li><li><a href="language/operators.html">Operators</a></li><li><a href="language/conditions.html">Conditions</a>: what can be true or false</li><li><a href="language/control-flow.html">Control flow</a>: if, while, for, <a href="language/control-flow.html#ranged-for">ranged for</a></li><li><a href="language/functions.html">Functions</a>, <a href="language/functions.html#lambdas">lambdas</a> and <a href="language/functions.html#closures">closures</a></li><li><a href="language/strings.html">Strings</a> and <a href="language/strings.html#template-strings">template strings</a></li><li><a href="language/objects.html">Objects</a> and <a href="language/arrays.html">arrays</a></li><li><a href="language/modules.html">Modules</a>: import and export</li><li><a href="language/exceptions.html">Exceptions</a>: throw, try, catch</li><li><a href="language/errors.html">Errors</a>: <a href="language/errors.html">compile errors</a> and <a href="language/errors.html">runtime errors</a></li><li><a href="language/coroutines.html">Coroutines and tasks</a></li></ul></div><div class="box"><div class="box-title"><a href="std/index.html">Standard library</a></div><ul><li><a href="std/index.html">std</a>: what's in it, <a href="std/index.html#std-length">std.length</a>, <a href="std/index.html#permissions">permissions</a></li><li><a href="std/console.html">std.console</a>: printing</li><li><a href="std/array.html">std.array</a>: array <a href="language/functions.html">functions</a></li><li><a href="std/string.html">std.string</a>: string functions</li><li><a href="std/object.html">std.object</a>: object functions</li><li><a href="std/math.html">std.math</a>: numbers</li><li><a href="std/json.html">std.json</a>: <a href="std/json.html">JSON</a> text</li><li><a href="std/time.html">std.time</a>: clocks</li><li><a href="std/task.html">std.task</a>: waiting without blocking</li><li><a href="std/coroutine.html">std.coroutine</a>: <a href="language/coroutines.html#coroutines">coroutines</a></li><li><a href="std/fs.html">std.fs</a>: files (when allowed)</li><li><a href="std/process.html">std.process</a>: <a href="language/functions.html#declaring">arguments</a>, exit (when allowed)</li></ul></div><div class="box"><div class="box-title">Using bloop</div><ul><li><a href="embedding.html">Embedding</a>: running scripts from C++</li><li>The standalone interpreter: <code>bloop file.bloop [arguments...]</code> runs a file; <a href="std/process.html#std-process-args">std.process.args</a>() has the arguments</li><li>This <a href="language/types.html#arrays-and-objects">reference</a> is plain text turned into html by a bloop script: <code>docs/build.bloop</code></li></ul></div></div>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/index.txt</code>.</div></div>
+</body>
+</html>

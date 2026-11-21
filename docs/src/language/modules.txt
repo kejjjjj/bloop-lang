@@ -1,0 +1,50 @@
+title: Modules
+path: Language / Modules
+defines: module, modules, import, export
+group: language
+order: 11
+---
+Every file is a module: it has its own globals, and shares only what it exports.
+
+# export
+
+```
+// shapes.bloop
+export const unit = 1.0;
+
+export fn area(width, height) {
+	return width * height;
+}
+
+fn helper() { return 0; }      // not exported: only this file sees it
+```
+
+`export` before a top-level `fn`, `let` or `const` makes it visible to the files that import this one.
+
+# import
+
+```
+// main.bloop
+import area, unit from "shapes.bloop";
+
+std.console.log(area(2, 3), " ", unit);
+```
+```output
+6 1.000000
+```
+
+`import name, other from "path";` makes exported names of another file usable here. Imports come first in a file,
+before any other statement. The path is relative to the importing file's directory (`"lib/math.bloop"`,
+`"../shared.bloop"`); a program running scripts can keep imports inside one directory, so that a script can't read
+files outside of it.
+
+# How modules run
+
+- A module runs once, before the file that imports it, however many files import it. The modules it imports run
+  before it.
+- Imports see the exported variables as they are now, not a copy from when they were imported: when the module
+  changes one, the importer sees the new value. Arrays and objects are [[shared]] as always.
+- An imported name can't be assigned to (it's the other module's).
+- Importing a file that imports this one, directly or through others, is a compile error ("circular import").
+- An [[exception]] thrown in an imported function is caught by the importer like any other.
+- Errors in a module name the module's file and its own line numbers.

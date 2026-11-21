@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Embedding - bloop reference</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="language/index.html">Language</a><a href="std/index.html">Standard library</a><a href="embedding.html">Embedding</a><a href="agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="index.html">bloop</a> <span class="sep">&rsaquo;</span> Embedding</div>
+<h1>Embedding</h1>
+
+<div id="body">
+<p>bloop is made to run inside a C++ program: an application that lets users script it, a tool that reads its settings or rules from scripts. Everything is in <code>bloop.hpp</code>.</p>
+<div class="code"><pre>bloop::ScriptOptions options;
+options.m_oLimits.m_uInstructions = <span class="nu">1</span><span class="st">'000'</span><span class="nu">000</span>;   <span class="co">// per call: a script that loops forever stops</span>
+options.m_oLimits.m_uHeapBytes = <span class="nu">64</span> * bloop::MB;
+options.m_sEventsModule = <span class="st">&quot;events&quot;</span>;              <span class="co">// events.on / events.off for the script</span>
+options.m_oModules.push_back(MakeAppModule());    <span class="co">// the program's own functions: a global next to std</span>
+
+bloop::Script script(options);
+<span class="kw">if</span> (auto loaded = script.LoadFile(<span class="st">&quot;scripts/main.bloop&quot;</span>); !loaded)
+	Log(loaded.m_sError);                          <span class="co">// a compile error (m_oLocation: where)</span>
+<span class="kw">else</span> <span class="kw">if</span> (auto ran = script.Run(); !ran)
+	Log(ran.m_sError);                             <span class="co">// a runtime error (m_oTrace: the calls)</span>
+
+script.Emit(<span class="st">&quot;file_saved&quot;</span>, { <span class="st">&quot;notes.txt&quot;</span> });         <span class="co">// every events.on(&quot;file_saved&quot;, ...) handler</span>
+script.RunTasks();                                  <span class="co">// std.task: whenever the program has time</span></pre></div>
+<h2 id="what-the-program-decides">What the program decides</h2>
+<ul><li><b>What scripts can reach</b>: nothing outside the VM by default. ScriptOptions::m_oEnvironment turns on <a href="std/fs.html">std.fs</a> (with a root directory it can't leave), <a href="std/process.html">std.process</a>, <a href="std/time.html#std-time-sleep">std.time.sleep</a>, and gives <a href="std/console.html#std-console-log">std.console.log</a> and <a href="std/time.html#std-time-now">std.time.now</a> their output and clock.</li><li><b>Limits</b>: instructions per call, heap size, how deep native code may recurse. A script that breaks one gets a <a href="language/errors.html">runtime error</a>; the program goes on.</li><li><b>Its own <a href="language/functions.html">functions</a></b>: <code>bloop::standard::Bind&lt;&amp;Function&gt;()</code> turns an ordinary C++ <a href="language/functions.html#declaring">function</a> into one the script can call, with its <a href="language/functions.html#declaring">parameters</a> checked; a <a href="language/modules.html">module</a> is an <a href="language/objects.html">object</a> of them.</li><li><b>Where files come from</b>: imports stay in the main file's directory unless told otherwise, and ScriptOptions::m_fnReadFile reads them from wherever the program keeps them (an archive, memory, a network).</li></ul>
+<h2 id="calling-into-scripts">Calling into scripts</h2>
+<ul><li>Script::Call calls an exported <a href="language/functions.html#declaring">function</a> by <a href="language/basics.html#identifiers">name</a>, or a function the program kept (a callback a native function got: bloop::Function::Keep).</li><li>Script::Emit calls every handler of an event, in the order they were added.</li><li>Script::RunTasks continues the <a href="std/task.html">std.task</a> <a href="language/coroutines.html#tasks">tasks</a> whose wait is over.</li><li><a href="language/types.html">Values</a> go in and out as bloop::HostValue: undefined, bool, <a href="language/types.html#int">int</a>, <a href="language/types.html#double">double</a>, <a href="language/types.html#strings">string</a>, <a href="language/arrays.html">array</a>, <a href="language/objects.html">object</a>, and <a href="language/types.html#handles">handles</a> (HostValue::Handle: a <a href="language/types.html">type</a> name and an id, for the program's own objects).</li></ul>
+<p><a href="language/errors.html">Errors</a> never throw into the program: every call returns a bloop::Result, with the message, the status (<a href="language/errors.html">compile error</a>, <a href="language/errors.html">runtime error</a>, exited) and, for errors, where they happened.</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/embedding.txt</code>.</div></div>
+</body>
+</html>

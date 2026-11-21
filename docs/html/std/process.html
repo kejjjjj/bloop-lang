@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>std.process - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../std/index.html">Standard library</a> <span class="sep">&rsaquo;</span> std.process</div>
+<h1>std.process</h1>
+<div class="navbar"><a href="../std/index.html">Standard library</a> <a href="../std/console.html">std.console</a> <a href="../std/array.html">std.array</a> <a href="../std/string.html">std.string</a> <a href="../std/object.html">std.object</a> <a href="../std/math.html">std.math</a> <a href="../std/json.html">std.json</a> <a href="../std/time.html">std.time</a> <a href="../std/task.html">std.task</a> <a href="../std/coroutine.html">std.coroutine</a> <a href="../std/fs.html">std.fs</a> <a class="here" href="../std/process.html">std.process</a></div>
+<div id="body">
+<p>The program the script runs in. Only when the program allows it (a <a href="../std/index.html#permissions">permission</a>): the standalone interpreter does.</p>
+<h2 id="std-process-args">std.process.args</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.process.args() -&gt; array</code></td><td class="dcl-note"></td></tr></table>
+<p>The <a href="../language/functions.html#declaring">arguments</a> the program gave the script: for the standalone interpreter, what comes after the script's path (<code>bloop build.bloop src out</code> gives <code>[&quot;src&quot;, &quot;out&quot;]</code>).</p>
+<h2 id="std-process-env">std.process.env</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.process.env(name)</code></td><td class="dcl-note">a <a href="../language/types.html#strings">string</a>, or undefined</td></tr></table>
+<p>The <a href="../language/types.html">value</a> of an environment <a href="../language/variables.html">variable</a>, or undefined when it isn't set.</p>
+<h2 id="std-process-exit">std.process.exit</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.process.exit(code)</code></td><td class="dcl-note">code is optional</td></tr></table>
+<p>Ends the script now. The standalone interpreter exits with <code>code</code> (0 if it's left out).</p>
+<h2 id="std-process-platform">std.process.platform</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.process.platform</code></td><td class="dcl-note">a <a href="../language/types.html#strings">string</a>, not a <a href="../language/functions.html#declaring">function</a></td></tr></table>
+<p><code>&quot;windows&quot;</code>, <code>&quot;linux&quot;</code>, <code>&quot;macos&quot;</code> or <code>&quot;unknown&quot;</code>.</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/std/process.txt</code>.</div></div>
+</body>
+</html>

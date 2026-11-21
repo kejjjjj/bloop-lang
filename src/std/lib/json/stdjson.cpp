@@ -32,8 +32,12 @@ namespace {
 
 	// ======================== stringify ========================
 
-	// the shortest text that reads back as the same double (independent of the C++ locale)
+	// the shortest text that reads back as the same double (independent of the C++ locale). Not in exponent form while
+	// plain digits are reasonable (10 is "10", not "1e+01")
 	[[nodiscard]] std::string FormatDouble(double value) {
+		const double magnitude = std::fabs(value);
+		const bool plainRange = magnitude >= 1e-5 && magnitude < 1e15;
+
 		for (int precision = 1; precision <= 17; precision++) {
 			std::ostringstream out;
 			out.imbue(std::locale::classic());
@@ -45,7 +49,8 @@ namespace {
 			double parsed{};
 			in >> parsed;
 
-			if (parsed == value || precision == 17)
+			const bool exponent = out.str().find('e') != std::string::npos;
+			if ((parsed == value && !(exponent && plainRange)) || precision == 17)
 				return out.str();
 		}
 		return {};

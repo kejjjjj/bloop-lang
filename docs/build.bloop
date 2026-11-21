@@ -1,0 +1,1014 @@
+// build.bloop: the bloop reference, from plain text to html.
+//
+//     bloop docs/build.bloop [source directory] [output directory]
+//
+// Every .txt file under the source directory (docs/src by default) is a page; the html goes to the output directory
+// (docs/html), with the same layout, plus style.css. docs/src/README.txt describes the plain text format.
+//
+// Two passes: the first reads every page and collects the terms that the pages define (a page's own "defines:", a
+// heading's {=term}, a {{term}} in the text), the second writes the pages, where the defined terms turn into links
+// wherever the text and the examples mention them.
+
+// ======================================================================================== the site
+
+const siteName = "bloop reference";
+
+// every page: { id ("std/array"), header: { title, path, defines, group, order, summary }, blocks: [...] }
+let sitePages = [];
+
+// every defined term: lowercase term -> { term, page, anchor }
+let siteTerms = {};
+// the terms by their first letter (lowercase), the longest first: where the linking looks
+let siteTermsByLetter = {};
+
+// the words the code examples show as keywords
+const siteKeywords = { "fn": true, "let": true, "const": true, "if": true, "else": true, "while": true, "for": true, "return": true, "continue": true,
+	"break": true, "try": true, "catch": true, "throw": true, "import": true, "export": true, "typeof": true, "from": true, "true": true, "false": true, "undefined": true };
+
+// ======================================================================================== characters
+
+fn is_word_code(code) {
+	return (code >= 97 && code <= 122) || (code >= 65 && code <= 90) || (code >= 48 && code <= 57) || code == 95;
+}
+
+fn is_word_char(text, index) {
+	if (index < 0 || index >= std.length(text))
+		return false;
+	return is_word_code(std.string.get_code_at(text, index));
+}
+
+fn is_digit_char(text, index) {
+	if (index < 0 || index >= std.length(text))
+		return false;
+	const code = std.string.get_code_at(text, index);
+	return code >= 48 && code <= 57;
+}
+
+fn char_at(text, index) {
+	if (index < 0 || index >= std.length(text))
+		return "";
+	return text[index];
+}
+
+fn escape_html(text) {
+	let result = std.string.replace(text, "&", "&amp;");
+	result = std.string.replace(result, "<", "&lt;");
+	result = std.string.replace(result, ">", "&gt;");
+	return std.string.replace(result, "\"", "&quot;");
+}
+
+// an id for a heading or a term: lowercase, dashes for anything that isn't a letter or a digit
+fn slug_of(text) {
+	const lower = std.string.to_lower(text);
+	let parts = [];
+	let dash = false;
+	for (let i = 0; i < std.length(lower); i++) {
+		if (is_word_char(lower, i) && lower[i] != "_") {
+			std.array.push(parts, lower[i]);
+			dash = false;
+		} else if (!dash && std.length(parts) > 0) {
+			std.array.push(parts, "-");
+			dash = true;
+		}
+	}
+	let slug = std.array.join(parts, "");
+	if (std.string.ends_with(slug, "-"))
+		slug = std.string.substring(slug, 0, std.length(slug) - 1);
+	return slug;
+}
+
+// < 0: a comes first, 0: the same, > 0: b first (by the bytes)
+fn compare_text(a, b) {
+	const shorter = std.math.min(std.length(a), std.length(b));
+	for (let i = 0; i < shorter; i++) {
+		const difference = std.string.get_code_at(a, i) - std.string.get_code_at(b, i);
+		if (difference != 0)
+			return difference;
+	}
+	return std.length(a) - std.length(b);
+}
+
+fn split_list(text) {
+	let items = [];
+	for (const part : std.string.split(text, ",")) {
+		const item = std.string.trim(part);
+		if (std.length(item) > 0)
+			std.array.push(items, item);
+	}
+	return items;
+}
+
+// ======================================================================================== reading
+
+fn read_directory(directory, prefix) {
+	const names = std.fs.list(directory);
+	if (names === undefined) {
+		std.console.log("can't list ", directory);
+		std.process.exit(1);
+	}
+	for (const name : names) {
+		const path = `${directory}/${name}`;
+		if (std.fs.is_dir(path)) {
+			read_directory(path, `${prefix}${name}/`);
+		} else if (std.string.ends_with(name, ".txt") && name != "README.txt") {
+			const id = prefix + std.string.substring(name, 0, std.length(name) - 4);
+			std.array.push(sitePages, parse_page(id, std.fs.read(path)));
+		}
+	}
+}
+
+// ======================================================================================== parsing
+
+// the page's header ("key: value" lines up to "---") and its blocks
+fn parse_page(id, text) {
+	const lines = std.string.split(std.string.replace(text, "\r", ""), "\n");
+	let header = { title: id, path: "", defines: "", group: "", order: "50", summary: "" };
+	let index = 0;
+
+	while (index < std.length(lines) && std.string.trim(lines[index]) != "---") {
+		const line = lines[index];
+		const colon = std.string.find(line, ":");
+		if (colon > 0)
+			header[std.string.trim(std.string.substring(line, 0, colon))] = std.string.trim(std.string.substring(line, colon + 1));
+		index++;
+	}
+	if (index >= std.length(lines)) {
+		std.console.log(id, ": no \"---\" after the header");
+		std.process.exit(1);
+	}
+
+	return { id: id, header: header, blocks: parse_blocks(std.array.slice(lines, index + 1)) };
+}
+
+// what kind of block a line starts
+fn line_kind(line) {
+	if (std.string.starts_with(line, "```"))
+		return "fence";
+	if (std.string.starts_with(line, "## "))
+		return "h3";
+	if (std.string.starts_with(line, "# "))
+		return "h2";
+	if (std.string.starts_with(line, "decl "))
+		return "decl";
+	if (std.string.starts_with(line, "param "))
+		return "param";
+	if (std.string.starts_with(line, "- "))
+		return "list";
+	if (std.string.starts_with(line, "|"))
+		return "table";
+	if (std.string.starts_with(line, "> "))
+		return "note";
+	if (std.string.starts_with(line, ":::"))
+		return "box";
+	if (std.length(std.string.trim(line)) == 0)
+		return "blank";
+	return "text";
+}
+
+fn parse_blocks(lines) {
+	let blocks = [];
+	let index = 0;
+	const count = std.length(lines);
+
+	while (index < count) {
+		const line = lines[index];
+		const kind = line_kind(line);
+
+		if (kind == "blank") {
+			index++;
+		} else if (kind == "fence") {
+			// ```  or ```output: everything up to the closing ```
+			const language = std.string.trim(std.string.substring(line, 3));
+			let code = [];
+			index++;
+			while (index < count && !std.string.starts_with(lines[index], "```")) {
+				std.array.push(code, lines[index]);
+				index++;
+			}
+			index++;
+			std.array.push(blocks, { kind: language == "output" ? "output" : "code", text: std.array.join(code, "\n") });
+		} else if (kind == "h2" || kind == "h3") {
+			std.array.push(blocks, { kind: kind, text: std.string.trim(std.string.substring(line, kind == "h2" ? 2 : 3)) });
+			index++;
+		} else if (kind == "box") {
+			// :::Title ... ::: (a box on the front page)
+			const title = std.string.trim(std.string.substring(line, 3));
+			let inner = [];
+			index++;
+			while (index < count && !std.string.starts_with(lines[index], ":::")) {
+				std.array.push(inner, lines[index]);
+				index++;
+			}
+			index++;
+			std.array.push(blocks, { kind: "box", text: title, blocks: parse_blocks(inner) });
+		} else if (kind == "text") {
+			// a paragraph: the lines up to a blank line or another kind of block
+			let parts = [];
+			while (index < count && line_kind(lines[index]) == "text") {
+				std.array.push(parts, std.string.trim(lines[index]));
+				index++;
+			}
+			std.array.push(blocks, { kind: "p", text: std.array.join(parts, " ") });
+		} else {
+			// lists, tables, declarations, parameters, notes: one item per line (a list item or a note goes on in the
+			// indented lines after it)
+			let items = [];
+			while (index < count && line_kind(lines[index]) == kind) {
+				let item = lines[index];
+				index++;
+				while (index < count && line_kind(lines[index]) == "text" && std.string.starts_with(lines[index], "  ")) {
+					item = item + " " + std.string.trim(lines[index]);
+					index++;
+				}
+				std.array.push(items, item);
+			}
+			std.array.push(blocks, { kind: kind, items: items });
+		}
+	}
+	return blocks;
+}
+
+// ======================================================================================== terms
+
+fn define_term(term, page, anchor) {
+	const key = std.string.to_lower(term);
+	if (std.object.has(siteTerms, key)) {
+		const before = siteTerms[key];
+		std.console.log("warning: \"", term, "\" is defined twice (", before.page, " and ", page, ")");
+		return;
+	}
+	siteTerms[key] = { term: term, page: page, anchor: anchor };
+}
+
+// a heading's text and the terms it defines: "std.array.push {=std.array.push, push}"
+fn heading_parts(text) {
+	const open = std.string.find(text, "{=");
+	if (open < 0)
+		return { text: text, defines: [] };
+	const close = std.string.find(text, "}", open);
+	return { text: std.string.trim(std.string.substring(text, 0, open)),
+		defines: split_list(std.string.substring(text, open + 2, close)) };
+}
+
+fn collect_terms(page) {
+	for (const term : split_list(page.header.defines))
+		define_term(term, page.id, "");
+
+	collect_block_terms(page, page.blocks);
+}
+
+fn collect_block_terms(page, blocks) {
+	for (const block : blocks) {
+		if (block.kind == "h2" || block.kind == "h3") {
+			const parts = heading_parts(block.text);
+			for (const term : parts.defines)
+				define_term(term, page.id, slug_of(parts.text));
+		} else if (block.kind == "p" || block.kind == "note" || block.kind == "list") {
+			// {{term}} in the text: the place that term is explained
+			const texts = block.kind == "p" ? [block.text] : block.items;
+			for (const text : texts) {
+				let at = std.string.find(text, "{{");
+				while (at >= 0) {
+					const close = std.string.find(text, "}}", at);
+					const term = std.string.substring(text, at + 2, close);
+					define_term(term, page.id, "def-" + slug_of(term));
+					at = std.string.find(text, "{{", close);
+				}
+			}
+		} else if (block.kind == "box") {
+			collect_block_terms(page, block.blocks);
+		}
+	}
+}
+
+// the index the linking looks terms up in: by the first letter, the longest first
+fn index_terms() {
+	for (const key : std.object.keys(siteTerms)) {
+		const letter = key[0];
+		if (!std.object.has(siteTermsByLetter, letter))
+			siteTermsByLetter[letter] = [];
+		std.array.push(siteTermsByLetter[letter], key);
+	}
+	for (const letter : std.object.keys(siteTermsByLetter))
+		std.array.sort(siteTermsByLetter[letter], (a, b) => std.length(b) - std.length(a));
+}
+
+// ======================================================================================== links
+
+// the way up from a page to the site's root ("std/array" -> "../")
+fn root_of(pageId) {
+	let up = "";
+	for (let i = 0; i < std.length(pageId); i++) {
+		if (pageId[i] == "/")
+			up = up + "../";
+	}
+	return up;
+}
+
+fn href_of(entry, context) {
+	const anchor = std.length(entry.anchor) > 0 ? "#" + entry.anchor : "";
+	if (entry.page == context.page && std.length(anchor) > 0)
+		return anchor;
+	return `${context.root}${entry.page}.html${anchor}`;
+}
+
+// the term (lowercase key) that the text at index starts with, the longest one, or undefined. The match is case
+// insensitive for words ("Closures" is "closure"), exact for names with a dot (std.array.push), and may have an "s"
+// after it (closures). The result: { key, length }
+fn match_term(text, lower, index) {
+	const letter = lower[index];
+	if (!std.object.has(siteTermsByLetter, letter))
+		return undefined;
+
+	for (const key : siteTermsByLetter[letter]) {
+		const length = std.length(key);
+		if (index + length > std.length(text))
+			continue;
+		if (std.string.substring(lower, index, index + length) != key)
+			continue;
+		if (std.string.contains(key, ".") && std.string.substring(text, index, index + length) != siteTerms[key].term)
+			continue;
+
+		// the whole word: nothing that goes on with it after (a dot ending a sentence is fine)
+		let end = index + length;
+		if (char_at(lower, end) == "s" && !is_word_char(lower, end + 1))
+			end++;
+		if (is_word_char(text, end))
+			continue;
+		if (char_at(text, end) == "." && is_word_char(text, end + 1))
+			continue;
+		return { key: key, length: end - index };
+	}
+	return undefined;
+}
+
+// plain text as html, with the defined terms linked (each one once per section, not the ones the section defines)
+fn link_text(text, context) {
+	const lower = std.string.to_lower(text);
+	let out = [];
+	let plainStart = 0;
+	let index = 0;
+	const count = std.length(text);
+
+	while (index < count) {
+		// only where a word starts
+		const before = char_at(text, index - 1);
+		if (index > 0 && (is_word_char(text, index - 1) || before == "." || before == "-")) {
+			index++;
+			continue;
+		}
+		const found = match_term(text, lower, index);
+		if (found === undefined) {
+			index++;
+			continue;
+		}
+
+		const entry = siteTerms[found.key];
+		// keywords are linked only in code (or with [[...]]): "returns" or "for" in a sentence is English
+		const skip = std.object.has(siteKeywords, found.key) || std.object.has(context.linked, found.key) || std.object.has(context.own, found.key)
+			|| (entry.page == context.page && std.length(entry.anchor) == 0);
+		if (skip) {
+			index += found.length;
+			continue;
+		}
+		context.linked[found.key] = true;
+
+		std.array.push(out, escape_html(std.string.substring(text, plainStart, index)));
+		std.array.push(out, `<a href="${href_of(entry, context)}">${escape_html(std.string.substring(text, index, index + found.length))}</a>`);
+		index += found.length;
+		plainStart = index;
+	}
+	std.array.push(out, escape_html(std.string.substring(text, plainStart)));
+	return std.array.join(out, "");
+}
+
+// `code` in the text: linked as a whole when it names a term (or calls one: std.array.push(a, 1))
+fn inline_code(code, context) {
+	let name = code;
+	const paren = std.string.find(code, "(");
+	if (paren > 0)
+		name = std.string.substring(code, 0, paren);
+	const key = std.string.to_lower(name);
+
+	if (std.object.has(siteTerms, key) && !std.object.has(context.own, key)) {
+		const entry = siteTerms[key];
+		if (!(entry.page == context.page && std.length(entry.anchor) == 0))
+			return `<a href="${href_of(entry, context)}"><code>${escape_html(code)}</code></a>`;
+	}
+	return `<code>${escape_html(code)}</code>`;
+}
+
+// a line of text: `code`, **bold**, [[term]] / [[term|text]], {{term}} (where it's explained), the rest linked
+fn render_inline(text, context) {
+	let out = [];
+	let plain = 0;
+	let index = 0;
+	const count = std.length(text);
+
+	while (index < count) {
+		const c = text[index];
+		const two = std.string.substring(text, index, index + 2);
+		let close = -1;
+		let html = undefined;
+		let length = 0;
+
+		if (two == "``") {
+			// ``code with a ` in it``
+			close = std.string.find(text, "``", index + 2);
+			if (close > index) {
+				html = inline_code(std.string.trim(std.string.substring(text, index + 2, close)), context);
+				length = close + 2 - index;
+			}
+		} else if (c == "`") {
+			close = std.string.find(text, "`", index + 1);
+			if (close > index) {
+				html = inline_code(std.string.substring(text, index + 1, close), context);
+				length = close + 1 - index;
+			}
+		} else if (two == "**") {
+			close = std.string.find(text, "**", index + 2);
+			if (close > index) {
+				html = `<b>${render_inline(std.string.substring(text, index + 2, close), context)}</b>`;
+				length = close + 2 - index;
+			}
+		} else if (two == "[[") {
+			close = std.string.find(text, "]]", index + 2);
+			if (close > index) {
+				html = explicit_link(std.string.substring(text, index + 2, close), context);
+				length = close + 2 - index;
+			}
+		} else if (two == "{{") {
+			close = std.string.find(text, "}}", index + 2);
+			if (close > index) {
+				const term = std.string.substring(text, index + 2, close);
+				context.own[std.string.to_lower(term)] = true;
+				html = `<dfn id="def-${slug_of(term)}">${escape_html(term)}</dfn>`;
+				length = close + 2 - index;
+			}
+		}
+
+		if (html === undefined) {
+			index++;
+		} else {
+			std.array.push(out, link_text(std.string.substring(text, plain, index), context));
+			std.array.push(out, html);
+			index += length;
+			plain = index;
+		}
+	}
+	std.array.push(out, link_text(std.string.substring(text, plain), context));
+	return std.array.join(out, "");
+}
+
+// [[term]], [[term|text]] or [[page/id|text]]
+fn explicit_link(inside, context) {
+	const bar = std.string.find(inside, "|");
+	const target = std.string.trim(bar < 0 ? inside : std.string.substring(inside, 0, bar));
+	const label = bar < 0 ? target : std.string.trim(std.string.substring(inside, bar + 1));
+	const key = std.string.to_lower(target);
+
+	if (std.object.has(siteTerms, key) && !std.string.ends_with(key, ".txt"))
+		return `<a href="${href_of(siteTerms[key], context)}">${escape_html(label)}</a>`;
+	// a file next to the pages (llms.txt)
+	if (std.string.ends_with(key, ".txt"))
+		return `<a href="${context.root}${target}">${escape_html(label)}</a>`;
+	for (const page : sitePages) {
+		if (page.id == target)
+			return `<a href="${context.root}${page.id}.html">${escape_html(label)}</a>`;
+	}
+	std.console.log("warning: ", context.page, ": [[", target, "]] leads nowhere");
+	return escape_html(label);
+}
+
+// ======================================================================================== code
+
+// a code example, coloured: keywords, strings, numbers, comments; the names of defined terms (std.array.push) linked
+fn highlight(code, context) {
+	let out = [];
+	let index = 0;
+	const count = std.length(code);
+
+	while (index < count) {
+		const c = code[index];
+		const two = std.string.substring(code, index, index + 2);
+
+		if (two == "//") {
+			let end = std.string.find(code, "\n", index);
+			if (end < 0)
+				end = count;
+			std.array.push(out, `<span class="co">${escape_html(std.string.substring(code, index, end))}</span>`);
+			index = end;
+		} else if (two == "/*") {
+			let end = std.string.find(code, "*/", index + 2);
+			end = end < 0 ? count : end + 2;
+			std.array.push(out, `<span class="co">${escape_html(std.string.substring(code, index, end))}</span>`);
+			index = end;
+		} else if (c == "\"" || c == "'" || c == "`") {
+			let end = index + 1;
+			while (end < count && code[end] != c) {
+				if (code[end] == "\\")
+					end++;
+				end++;
+			}
+			end = end < count ? end + 1 : count;
+			std.array.push(out, `<span class="st">${escape_html(std.string.substring(code, index, end))}</span>`);
+			index = end;
+		} else if (is_digit_char(code, index) && !is_word_char(code, index - 1)) {
+			let end = index;
+			while (end < count && (is_word_char(code, end) || (code[end] == "." && is_digit_char(code, end + 1))))
+				end++;
+			std.array.push(out, `<span class="nu">${escape_html(std.string.substring(code, index, end))}</span>`);
+			index = end;
+		} else if (is_word_char(code, index)) {
+			// a name, with its dots (std.array.push)
+			let end = index;
+			while (end < count && (is_word_char(code, end) || (code[end] == "." && is_word_char(code, end + 1))))
+				end++;
+			const name = std.string.substring(code, index, end);
+			std.array.push(out, highlight_name(name, context));
+			index = end;
+		} else {
+			std.array.push(out, escape_html(c));
+			index++;
+		}
+	}
+	return std.array.join(out, "");
+}
+
+fn highlight_name(name, context) {
+	if (std.object.has(siteKeywords, name))
+		return `<span class="kw">${name}</span>`;
+
+	// the longest defined prefix of a dotted name (game.doors.open: nothing; std.array.push: itself)
+	if (std.string.contains(name, ".")) {
+		let candidate = name;
+		while (std.length(candidate) > 0) {
+			const key = std.string.to_lower(candidate);
+			if (std.object.has(siteTerms, key) && siteTerms[key].term == candidate) {
+				const rest = std.string.substring(name, std.length(candidate));
+				return `<a href="${href_of(siteTerms[key], context)}">${escape_html(candidate)}</a>${escape_html(rest)}`;
+			}
+			const dot = std.string.find_last(candidate, ".");
+			candidate = dot < 0 ? "" : std.string.substring(candidate, 0, dot);
+		}
+	}
+	return escape_html(name);
+}
+
+// ======================================================================================== blocks
+
+fn render_blocks(blocks, context) {
+	let out = [];
+	let boxes = [];
+
+	for (const block : blocks) {
+		// the front page's boxes go side by side
+		if (block.kind == "box") {
+			std.array.push(boxes, render_box(block, context));
+			continue;
+		}
+		if (std.length(boxes) > 0) {
+			std.array.push(out, `<div class="boxes">${std.array.join(boxes, "")}</div>`);
+			boxes = [];
+		}
+		std.array.push(out, render_block(block, context));
+	}
+	if (std.length(boxes) > 0)
+		std.array.push(out, `<div class="boxes">${std.array.join(boxes, "")}</div>`);
+	return std.array.join(out, "\n");
+}
+
+fn render_box(block, context) {
+	return `<div class="box"><div class="box-title">${render_inline(block.text, context)}</div>${render_blocks(block.blocks, context)}</div>`;
+}
+
+fn render_block(block, context) {
+	const kind = block.kind;
+
+	if (kind == "h2" || kind == "h3") {
+		// a new section: its terms aren't linked inside it, the others once each again
+		const parts = heading_parts(block.text);
+		context.linked = {};
+		context.own = {};
+		for (const term : parts.defines)
+			context.own[std.string.to_lower(term)] = true;
+		return `<${kind} id="${slug_of(parts.text)}">${escape_html(parts.text)}</${kind}>`;
+	}
+	if (kind == "p")
+		return `<p>${render_inline(block.text, context)}</p>`;
+	if (kind == "code")
+		return `<div class="code"><pre>${highlight(block.text, context)}</pre></div>`;
+	if (kind == "output")
+		return `<div class="output"><div class="output-title">Output:</div><pre>${escape_html(block.text)}</pre></div>`;
+	if (kind == "note") {
+		let lines = [];
+		for (const item : block.items)
+			std.array.push(lines, render_inline(std.string.substring(item, 2), context));
+		return `<div class="note">${std.array.join(lines, "<br>")}</div>`;
+	}
+	if (kind == "list") {
+		let items = [];
+		for (const item : block.items)
+			std.array.push(items, `<li>${render_inline(std.string.substring(item, 2), context)}</li>`);
+		return `<ul>${std.array.join(items, "")}</ul>`;
+	}
+	if (kind == "decl") {
+		let rows = [];
+		for (const item : block.items) {
+			const line = std.string.substring(item, 5);
+			const comment = std.string.find(line, "  //");
+			const code = comment < 0 ? line : std.string.substring(line, 0, comment);
+			const note = comment < 0 ? "" : std.string.trim(std.string.substring(line, comment + 4));
+			std.array.push(rows, `<tr><td class="dcl-code"><code>${escape_html(std.string.trim(code))}</code></td><td class="dcl-note">${render_inline(note, context)}</td></tr>`);
+		}
+		return `<table class="dcl">${std.array.join(rows, "")}</table>`;
+	}
+	if (kind == "param") {
+		let rows = [];
+		for (const item : block.items) {
+			const line = std.string.substring(item, 6);
+			const bar = std.string.find(line, "|");
+			const name = std.string.trim(bar < 0 ? line : std.string.substring(line, 0, bar));
+			const what = bar < 0 ? "" : std.string.trim(std.string.substring(line, bar + 1));
+			std.array.push(rows, `<tr><td class="par-name"><code>${escape_html(name)}</code></td><td class="par-dash">-</td><td>${render_inline(what, context)}</td></tr>`);
+		}
+		return `<table class="params">${std.array.join(rows, "")}</table>`;
+	}
+	if (kind == "table") {
+		let rows = [];
+		const bar = std.string.from_char_code(1);
+		for (let r = 0; r < std.length(block.items); r++) {
+			let cells = std.string.split(hide_cell_bars(block.items[r], bar), "|");
+			let html = [];
+			// (the bars at the ends make an empty first and last cell)
+			for (let i = 1; i < std.length(cells) - 1; i++) {
+				const tag = r == 0 ? "th" : "td";
+				const cell = std.string.replace(std.string.trim(cells[i]), bar, "|");
+				std.array.push(html, `<${tag}>${render_inline(cell, context)}</${tag}>`);
+			}
+			std.array.push(rows, `<tr>${std.array.join(html, "")}</tr>`);
+		}
+		return `<table class="wikitable">${std.array.join(rows, "")}</table>`;
+	}
+	std.console.log("warning: ", context.page, ": unknown block ", kind);
+	return "";
+}
+
+// a table row's bars that aren't cell borders: \| and the ones in [[page|text]] and `code`
+fn hide_cell_bars(row, bar) {
+	let out = [];
+	let inLink = false;
+	let inCode = false;
+	const count = std.length(row);
+	for (let i = 0; i < count; i++) {
+		const c = char_at(row, i);
+		if (c == "\\" && char_at(row, i + 1) == "|") {
+			std.array.push(out, bar);
+			i++;
+			continue;
+		}
+		if (!inCode && c == "[" && char_at(row, i + 1) == "[")
+			inLink = true;
+		else if (inLink && c == "]" && char_at(row, i + 1) == "]")
+			inLink = false;
+		else if (!inLink && c == "`")
+			inCode = !inCode;
+		std.array.push(out, c == "|" && (inLink || inCode) ? bar : c);
+	}
+	return std.array.join(out, "");
+}
+
+// ======================================================================================== plain text
+
+// the pages for reading in order: the front page, For agents, the language, the library, the rest
+fn reading_order() {
+	let pages = std.array.slice(sitePages);
+	const rank = (page) => {
+		if (page.id == "index")
+			return 0;
+		if (page.id == "agents")
+			return 1;
+		if (page.header.group == "language")
+			return 2;
+		if (page.header.group == "std")
+			return 3;
+		return 4;
+	};
+	std.array.sort(pages, (a, b) => {
+		const byRank = rank(a) - rank(b);
+		if (byRank != 0)
+			return byRank;
+		const byOrder = std.string.parse_int(a.header.order) - std.string.parse_int(b.header.order);
+		return byOrder != 0 ? byOrder : compare_text(a.id, b.id);
+	});
+	return pages;
+}
+
+// the text without the markup: {{term}} and [[target|text]] become their text, **bold** plain; `code` stays
+fn plain_inline(text) {
+	let out = [];
+	let index = 0;
+	const count = std.length(text);
+	while (index < count) {
+		const two = std.string.substring(text, index, index + 2);
+		if (two == "{{" || two == "[[") {
+			const close = std.string.find(text, two == "{{" ? "}}" : "]]", index + 2);
+			if (close >= 0) {
+				const inside = std.string.substring(text, index + 2, close);
+				const bar = std.string.find(inside, "|");
+				std.array.push(out, bar < 0 ? inside : std.string.substring(inside, bar + 1));
+				index = close + 2;
+				continue;
+			}
+		}
+		if (two == "**") {
+			index += 2;
+			continue;
+		}
+		std.array.push(out, char_at(text, index));
+		index++;
+	}
+	return std.array.join(out, "");
+}
+
+// a table row as markdown: the bars inside cells escaped
+fn plain_row(row) {
+	const bar = std.string.from_char_code(1);
+	let cells = std.string.split(hide_cell_bars(row, bar), "|");
+	let out = [];
+	for (let i = 1; i < std.length(cells) - 1; i++)
+		std.array.push(out, std.string.replace(plain_inline(std.string.trim(cells[i])), bar, "\\|"));
+	return { text: `| ${std.array.join(out, " | ")} |`, count: std.length(out) };
+}
+
+fn plain_blocks(blocks, out) {
+	for (const block : blocks) {
+		const kind = block.kind;
+		if (kind == "h2" || kind == "h3") {
+			std.array.push(out, `${kind == "h2" ? "##" : "###"} ${plain_inline(heading_parts(block.text).text)}`, "");
+		} else if (kind == "p") {
+			std.array.push(out, plain_inline(block.text), "");
+		} else if (kind == "code" || kind == "output") {
+			std.array.push(out, kind == "code" ? "```bloop" : "```output", block.text, "```", "");
+		} else if (kind == "box") {
+			std.array.push(out, `### ${block.text}`, "");
+			plain_blocks(block.blocks, out);
+		} else if (kind == "list") {
+			for (const item : block.items)
+				std.array.push(out, plain_inline(item));
+			std.array.push(out, "");
+		} else if (kind == "note") {
+			for (const item : block.items)
+				std.array.push(out, `> ${plain_inline(std.string.trim(std.string.substring(item, 2)))}`);
+			std.array.push(out, "");
+		} else if (kind == "decl") {
+			std.array.push(out, "```");
+			for (const item : block.items)
+				std.array.push(out, std.string.trim(std.string.substring(item, 5)));
+			std.array.push(out, "```", "");
+		} else if (kind == "param") {
+			for (const item : block.items) {
+				const line = std.string.substring(item, 6);
+				const bar = std.string.find(line, "|");
+				std.array.push(out, `- \`${std.string.trim(std.string.substring(line, 0, bar))}\`: ${plain_inline(std.string.trim(std.string.substring(line, bar + 1)))}`);
+			}
+			std.array.push(out, "");
+		} else if (kind == "table") {
+			for (let r = 0; r < std.length(block.items); r++) {
+				const row = plain_row(block.items[r]);
+				std.array.push(out, row.text);
+				if (r == 0)
+					std.array.push(out, `|${std.string.clone(" --- |", row.count)}`);
+			}
+			std.array.push(out, "");
+		}
+	}
+}
+
+fn plain_page(page, out) {
+	std.array.push(out, `# ${page.header.title}`, "", `(${page.id}.html)`, "");
+	plain_blocks(page.blocks, out);
+}
+
+fn write_text(path, lines) {
+	if (!std.fs.write(path, std.array.join(lines, "\n"))) {
+		std.console.log("can't write ", path);
+		std.process.exit(1);
+	}
+}
+
+// llms.txt: every page as one text file; llms-short.txt: For agents and every declaration
+fn write_plain(output) {
+	const pages = reading_order();
+	let all = [`# ${siteName}, as plain text`, "",
+		"Generated from docs/src by docs/build.bloop. Every page of the html reference, in reading order.", ""];
+	for (const page : pages)
+		plain_page(page, all);
+	write_text(`${output}/llms.txt`, all);
+
+	let short = [`# ${siteName}, the short version`, "",
+		"For agents writing bloop: the pitfalls, then every standard library declaration. The rest is in llms.txt.", ""];
+	for (const page : pages) {
+		if (page.id == "agents")
+			plain_page(page, short);
+	}
+	std.array.push(short, "# Standard library declarations", "");
+	for (const page : pages) {
+		if (page.header.group != "std")
+			continue;
+		let decls = [];
+		for (const block : page.blocks) {
+			if (block.kind == "decl") {
+				for (const item : block.items)
+					std.array.push(decls, std.string.trim(std.string.substring(item, 5)));
+			}
+		}
+		if (std.length(decls) > 0)
+			std.array.push(short, `## ${page.header.title}`, "", "```", std.array.join(decls, "\n"), "```", "");
+	}
+	write_text(`${output}/llms-short.txt`, short);
+}
+
+// ======================================================================================== pages
+
+fn find_page(id) {
+	for (const page : sitePages) {
+		if (page.id == id)
+			return page;
+	}
+	return undefined;
+}
+
+// "Standard library / std.array": every part a link when it's a page's title or a term
+fn breadcrumb(page, context) {
+	let parts = [`<a href="${context.root}index.html">bloop</a>`];
+	for (const part : std.string.split(page.header.path, "/")) {
+		const text = std.string.trim(part);
+		if (std.length(text) == 0)
+			continue;
+		const key = std.string.to_lower(text);
+		if (std.object.has(siteTerms, key) && siteTerms[key].page != page.id)
+			std.array.push(parts, `<a href="${href_of(siteTerms[key], context)}">${escape_html(text)}</a>`);
+		else
+			std.array.push(parts, escape_html(text));
+	}
+	return std.array.join(parts, " <span class=\"sep\">&rsaquo;</span> ");
+}
+
+// the pages of the same group (std, language), in their order: the bar under the title
+fn group_bar(page, context) {
+	const group = page.header.group;
+	if (std.length(group) == 0)
+		return "";
+
+	let members = [];
+	for (const other : sitePages) {
+		if (other.header.group == group)
+			std.array.push(members, other);
+	}
+	std.array.sort(members, (a, b) => {
+		const byOrder = std.string.parse_int(a.header.order) - std.string.parse_int(b.header.order);
+		return byOrder != 0 ? byOrder : compare_text(a.header.title, b.header.title);
+	});
+
+	let links = [];
+	for (const other : members) {
+		const css = other.id == page.id ? " class=\"here\"" : "";
+		std.array.push(links, `<a${css} href="${context.root}${other.id}.html">${escape_html(other.header.title)}</a>`);
+	}
+	return `<div class="navbar">${std.array.join(links, " ")}</div>`;
+}
+
+fn render_page(page) {
+	const context = { page: page.id, root: root_of(page.id), linked: {}, own: {} };
+	for (const term : split_list(page.header.defines))
+		context.own[std.string.to_lower(term)] = true;
+
+	const body = render_blocks(page.blocks, context);
+	const title = escape_html(page.header.title);
+	const root = context.root;
+
+	return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${title} - ${siteName}</title>
+<link rel="stylesheet" href="${root}style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="${root}index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="${root}language/index.html">Language</a><a href="${root}std/index.html">Standard library</a><a href="${root}embedding.html">Embedding</a><a href="${root}agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs">${breadcrumb(page, context)}</div>
+<h1>${title}</h1>
+${group_bar(page, context)}
+<div id="body">
+${body}
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/${page.id}.txt</code>.</div></div>
+</body>
+</html>
+`;
+}
+
+// ======================================================================================== the style
+
+fn write_style(directory) {
+	const css = `/* the bloop reference: cppreference's look (a wiki: plain, dense, blue links, grey boxes) */
+html { background: #fff; }
+body { margin: 0; color: #222; font: 14px/1.5 "DejaVu Sans", "Liberation Sans", Arial, sans-serif; }
+a { color: #0645ad; text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:visited { color: #0b0080; }
+code, pre, .dcl-code { font-family: "DejaVu Sans Mono", "Liberation Mono", Consolas, monospace; font-size: 13px; tab-size: 4; -moz-tab-size: 4; }
+code { background: #f9f9f9; padding: 0 2px; }
+a code { color: inherit; }
+
+#top { background: #f2f2f2; border-bottom: 1px solid #a7d7f9; }
+#top .inner, #page, #footer .inner { max-width: 1060px; margin: 0 auto; padding: 0 20px; }
+#top .inner { display: flex; align-items: center; height: 46px; }
+.logo { font: bold 22px "DejaVu Serif", Georgia, serif; color: #222 !important; margin-right: 28px; }
+.logo span { font: normal 13px "DejaVu Sans", Arial, sans-serif; color: #777; margin-left: 6px; letter-spacing: 1px; text-transform: uppercase; }
+.sections a { margin-right: 18px; font-size: 13px; }
+
+#page { padding-top: 10px; padding-bottom: 30px; }
+.crumbs { font-size: 12px; color: #777; margin-bottom: 2px; }
+.crumbs .sep { color: #aaa; margin: 0 3px; }
+h1 { font: normal 28px "DejaVu Serif", Georgia, serif; margin: 0 0 6px 0; padding-bottom: 2px; border-bottom: 1px solid #aaa; }
+h2 { font: normal 20px "DejaVu Serif", Georgia, serif; margin: 22px 0 8px 0; padding-bottom: 2px; border-bottom: 1px solid #aaa; }
+h3 { font-size: 15px; font-weight: bold; margin: 18px 0 6px 0; }
+p { margin: 6px 0 10px 0; }
+ul { margin: 4px 0 10px 0; padding-left: 26px; }
+li { margin: 2px 0; }
+dfn { font-style: normal; font-weight: bold; }
+
+.navbar { background: #f9f9f9; border: 1px solid #ccc; padding: 4px 8px; margin: 6px 0 14px 0; font-size: 12px; line-height: 1.9; }
+.navbar a { margin-right: 14px; white-space: nowrap; }
+.navbar a.here { color: #222; font-weight: bold; }
+
+table.dcl { border-collapse: collapse; margin: 8px 0 12px 0; width: 100%; background: #f9f9f9; border: 1px solid #ccc; }
+table.dcl td { padding: 3px 10px; vertical-align: top; border-bottom: 1px solid #e4e4e4; }
+table.dcl td.dcl-code { white-space: pre-wrap; }
+table.dcl td.dcl-code code { background: none; padding: 0; }
+table.dcl td.dcl-note { color: #555; font-size: 12px; text-align: right; width: 35%; }
+
+table.params { border-collapse: collapse; margin: 4px 0 10px 12px; }
+table.params td { padding: 2px 6px; vertical-align: top; }
+table.params td.par-name { white-space: nowrap; }
+table.params td.par-dash { color: #777; }
+
+table.wikitable { border-collapse: collapse; margin: 8px 0 14px 0; background: #f9f9f9; border: 1px solid #aaa; }
+table.wikitable th, table.wikitable td { border: 1px solid #aaa; padding: 3px 8px; vertical-align: top; text-align: left; }
+table.wikitable th { background: #f2f2f2; }
+
+.code, .output { margin: 8px 0 12px 0; }
+.code pre, .output pre { margin: 0; padding: 8px 12px; overflow-x: auto; line-height: 1.4; }
+.code pre { background: #f8f8f8; border: 1px dashed #2f6fab; }
+.output-title { font-size: 12px; color: #555; margin-bottom: 2px; }
+.output pre { background: #fff; border: 1px solid #ccc; }
+.kw { color: #0000dd; }
+.st { color: #008000; }
+.nu { color: #000080; }
+.co { color: #666; font-style: italic; }
+.code a { color: #003080; }
+
+.note { border-left: 3px solid #2f6fab; background: #f4f8fc; padding: 6px 10px; margin: 8px 0 12px 0; }
+
+.boxes { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0 18px 0; }
+.box { flex: 1 1 300px; border: 1px solid #ccc; background: #fcfcfc; padding: 0 12px 6px 12px; }
+.box-title { font: bold 15px "DejaVu Serif", Georgia, serif; background: #f2f2f2; margin: 0 -12px 6px -12px; padding: 5px 12px; border-bottom: 1px solid #ccc; }
+.box ul { padding-left: 18px; }
+
+#footer { border-top: 1px solid #ccc; background: #f9f9f9; color: #777; font-size: 12px; padding: 10px 0; }
+`;
+	std.fs.write(`${directory}/style.css`, css);
+}
+
+// ======================================================================================== main
+
+fn build(source, output) {
+	read_directory(source, "");
+	for (const page : sitePages)
+		collect_terms(page);
+	index_terms();
+
+	for (const page : sitePages) {
+		const path = `${output}/${page.id}.html`;
+		const slash = std.string.find_last(path, "/");
+		std.fs.make_dir(std.string.substring(path, 0, slash));
+		if (!std.fs.write(path, render_page(page))) {
+			std.console.log("can't write ", path);
+			std.process.exit(1);
+		}
+	}
+	write_style(output);
+	write_plain(output);
+	std.console.log(std.length(sitePages), " pages, ", std.length(std.object.keys(siteTerms)), " terms -> ", output);
+}
+
+const arguments = std.process.args();
+build(std.length(arguments) > 0 ? arguments[0] : "docs/src", std.length(arguments) > 1 ? arguments[1] : "docs/html");

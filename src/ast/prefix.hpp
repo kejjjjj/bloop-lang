@@ -56,6 +56,23 @@ namespace bloop::ast {
 		}
 	};
 
+	// typeof value: the name of its type, as a string ("undefined", "boolean", "int", "uint", "double", "string",
+	// "array", "object", "function", "coroutine", or a handle's type name)
+	struct TypeOf final : Prefix {
+		TypeOf(const bloop::CodePosition& cp) : Prefix(bloop::EPunctuation::p_error, cp) {}
+
+		void Resolve(TResolver& resolver) override {
+			left->Resolve(resolver);
+		}
+		void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+			left->EmitByteCode(builder, true);
+			Emit(builder, TOpCode::TYPEOF);
+
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
+		}
+	};
+
 	struct PrefixIncrement final : Prefix {
 
 		PrefixIncrement(const bloop::CodePosition& cp) : Prefix(EPunctuation::p_increment, cp) {}
@@ -80,4 +97,4 @@ namespace bloop::ast {
 		}
 	};
 
-}
+}

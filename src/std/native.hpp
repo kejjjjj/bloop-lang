@@ -31,6 +31,10 @@ namespace bloop::standard {
 	struct NativeFunction {
 		bloop::BloopIndex m_uParamCount;
 		NativeFn m_pFunction;
+		// anything the host wants the function to have (VM::GetCalledNative()->m_pContext inside it): one function
+		// can then serve many host functions, a std::function each (the embedding's adapters). It must outlive
+		// the scripts that can call it
+		const void* m_pContext{};
 	};
 
 	struct NativeField;
@@ -88,6 +92,8 @@ namespace bloop::standard {
 	}
 
 	[[nodiscard]] NativeDef IncludeStandardLibrary();
+	// every program copies it. Change it only before any script is compiled (hosts add their own modules with
+	// CompileOptions::m_oHostModules instead): several threads may be compiling at once
 	extern std::vector<NativeDef> g_Natives;
 	
-}
+}

@@ -1,0 +1,58 @@
+title: bloop reference
+path:
+defines: front page, bloop reference
+---
+bloop is a small scripting language for embedding in C++ programs: applications, tools, anything that wants
+to be scripted. It looks like JavaScript, but it's strict: mistakes stop the script with an error that says where,
+instead of being papered over.
+
+```
+fn greet(name) {
+	return `Hello, ${name}!`;
+}
+
+const names = ["Ada", "Grace"];
+for (const name : names)
+	std.console.log(greet(name));
+```
+```output
+Hello, Ada!
+Hello, Grace!
+```
+
+:::Language
+- [[language/basics|Basic concepts]]: source files, comments, identifiers, literals
+- [[language/types|Types]]: undefined, booleans, numbers, strings, arrays, objects
+- [[language/variables|Variables]]: let, const, scope
+- [[language/operators|Operators]]
+- [[language/conditions|Conditions]]: what can be true or false
+- [[language/control-flow|Control flow]]: if, while, for, ranged for
+- [[language/functions|Functions]], lambdas and closures
+- [[language/strings|Strings]] and template strings
+- [[language/objects|Objects]] and [[language/arrays|arrays]]
+- [[language/modules|Modules]]: import and export
+- [[language/exceptions|Exceptions]]: throw, try, catch
+- [[language/errors|Errors]]: compile errors and runtime errors
+- [[language/coroutines|Coroutines and tasks]]
+:::
+
+:::Standard library
+- [[std/index|std]]: what's in it, std.length, permissions
+- [[std/console|std.console]]: printing
+- [[std/array|std.array]]: array functions
+- [[std/string|std.string]]: string functions
+- [[std/object|std.object]]: object functions
+- [[std/math|std.math]]: numbers
+- [[std/json|std.json]]: JSON text
+- [[std/time|std.time]]: clocks
+- [[std/task|std.task]]: waiting without blocking
+- [[std/coroutine|std.coroutine]]: coroutines
+- [[std/fs|std.fs]]: files (when allowed)
+- [[std/process|std.process]]: arguments, exit (when allowed)
+:::
+
+:::Using bloop
+- [[embedding|Embedding]]: running scripts from C++
+- The standalone interpreter: `bloop file.bloop [arguments...]` runs a file; std.process.args() has the arguments
+- This reference is plain text turned into html by a bloop script: `docs/build.bloop`
+:::

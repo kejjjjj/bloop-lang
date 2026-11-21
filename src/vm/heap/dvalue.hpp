@@ -48,8 +48,15 @@ namespace bloop::vm
 		bloop::BloopInt capacity;
 	};
 
+	// a reference to something of the host's (a game object): its type ("door") and the host's id for it.
+	// Scripts can keep, compare and pass it back, but not make one or look inside (see Heap::AllocHandle)
+	struct HandleData {
+		const bloop::BloopString* type; // VM::GetHandleType: one string per type name, for the VM's lifetime
+		bloop::BloopUInt64 id;
+	};
+
 	struct Object {
-		enum class Type { ot_string, ot_array, ot_object, ot_function, ot_closure, ot_nativefunction, ot_coroutine } type;
+		enum class Type { ot_string, ot_array, ot_object, ot_function, ot_closure, ot_nativefunction, ot_coroutine, ot_handle } type;
 
 		Object(bloop::BloopChar* _data, bloop::BloopInt _len) : type(Type::ot_string), string({.data=_data, .len=_len,.hash={}}) {}
 		Object(Function* chunk) : type(Type::ot_function), function(chunk){}
@@ -60,6 +67,7 @@ namespace bloop::vm
 		Object(const standard::NativeFunction* def) : type(Type::ot_nativefunction), nativeFunction(def){}
 		// (always in the old generation, see Heap::AllocCoroutine)
 		Object(CoroutineState* state) : type(Type::ot_coroutine), coroutine(state){}
+		Object(const bloop::BloopString* handleType, bloop::BloopUInt64 id) : type(Type::ot_handle), handle({ .type = handleType, .id = id }) {}
 
 		union {
 			StringData string;
@@ -69,6 +77,7 @@ namespace bloop::vm
 			Function* function;
 			const standard::NativeFunction* nativeFunction;
 			CoroutineState* coroutine; // owned by the GC
+			HandleData handle;
 		};
 
 		[[nodiscard]] constexpr bool IsString() const noexcept { return type == Type::ot_string; }
@@ -77,6 +86,7 @@ namespace bloop::vm
 		[[nodiscard]] constexpr bool IsFunction() const noexcept { return type == Type::ot_function; }
 		[[nodiscard]] constexpr bool IsClosure() const noexcept { return type == Type::ot_closure; }
 		[[nodiscard]] constexpr bool IsCoroutine() const noexcept { return type == Type::ot_coroutine; }
+		[[nodiscard]] constexpr bool IsHandle() const noexcept { return type == Type::ot_handle; }
 
 		[[nodiscard]] bool IsIndexable() const;
 		[[nodiscard]] bool IsAggregate() const;
@@ -114,4 +124,4 @@ namespace bloop::vm
 
 	};
 
-};
+};

@@ -64,6 +64,7 @@ BLOOP_OP(DECR)
 BLOOP_OP(NEG)
 BLOOP_OP(NOT) // [value] -> [!value] (a boolean)
 BLOOP_OP(BITWISE_NOT) // [value] -> [~value] (integers)
+BLOOP_OP(TYPEOF) // [value] -> [its type's name, a string: "int", "array", "function"...]
 BLOOP_OP(CONCAT) // count: [v1 ... vn] -> [one string of them all] (template strings: values become strings like std.string.from)
 
 BLOOP_OP(TRY) //catch_ip, base, catch_var

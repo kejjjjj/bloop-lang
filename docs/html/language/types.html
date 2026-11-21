@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Types - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../language/index.html">Language</a> <span class="sep">&rsaquo;</span> Types</div>
+<h1>Types</h1>
+<div class="navbar"><a href="../language/index.html">Language</a> <a href="../language/basics.html">Basic concepts</a> <a class="here" href="../language/types.html">Types</a> <a href="../language/variables.html">Variables</a> <a href="../language/operators.html">Operators</a> <a href="../language/conditions.html">Conditions</a> <a href="../language/control-flow.html">Control flow</a> <a href="../language/functions.html">Functions</a> <a href="../language/strings.html">Strings</a> <a href="../language/objects.html">Objects</a> <a href="../language/arrays.html">Arrays</a> <a href="../language/modules.html">Modules</a> <a href="../language/exceptions.html">Exceptions</a> <a href="../language/errors.html">Errors</a> <a href="../language/coroutines.html">Coroutines and tasks</a></div>
+<div id="body">
+<p>Every value has one of these types. A <a href="../language/variables.html">variable</a> can hold any of them, and change from one to another. The <a href="../language/basics.html#identifiers">names</a> are the ones that error messages use.</p>
+<table class="wikitable"><tr><th>Type</th><th>What it is</th><th>Copied or <a href="#arrays-and-objects">shared</a></th></tr><tr><td><a href="#undefined"><code>undefined</code></a></td><td>no value: what a variable without an initial value holds, what a <a href="../language/functions.html#declaring">function</a> without a return returns</td><td>copied</td></tr><tr><td><a href="#booleans"><code>boolean</code></a></td><td><a href="#booleans"><code>true</code></a> or <a href="#booleans"><code>false</code></a></td><td>copied</td></tr><tr><td><a href="#int"><code>int</code></a></td><td>a 64-bit signed <a href="#int">integer</a></td><td>copied</td></tr><tr><td><a href="#uint"><code>uint</code></a></td><td>a 64-bit unsigned integer</td><td>copied</td></tr><tr><td><a href="#double"><code>double</code></a></td><td>a 64-bit <a href="#double">floating point</a> <a href="#numbers">number</a></td><td>copied</td></tr><tr><td><a href="#strings"><code>string</code></a></td><td>text: a sequence of bytes</td><td>shared, but never changes</td></tr><tr><td><a href="../language/arrays.html"><code>array</code></a></td><td>an ordered list of values</td><td>shared</td></tr><tr><td><a href="../language/objects.html"><code>object</code></a></td><td>named properties with values, in the order they were added</td><td>shared</td></tr><tr><td><a href="../language/functions.html#declaring"><code>function</code></a></td><td>a function or a <a href="../language/functions.html#lambdas">lambda</a> (<a href="../language/functions.html#closures">closures</a> too)</td><td>shared</td></tr><tr><td><a href="../language/coroutines.html#coroutines"><code>coroutine</code></a></td><td>a function that can pause (<a href="../std/coroutine.html">std.coroutine</a>)</td><td>shared</td></tr><tr><td><a href="#handles">handles</a></td><td>handles that the program running the script gives it (<a href="../language/coroutines.html#tasks"><code>task</code></a>, ...)</td><td>copied</td></tr></table>
+<h2 id="undefined">undefined</h2>
+<p>The value that means nothing: a <a href="../language/variables.html">variable</a> declared without a value, a missing optional <a href="../language/functions.html#declaring">argument</a> of a standard <a href="../language/functions.html#declaring">function</a>, a function that ends without returning a value, <a href="../std/array.html#std-array-pop">std.array.pop</a>() of an empty <a href="../language/arrays.html">array</a>. <code>undefined</code> is a <a href="../language/conditions.html">condition</a> that is false.</p>
+<h2 id="booleans">Booleans</h2>
+<p><code>true</code> and <code>false</code>, what <a href="../language/operators.html#comparison">comparisons</a> and the <a href="../language/operators.html#logic">logical operators</a> give. In <a href="../language/operators.html#arithmetic">arithmetic</a> a boolean counts as <code>1</code> or <code>0</code> (<code>true + 1</code> is <code>2</code>).</p>
+<h2 id="numbers">Numbers</h2>
+<h3 id="int">int</h3>
+<p>The usual <a href="#numbers">number</a>: a 64-bit signed integer. Integer <a href="../language/basics.html">literals</a> are ints. <a href="../language/operators.html#arithmetic">Arithmetic</a> on ints stays int: <code>7 / 2</code> is <code>3</code>, dividing by zero is a <a href="../language/errors.html">runtime error</a>, and going past the largest or smallest int wraps around.</p>
+<h3 id="uint">uint</h3>
+<p>A 64-bit unsigned <a href="#int">integer</a>, written with a <code>u</code> after the <a href="#numbers">number</a> (<code>5u</code>). Subtracting past zero wraps around to the largest values, and a uint can't be negated.</p>
+<h3 id="double">double</h3>
+<p>A 64-bit floating point <a href="#numbers">number</a> (IEEE 754): <a href="../language/basics.html">literals</a> with a decimal point, and the results of <a href="../language/operators.html#arithmetic">arithmetic</a> that has a double in it. Dividing by zero gives <code>inf</code> (or <code>-inf</code>, or <code>nan</code> for 0 / 0), no error.</p>
+<p>When an <a href="../language/operators.html">operator</a> gets an <a href="#int">int</a> and a double, the int is converted to a double first: <code>1 + 2.5</code> is <code>3.5</code>. Between an int and a <a href="#uint">uint</a>, the uint becomes an int.</p>
+<h2 id="strings">Strings</h2>
+<p>Text, as a sequence of bytes (UTF-8 for anything that isn't ASCII): indexes and lengths count bytes. Strings never change: every <a href="../language/functions.html#declaring">function</a> that &quot;changes&quot; one returns a new string. See <a href="../language/strings.html">Strings</a>.</p>
+<h2 id="arrays-and-objects">Arrays and objects</h2>
+<p><a href="../language/arrays.html">Arrays</a> and <a href="../language/objects.html">objects</a> are shared, not copied: assigning one to another <a href="../language/variables.html">variable</a>, passing it to a <a href="../language/functions.html#declaring">function</a> or putting it in another array gives that place the same array, and a change through any of them is seen through all of them. <code>==</code> compares them by identity: two different arrays with the same <a href="../language/arrays.html">elements</a> aren't equal.</p>
+<div class="code"><pre><span class="kw">const</span> a = [<span class="nu">1</span>, <span class="nu">2</span>];
+<span class="kw">const</span> b = a;
+<a href="../std/array.html#std-array-push">std.array.push</a>(b, <span class="nu">3</span>);
+<a href="../std/console.html#std-console-log">std.console.log</a>(a, <span class="st">&quot; &quot;</span>, a == b, <span class="st">&quot; &quot;</span>, [<span class="nu">1</span>] == [<span class="nu">1</span>]);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>[ 1, 2, 3 ] true false</pre></div>
+<p>See <a href="../language/arrays.html">Arrays</a> and <a href="../language/objects.html">Objects</a>.</p>
+<h2 id="functions">Functions</h2>
+<p><a href="../language/functions.html">Functions</a> are values: they can be stored in <a href="../language/variables.html">variables</a>, <a href="../language/arrays.html">arrays</a> and <a href="../language/objects.html">objects</a>, passed to other functions and returned from them. See <a href="../language/functions.html">Functions</a>.</p>
+<h2 id="handles">Handles</h2>
+<p>A program that runs a script can give it handles: values that stand for something of the program's (a file, a window, a <a href="../language/coroutines.html#tasks">task</a>). A script keeps them, compares them (<code>==</code>: the same thing) and passes them back to the program's <a href="../language/functions.html">functions</a>, but can't look inside them or make one. They print as their type and a <a href="#numbers">number</a>, like <code>task#2</code>.</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/language/types.txt</code>.</div></div>
+</body>
+</html>

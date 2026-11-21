@@ -744,3 +744,99 @@ TEST_CASE("embedding | events drive coroutines") {
 		REQUIRE(script.Emit("hit", { i }).Ok());
 	REQUIRE(script.Call("total").m_oValue == HostValue(55));
 }
+
+// one native function serving several script functions, each with its own context (how an engine adapts its own
+// callbacks: a std::function each)
+namespace {
+	struct Adder { bloop::BloopInt amount; };
+
+	bloop::vm::Value AddWithContext(bloop::vm::VM& vm, bloop::standard::NativeArgs args) {
+		const auto* adder = static_cast<const Adder*>(vm.GetCalledNative()->m_pContext);
+		return bloop::vm::Value{ args[0].i + adder->amount };
+	}
+}
+TEST_CASE("embedding | native functions with a context") {
+	static const Adder addOne{ 1 };
+	static const Adder addHundred{ 100 };
+
+	using namespace bloop::standard;
+	ScriptOptions options;
+	options.m_oModules.push_back(NativeDef("adders", NativeObject{ .m_oFields = {
+		NativeField("one", NativeFunction{ 1, &AddWithContext, &addOne }),
+		NativeField("hundred", NativeFunction{ 1, &AddWithContext, &addHundred }),
+	}}));
+
+	auto script = Start(R"(
+		export fn both(x) { return [adders.one(x), adders.hundred(x), adders.one(adders.hundred(x))]; }
+		export fn through_callback() { return std.array.transform([1, 2], (x) => adders.hundred(x)); }
+	)", options);
+
+	REQUIRE(script.Call("both", { 5 }).m_oValue == HostValue(HostValue::Array{ 6, 105, 106 }));
+	REQUIRE(script.Call("through_callback").m_oValue == HostValue(HostValue::Array{ 101, 102 }));
+}
+
+// handles: references to the host's things (game objects) that scripts keep, compare and pass back
+namespace {
+	std::vector<HostValue> g_ReceivedHandles;
+
+	bloop::vm::Value ReceiveHandle(bloop::vm::VM& vm, bloop::standard::NativeArgs args) {
+		g_ReceivedHandles.push_back(bloop::ToHostValue(args[0]));
+		return bloop::FromHostValue(vm, HostValue(HostValue::Handle{ "door", 99 })); // and gives one back
+	}
+}
+TEST_CASE("embedding | handles") {
+	g_ReceivedHandles.clear();
+	using namespace bloop::standard;
+	ScriptOptions options;
+	options.m_sEventsModule = "events";
+	options.m_oModules.push_back(NativeDef("host", NativeObject{ .m_oFields = {
+		NativeField("receive", NativeFunction{ 1, &ReceiveHandle }),
+	}}));
+
+	auto script = Start(R"(
+		let kept = [];
+		events.on("opened", (door, by) => { std.array.push(kept, door); });
+		export fn count() { return std.length(kept); }
+		export fn same(a, b) { return [a == b, a === b, a != b]; }
+		export fn first_twice() { return kept[0] == kept[1]; }
+		export fn text(h) { return [std.string.from(h), `${h}`]; }
+		export fn back() { return host.receive(kept[0]); }
+		export fn after_gc() { std.gc_minor(); std.gc_major(); return kept[0] == kept[1] && std.string.from(kept[0]) == "door#7"; }
+		export fn as_json(h) { return std.json.stringify(h); }
+		export fn as_condition(h) { if (h) { return 1; } return 0; }
+	)", options);
+
+	const HostValue door7(HostValue::Handle{ "door", 7 });
+	const HostValue door8(HostValue::Handle{ "door", 8 });
+	const HostValue player7(HostValue::Handle{ "player", 7 });
+
+	// the host hands the same thing out twice (two separate handle values): they're equal
+	REQUIRE(script.Emit("opened", { door7, player7 }).Ok());
+	REQUIRE(script.Emit("opened", { door7, HostValue() }).Ok());
+	REQUIRE(script.Call("count").m_oValue == HostValue(2));
+	REQUIRE(script.Call("first_twice").m_oValue == HostValue(true));
+
+	REQUIRE(script.Call("same", { door7, door7 }).m_oValue == HostValue(HostValue::Array{ true, true, false }));
+	REQUIRE(script.Call("same", { door7, door8 }).m_oValue == HostValue(HostValue::Array{ false, false, true }));
+	REQUIRE(script.Call("same", { door7, player7 }).m_oValue == HostValue(HostValue::Array{ false, false, true })); // (same id, another type)
+	REQUIRE(script.Call("same", { door7, "door#7" }).m_oValue == HostValue(HostValue::Array{ false, false, true }));
+
+	REQUIRE(script.Call("text", { door7 }).m_oValue == HostValue(HostValue::Array{ "door#7", "door#7" }));
+
+	// back to the host as it was, and the host's new one into the script
+	const auto back = script.Call("back");
+	REQUIRE(back.Ok());
+	REQUIRE(g_ReceivedHandles.size() == 1u);
+	REQUIRE(g_ReceivedHandles[0] == door7);
+	REQUIRE(back.m_oValue == HostValue(HostValue::Handle{ "door", 99 }));
+	REQUIRE(back.m_oValue.TypeName() == "door");
+	REQUIRE(back.m_oValue.ToString() == "door#99");
+
+	REQUIRE(script.Call("after_gc").m_oValue == HostValue(true));
+
+	// not data: no json, and not a condition (only booleans, numbers and undefined are)
+	auto json = script.Call("as_json", { door7 });
+	REQUIRE(json.m_eStatus == Result::Status::runtime_error);
+	REQUIRE(json.m_sError.find("a value of type \"door\" can't be converted to json") != std::string::npos);
+	REQUIRE(script.Call("as_condition", { door7 }).m_eStatus == Result::Status::runtime_error);
+}

@@ -1,0 +1,38 @@
+title: Exceptions
+path: Language / Exceptions
+defines: exception, exceptions, throw, try, catch
+group: language
+order: 12
+---
+```
+fn parse_age(text) {
+	const age = std.string.parse_int(text);
+	if (age === undefined)
+		throw { message: `not a number: ${text}` };
+	return age;
+}
+
+try {
+	std.console.log(parse_age("42"));
+	std.console.log(parse_age("forty"));
+} catch (error) {
+	std.console.log("failed: ", error.message);
+}
+```
+```output
+42
+failed: not a number: forty
+```
+
+- `throw value;` throws any value: a string, an object with details, a number.
+- `try { ... } catch (name) { ... }` runs the try block; when something in it throws (also in functions it calls,
+  however deep), the rest is skipped and the catch block runs with the thrown value in `name`.
+- An exception that nothing catches ends the script with a runtime error: "uncaught exception: " and the value, and
+  where it was thrown.
+- Try blocks nest: the closest one catches.
+
+# Exceptions are not errors
+
+A runtime error (a wrong type in an operator, an index out of bounds, a wrong number of arguments, a standard
+function used wrongly) is a mistake in the script, and `catch` doesn't catch it: it ends the script. Exceptions are
+for what the script expects can happen and wants to handle. See [[language/errors|Errors]].

@@ -16,11 +16,7 @@ namespace {
 	// a clock for measuring time: it never goes backwards, and it starts at 0 when the VM is created.
 	// The host can replace it (Environment::m_fnClock), a game with its game time
 	bloop::BloopDouble Now(VM& vm) {
-		if (const auto& clock = vm.GetEnvironment().m_fnClock)
-			return clock();
-
-		const auto elapsed = std::chrono::steady_clock::now() - vm.GetCreationTime();
-		return std::chrono::duration<bloop::BloopDouble>(elapsed).count();
+		return vm.Now();
 	}
 
 	// the wall clock: seconds since 1970-01-01 00:00 UTC (for timestamps, it can jump when the system clock changes)

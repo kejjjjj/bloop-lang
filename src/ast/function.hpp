@@ -16,6 +16,7 @@ namespace bloop::ast {
 			m_pBody(std::forward<decltype(body)>(body)), m_oEndPosition(end_cp) {
 		}
 		[[nodiscard]] constexpr bool IsFunction() const noexcept override { return true; }
+		[[nodiscard]] FunctionDeclarationStatement* AsFunction() noexcept override { return this; }
 		[[nodiscard]] const bloop::BloopString* GetDeclaredName() const noexcept override { return &m_sName; }
 
 		void Resolve(TResolver& resolver) override {

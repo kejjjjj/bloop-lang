@@ -1,0 +1,32 @@
+title: std.process
+path: Standard library / std.process
+defines: std.process
+group: std
+order: 11
+---
+The program the script runs in. Only when the program allows it (a [[permission]]): the standalone interpreter does.
+
+# std.process.args {=std.process.args}
+
+decl std.process.args() -> array
+
+The arguments the program gave the script: for the standalone interpreter, what comes after the script's path
+(`bloop build.bloop src out` gives `["src", "out"]`).
+
+# std.process.env {=std.process.env}
+
+decl std.process.env(name)  // a string, or undefined
+
+The value of an environment variable, or undefined when it isn't set.
+
+# std.process.exit {=std.process.exit}
+
+decl std.process.exit(code)  // code is optional
+
+Ends the script now. The standalone interpreter exits with `code` (0 if it's left out).
+
+# std.process.platform {=std.process.platform}
+
+decl std.process.platform  // a string, not a function
+
+`"windows"`, `"linux"`, `"macos"` or `"unknown"`.

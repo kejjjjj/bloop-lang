@@ -1,0 +1,60 @@
+title: std.task
+path: Standard library / std.task
+defines: std.task
+group: std
+order: 8
+---
+Tasks are functions that run alongside everything else and can wait without stopping anything: the program running
+the script continues the tasks whose wait is over (the standalone interpreter: once the main script has finished, until they're all done). See [[coroutines and tasks]].
+
+```
+const job = std.task.spawn((seconds) => {
+	std.console.log("started");
+	const waited = std.task.wait(seconds);
+	std.console.log("finished after ", waited, " s");
+}, 2);
+std.console.log("alive: ", std.task.alive(job));
+```
+```output
+started
+alive: true
+finished after 2.000000 s
+```
+
+(The waited time is measured by std.time.now: it can be a little more than asked, when the program continues the
+tasks only now and then.)
+
+# std.task.spawn {=std.task.spawn}
+
+decl std.task.spawn(function, arguments...) -> task
+param function | a script function or lambda; it gets `arguments` (exactly as many as it has parameters)
+
+Starts a task and runs it right away, until its first wait or its end. Returns the task: a [[handle]] like `task#1`.
+An exception that the task doesn't catch before its first wait goes on in the code that spawned it; after that, it
+ends the task and goes to the program as a runtime error.
+
+# std.task.wait {=std.task.wait}
+
+decl std.task.wait(seconds) -> double  // seconds is optional
+
+Pauses the running task for `seconds`, or without seconds until the next time the program continues the tasks. Returns how long it waited. Only a task can wait: the main script, an event handler or a
+plain coroutine that has to wait spawns a task.
+
+# std.task.cancel {=std.task.cancel}
+
+decl std.task.cancel(task) -> boolean
+
+Stops a task: it won't continue from its wait. Returns whether it was still alive. A task can cancel itself; it ends
+at its next wait (or when it returns).
+
+# std.task.alive {=std.task.alive}
+
+decl std.task.alive(task) -> boolean
+
+Whether the task hasn't ended and wasn't cancelled.
+
+# std.task.current {=std.task.current}
+
+decl std.task.current()
+
+The task that's running, or [[undefined]] outside of one.

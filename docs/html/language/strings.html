@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strings - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../language/index.html">Language</a> <span class="sep">&rsaquo;</span> Strings</div>
+<h1>Strings</h1>
+<div class="navbar"><a href="../language/index.html">Language</a> <a href="../language/basics.html">Basic concepts</a> <a href="../language/types.html">Types</a> <a href="../language/variables.html">Variables</a> <a href="../language/operators.html">Operators</a> <a href="../language/conditions.html">Conditions</a> <a href="../language/control-flow.html">Control flow</a> <a href="../language/functions.html">Functions</a> <a class="here" href="../language/strings.html">Strings</a> <a href="../language/objects.html">Objects</a> <a href="../language/arrays.html">Arrays</a> <a href="../language/modules.html">Modules</a> <a href="../language/exceptions.html">Exceptions</a> <a href="../language/errors.html">Errors</a> <a href="../language/coroutines.html">Coroutines and tasks</a></div>
+<div id="body">
+<h2 id="string-literals">String literals</h2>
+<p><code>&quot;text&quot;</code> and <code>'text'</code> are the same. A <a href="../language/types.html#strings">string</a> is a sequence of bytes; text that isn't ASCII is UTF-8, and indexes and lengths count bytes.</p>
+<table class="wikitable"><tr><th>Escape</th><th>Is</th></tr><tr><td><code>\n</code></td><td>a new line</td></tr><tr><td><code>\t</code></td><td>a tab</td></tr><tr><td><code>\r</code></td><td>a carriage return</td></tr><tr><td><code>\\</code></td><td>a backslash</td></tr><tr><td><code>\&quot;</code>, <code>\'</code></td><td>a quote</td></tr></table>
+<h2 id="using-strings">Using strings</h2>
+<div class="code"><pre><span class="kw">const</span> word = <span class="st">&quot;bloop&quot;</span>;
+<a href="../std/console.html#std-console-log">std.console.log</a>(<a href="../std/index.html#std-length">std.length</a>(word), <span class="st">&quot; &quot;</span>, word[<span class="nu">0</span>], <span class="st">&quot; &quot;</span>, word + <span class="st">&quot;!&quot;</span>);
+<a href="../std/console.html#std-console-log">std.console.log</a>(<a href="../std/string.html#std-string-to-upper">std.string.to_upper</a>(word), <span class="st">&quot; &quot;</span>, <a href="../std/string.html#std-string-find">std.string.find</a>(word, <span class="st">&quot;o&quot;</span>));</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>5 b bloop!
+BLOOP 2</pre></div>
+<ul><li><code>a + b</code> joins two <a href="../language/types.html#strings">strings</a>. A string and anything else is a <a href="../language/errors.html">runtime error</a>: convert with <a href="../std/string.html#std-string-from">std.string.from</a>, or use a <a href="#template-strings">template string</a>.</li><li><code>s[i]</code> is the byte at <code>i</code> as a string of one; strings can't be changed (<code>s[0] = &quot;x&quot;</code> is an error).</li><li><code>==</code> and <code>!=</code> compare the contents; <code>&lt;</code> and <code>&gt;</code> don't work on strings.</li><li><code>for (const c : s)</code> goes over the bytes.</li><li><a href="../std/index.html#std-length">std.length</a>(s) is the length in bytes. The other <a href="../language/functions.html">functions</a> are in <a href="../std/string.html">std.string</a>.</li></ul>
+<h2 id="template-strings">Template strings</h2>
+<p>Text between backticks, with <code>${expression}</code> parts that are replaced by the expression's <a href="../language/types.html">value</a> as text (the same text <a href="../std/console.html#std-console-log">std.console.log</a> prints, so <a href="../language/types.html#numbers">numbers</a>, <a href="../language/arrays.html">arrays</a> and <a href="../language/objects.html">objects</a> work too):</p>
+<div class="code"><pre><span class="kw">const</span> count = <span class="nu">3</span>;
+<span class="kw">const</span> items = [<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>];
+<a href="../std/console.html#std-console-log">std.console.log</a>(<span class="st">`${count} apples, ${count * 2} halves, ${items}`</span>);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>3 apples, 6 halves, [ a, b ]</pre></div>
+<p>A template string can span lines; the line breaks are part of it.</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/language/strings.txt</code>.</div></div>
+</body>
+</html>

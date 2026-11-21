@@ -1,0 +1,28 @@
+title: std.console
+path: Standard library / std.console
+defines: std.console
+group: std
+order: 1
+---
+# std.console.log {=std.console.log}
+
+decl std.console.log(values...)
+
+Prints the values one after another, without anything between them, and a new line after the last one. Strings print
+as they are; numbers, booleans and undefined as text (doubles with six decimals); arrays and objects in a JSON-like
+form. The program running the script decides where it goes (the standalone interpreter: the standard output).
+
+```
+const name = "Ada";
+std.console.log("hello ", name, ", ", 2, " ", 2.5, " ", [1, "x"], " ", undefined);
+std.console.log({ a: 1, b: [true] });
+```
+```output
+hello Ada, 2 2.500000 [ 1, x ] undefined
+{
+  "a": 1,
+  "b": [ true ]
+}
+```
+
+std.string.from gives the same text as a string; a [[template string]] uses it too.

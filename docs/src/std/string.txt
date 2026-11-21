@@ -1,0 +1,123 @@
+title: std.string
+path: Standard library / std.string
+defines: std.string
+group: std
+order: 3
+---
+Functions for [[language/strings|strings]]. Strings never change: every function returns a new one. Indexes count
+bytes from `0`.
+
+| Function | |
+| std.string.substring | a part |
+| std.string.find, std.string.find_last, std.string.contains, std.string.starts_with, std.string.ends_with | searching |
+| std.string.split, std.string.replace, std.string.clone, std.string.trim | making new strings |
+| std.string.to_upper, std.string.to_lower | case |
+| std.string.get_code_at, std.string.from_char_code | bytes |
+| std.string.from, std.string.parse_int, std.string.parse_float | converting |
+
+# std.string.substring {=std.string.substring}
+
+decl std.string.substring(s, start, end) -> string  // start and end are optional
+
+The bytes from `start` up to (not including) `end`. Negative indexes count from the end; out of range ones are
+clamped. Without `end`: to the end.
+
+```
+std.console.log(std.string.substring("bloop", 1, 3), " ", std.string.substring("bloop", -2));
+```
+```output
+lo op
+```
+
+# std.string.find {=std.string.find, std.string.find_last}
+
+decl std.string.find(s, part, from) -> int  // from is optional
+decl std.string.find_last(s, part, from) -> int  // from is optional
+
+The index of the first occurrence of `part` at or after `from` (`0` if left out), or `-1`. find_last: the last one
+that starts at or before `from` (anywhere if left out).
+
+# std.string.contains {=std.string.contains, std.string.starts_with, std.string.ends_with}
+
+decl std.string.contains(s, part) -> boolean
+decl std.string.starts_with(s, prefix) -> boolean
+decl std.string.ends_with(s, suffix) -> boolean
+
+# std.string.split {=std.string.split}
+
+decl std.string.split(s, separator) -> array
+
+The parts between every `separator`, as an array of strings (empty ones too: `"a,,b"` gives three). An empty
+separator splits into single bytes.
+
+```
+std.console.log(std.string.split("a,b,,c", ","), " ", std.string.split("hey", ""));
+```
+```output
+[ a, b, , c ] [ h, e, y ]
+```
+
+# std.string.replace {=std.string.replace}
+
+decl std.string.replace(s, from, to) -> string
+
+Every occurrence of `from` replaced by `to`.
+
+# std.string.clone {=std.string.clone}
+
+decl std.string.clone(s, count) -> string
+
+`s` repeated `count` times.
+
+# std.string.trim {=std.string.trim}
+
+decl std.string.trim(s) -> string
+
+Without the whitespace (spaces, tabs, new lines) at both ends.
+
+# std.string.to_upper {=std.string.to_upper, std.string.to_lower}
+
+decl std.string.to_upper(s) -> string
+decl std.string.to_lower(s) -> string
+
+ASCII letters in upper or lower case; other bytes stay as they are.
+
+# std.string.get_code_at {=std.string.get_code_at}
+
+decl std.string.get_code_at(s, index) -> int
+
+The byte at `index`, as a number from `0` to `255`.
+
+# std.string.from_char_code {=std.string.from_char_code}
+
+decl std.string.from_char_code(code) -> string
+
+A string of one byte.
+
+# std.string.from {=std.string.from}
+
+decl std.string.from(value) -> string
+
+Any value as text: what std.console.log prints for it. The way to put a number into a string with `+`.
+
+```
+const count = 3;
+std.console.log("count: " + std.string.from(count));
+```
+```output
+count: 3
+```
+
+# std.string.parse_int {=std.string.parse_int, std.string.parse_float}
+
+decl std.string.parse_int(s)  // an int, or undefined
+decl std.string.parse_float(s)  // a double, or undefined
+
+The number that the whole string is (whitespace around it allowed), or [[undefined]] when it isn't one.
+
+```
+std.console.log(std.string.parse_int(" 42 "), " ", std.string.parse_int("42px"), " ", std.string.parse_float("2.5"));
+```
+```output
+42 undefined 2.500000
+```

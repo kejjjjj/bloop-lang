@@ -4,6 +4,9 @@
 #include "metadata/metadata.hpp"
 
 #include <filesystem>
+#include <functional>
+#include <optional>
+#include <string>
 #include <memory>
 #include <vector>
 
@@ -21,6 +24,11 @@ namespace bloop::module {
 
 		// the host's own native modules: globals next to std (see bloop.hpp)
 		std::vector<bloop::standard::NativeDef> m_oHostModules;
+
+		// reads a file (the main file and the ones it imports): its contents, or nothing if it can't. Empty: from the
+		// disk. A host whose files aren't on the disk as they are (a game's archives) reads them itself. The paths are
+		// absolute and normalized
+		std::function<std::optional<std::string>(const std::filesystem::path&)> m_fnReadFile;
 	};
 
 	// lexes, parses, resolves and builds the bytecode of a file and every module it imports (recursively).

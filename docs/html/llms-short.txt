@@ -1,0 +1,289 @@
+# bloop reference, the short version
+
+For agents writing bloop: the pitfalls, then every standard library declaration. The rest is in llms.txt.
+
+# For agents
+
+(agents.html)
+
+This page is for AI agents writing bloop (and for anyone who knows JavaScript). bloop looks like JavaScript, so JavaScript habits are where almost every mistake comes from: this page lists them, with the error each one gives.
+
+The whole reference is also available as plain text, which is easier for a program to read than these pages: llms.txt (everything) and llms-short.txt (this page and every standard library signature).
+
+## The rules in short
+
+- Statements end with `;`. Blocks use `{ }`.
+- `let` and `const` only. Functions are `fn name(a, b) { ... }` or lambdas `(a, b) => expression` (parentheses always).
+- A name can't be declared again while it's visible: not in an inner block, not as a parameter, not even when the outer name is a global declared above the function.
+- Only booleans, numbers and undefined can be conditions. `0`, `0.0` and undefined are false.
+- `==` compares values of the same kind (numbers and booleans count as one kind). Between other kinds it's an error. `===` compares anything: different types are simply not equal.
+- A function takes exactly as many arguments as it has parameters.
+- Reading a missing property or an index outside of an array is an error.
+- `try`/`catch` catches what `throw` throws. Errors (a missing property, a wrong call...) can't be caught: they stop the script.
+- `std.console.log` prints its arguments with nothing between them.
+- Scripts run with no std.fs, std.process or std.time.sleep unless the program running them allows it (the standalone interpreter `bloop file.bloop` does).
+
+## Not JavaScript
+
+| JavaScript habit | In bloop | What you get |
+| --- | --- | --- |
+| `if (text)`, `if (object)` | `if (text != "")`, `if (object !== undefined)` | `value of type "string" is not convertible to a boolean` |
+| `value \|\| fallback` | `value !== undefined ? value : fallback` | a boolean: `&&` and `\|\|` always give `true` or `false` |
+| `"n = " + 1` | `` `n = ${1}` `` or `"n = " + std.string.from(1)` | `cannot promote from "int" to "object"` |
+| `1 == "1"`, `"a" == true` | compare values of the same kind | `cannot promote from ...` |
+| `text == undefined`, `array == undefined` | `text === undefined` | `cannot promote from "undefined" to "object"` |
+| `"a" < "b"` | `std.array.sort` sorts strings; or compare std.string.get_code_at | `incompatible operands "string" and "string"` |
+| `7 / 2` is 3.5 | `7 / 2` is `3` (two ints divide as ints); write `7.0 / 2` | no error: a wrong number |
+| `object.missing` is undefined | `std.object.has(object, "missing")` first | `unknown property "missing"` |
+| `array[10]` is undefined | check `i < std.length(array)` | `out of bounds index [10]` |
+| `array.length`, `text.length` | `std.length(array)`, `std.length(text)` (bytes) | `a value of type "array" is not an aggregate type` |
+| `array.push(x)`, `text.split(",")` | `std.array.push(array, x)`, `std.string.split(text, ",")` | `a value of type "array" is not an aggregate type` |
+| `f(1)` for `fn f(a, b)` | pass every argument; there are no default parameters | `passed 1 arguments, but expected 2` |
+| `x => x + 1` | `(x) => x + 1` | `unsupported: >` |
+| `{ if: 1 }` | `{ "if": 1 }` (keywords as keys need quotes) | `expected an identifier` |
+| `for (const v of array)` | `for (const v : array)` | `expected "=" or end of statement` |
+| `for (const k in object)` | `for (const k : std.object.keys(object))` | `expected "=" or end of statement` |
+| `null` | `undefined` | `unknown identifier: null` |
+| `typeof x == "number"` | `typeof` gives `"int"`, `"uint"` or `"double"`; `typeof [1]` is `"array"` | no error: never true |
+| a missing `;` | end every statement with `;` | `unexpected end of expression` on the next line |
+| `std.array.sort(a, (x, y) => x < y)` | the comparator returns a number: `(x, y) => x - y` | `the comparator must return a number` |
+| `catch { }` | `catch (e) { }` | `expected a "("` |
+| `console.log(a, b)` prints `a b` | `std.console.log(a, " ", b)` | no error: `ab` |
+| `const f = () => i` in a `for (let i ...)` loop: each gets its own `i` | every closure shares the one `i` | no error: they all see the last value |
+| `[1] == [1]` is false | the same: arrays, objects and functions compare by identity |  |
+
+These don't exist: `var`, `function`, `class`, `this`, `new`, `switch`, `do ... while`, `instanceof`, `null`, `??`, `?.`, `...` (spread and rest), destructuring, default parameters, getters, regular expressions. Methods are functions in properties that take the object as a parameter: `o.add(o, 2)`.
+
+## Reading an error
+
+A compile error stops the file before anything runs and gives a line and column (`at: 2:13`). A runtime error gives the message, `at [line, column]`, the line with a `^` under the spot, and the calls that led there.
+
+| Message | Usually |
+| --- | --- |
+| `identifier "x" already declared` | a parameter or an inner variable reuses a name that's visible there: rename it |
+| `unknown identifier: x` | a typo, a variable used before its declaration, or something JavaScript has and bloop doesn't (`null`, `this`) |
+| `lhs is declared as const` | assigning to a `const` |
+| `unexpected end of expression: x` | a missing `;` before `x`, or syntax bloop doesn't have (`var`, `function`, `do`) |
+| `unsupported: ...` | an operator bloop doesn't have (`??`, `?.`, `x => x` without parentheses) |
+| `expected an identifier` | a keyword used as a name or an object key, or destructuring |
+| `cannot promote from "A" to "B"` | `+` or `==` with values of different kinds: a string and a number, anything and undefined |
+| `value of type "T" is not convertible to a boolean` | a string, array, object or function used as a condition |
+| `unknown property "p"` | the property isn't there: check with std.object.has |
+| `out of bounds index [i]` | the index is past the end (or negative) |
+| `passed N arguments, but expected M` | a call with too few or too many arguments |
+| `is not an aggregate type` | `.something` on a value that isn't an object (`array.length`, `text.split(",")`) |
+| `exceeded 1024 call frames` | recursion too deep |
+| `uncaught exception: v` | a `throw` nothing caught |
+
+The full list is on Errors.
+
+## A script that uses the common parts
+
+```bloop
+// counts the words of a text and prints the three most common
+fn count_words(text) {
+	let counts = {};
+	for (const raw : std.string.split(text, " ")) {
+		const word = std.string.to_lower(std.string.trim(raw));
+		if (word == "")
+			continue;
+		counts[word] = std.object.has(counts, word) ? counts[word] + 1 : 1;
+	}
+	return counts;
+}
+
+const counts = count_words("the cat and the dog and the bird");
+let words = std.object.keys(counts);
+std.array.sort(words, (a, b) => counts[b] - counts[a]);
+
+for (const word : std.array.slice(words, 0, 3))
+	std.console.log(`${word}: ${counts[word]}`);
+```
+
+```output
+the: 3
+and: 2
+cat: 1
+```
+
+## Checking your work
+
+- Run a file with `bloop file.bloop`: a compile error or a runtime error prints where it is.
+- Signatures: every standard function is on its page, and all of them are in llms-short.txt.
+- When something works in JavaScript but not here, look it up in the table above before working around it.
+
+# Standard library declarations
+
+## Standard library
+
+```
+std.length(value) -> int
+std.gc_major()  // a full collection
+std.gc_minor()  // the young objects only
+```
+
+## std.console
+
+```
+std.console.log(values...)
+```
+
+## std.array
+
+```
+std.array.create(count, fill) -> array  // fill is optional
+std.array.push(array, values...) -> int
+std.array.push_front(array, values...) -> int
+std.array.pop(array)
+std.array.pop_front(array)
+std.array.insert(array, index, value) -> int
+std.array.remove(array, index)
+std.array.resize(array, count, fill) -> array  // fill is optional
+std.array.fill(array, value, start, end) -> array  // start and end are optional
+std.array.slice(array, start, end) -> array  // start and end are optional
+std.array.concat(a, b) -> array
+std.array.index_of(array, value) -> int
+std.array.contains(array, value) -> boolean
+std.array.find(array, callback)
+std.array.find_last(array, callback)
+std.array.find_index(array, callback) -> int
+std.array.find_last_index(array, callback) -> int
+std.array.transform(array, callback) -> array
+std.array.filter(array, callback) -> array
+std.array.accumulate(array, callback, initial)  // initial is optional
+std.array.all(array, callback) -> boolean
+std.array.any(array, callback) -> boolean
+std.array.for_each(array, callback)
+std.array.reverse(array) -> array
+std.array.sort(array, comparator) -> array  // comparator is optional
+std.array.join(array, separator) -> string  // separator is optional
+```
+
+## std.string
+
+```
+std.string.substring(s, start, end) -> string  // start and end are optional
+std.string.find(s, part, from) -> int  // from is optional
+std.string.find_last(s, part, from) -> int  // from is optional
+std.string.contains(s, part) -> boolean
+std.string.starts_with(s, prefix) -> boolean
+std.string.ends_with(s, suffix) -> boolean
+std.string.split(s, separator) -> array
+std.string.replace(s, from, to) -> string
+std.string.clone(s, count) -> string
+std.string.trim(s) -> string
+std.string.to_upper(s) -> string
+std.string.to_lower(s) -> string
+std.string.get_code_at(s, index) -> int
+std.string.from_char_code(code) -> string
+std.string.from(value) -> string
+std.string.parse_int(s)  // an int, or undefined
+std.string.parse_float(s)  // a double, or undefined
+```
+
+## std.object
+
+```
+std.object.keys(object) -> array
+std.object.values(object) -> array
+std.object.has(object, key) -> boolean
+std.object.get(object, key)
+std.object.set(object, key, value)
+std.object.remove(object, key) -> boolean
+```
+
+## std.math
+
+```
+std.math.abs(x)
+std.math.sign(x)  // -1, 0 or 1
+std.math.min(values...)
+std.math.max(values...)
+std.math.clamp(x, low, high)
+std.math.floor(x) -> int  // down
+std.math.ceil(x) -> int  // up
+std.math.round(x) -> int  // to the nearest, halves away from zero
+std.math.trunc(x) -> int  // towards zero
+std.math.sqrt(x) -> double
+std.math.cbrt(x) -> double
+std.math.pow(base, exponent) -> double
+std.math.exp(x) -> double  // e to the x
+std.math.log(x) -> double  // natural logarithm
+std.math.log2(x) -> double
+std.math.log10(x) -> double
+std.math.hypot(x, y) -> double  // the square root of x * x + y * y
+std.math.sin(x) -> double
+std.math.cos(x) -> double
+std.math.tan(x) -> double
+std.math.asin(x) -> double
+std.math.acos(x) -> double
+std.math.atan(x) -> double
+std.math.atan2(y, x) -> double  // the angle of the point (x, y)
+std.math.to_radians(degrees) -> double
+std.math.to_degrees(radians) -> double
+std.math.lerp(a, b, t) -> double
+std.math.is_nan(x) -> boolean
+std.math.is_finite(x) -> boolean
+std.math.random() -> double  // in [0, 1)
+std.math.random_int(low, high) -> int  // in [low, high], both included
+std.math.seed(seed)
+```
+
+## std.json
+
+```
+std.json.stringify(value, indent) -> string  // indent is optional
+std.json.parse(text)
+```
+
+## std.time
+
+```
+std.time.now() -> double
+std.time.unix() -> double
+std.time.sleep(seconds)
+```
+
+## std.task
+
+```
+std.task.spawn(function, arguments...) -> task
+std.task.wait(seconds) -> double  // seconds is optional
+std.task.cancel(task) -> boolean
+std.task.alive(task) -> boolean
+std.task.current()
+```
+
+## std.coroutine
+
+```
+std.coroutine.create(function) -> coroutine
+std.coroutine.resume(coroutine, arguments...)
+std.coroutine.yield(value)  // value is optional
+std.coroutine.status(coroutine) -> string
+std.coroutine.running()
+```
+
+## std.fs
+
+```
+std.fs.read(path)  // a string, or undefined
+std.fs.write(path, text) -> boolean  // replaces the file
+std.fs.append(path, text) -> boolean  // adds to its end
+std.fs.exists(path) -> boolean
+std.fs.is_file(path) -> boolean
+std.fs.is_dir(path) -> boolean
+std.fs.list(path)  // an array, or undefined
+std.fs.make_dir(path) -> boolean
+std.fs.remove(path) -> boolean
+std.fs.rename(from, to) -> boolean
+```
+
+## std.process
+
+```
+std.process.args() -> array
+std.process.env(name)  // a string, or undefined
+std.process.exit(code)  // code is optional
+std.process.platform  // a string, not a function
+```

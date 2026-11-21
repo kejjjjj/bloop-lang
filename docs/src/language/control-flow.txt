@@ -1,0 +1,80 @@
+title: Control flow
+path: Language / Control flow
+defines: control flow
+group: language
+order: 6
+---
+# if {=if, else}
+
+```
+if (score > 90) {
+	grade = "A";
+} else if (score > 75) {
+	grade = "B";
+} else {
+	grade = "C";
+}
+```
+
+The condition is a [[condition]]. A body without braces is the one statement after it.
+
+# while {=while, loop}
+
+```
+let n = 3;
+while (n > 0) {
+	std.console.log(n);
+	n--;
+}
+```
+```output
+3
+2
+1
+```
+
+There's no do-while: `while (true) { ...; if (done) break; }` does the same.
+
+# for {=for}
+
+```
+for (let i = 0; i < 3; i++)
+	std.console.log(i);
+```
+
+The three parts (a declaration or an expression, the [[condition]], what happens after every round) are as in C and
+JavaScript. A variable declared in the first part exists in the loop only.
+
+# Ranged for {=ranged for, for each}
+
+```
+for (const item : ["a", "b", "c"])
+	std.console.log(item);
+
+for (const c : "hi")             // a string: its bytes, each a string of one
+	std.console.log(c);
+```
+```output
+a
+b
+c
+h
+i
+```
+
+`for (const name : container)` goes over the elements of an array (or the bytes of a string) in order. With `let` the
+variable can be assigned in the loop (the array doesn't change). Objects can't be iterated this way:
+std.object.keys(o) gives their keys as an array.
+
+> Changing an array while a ranged for goes over it is allowed: the number of rounds is the array's length when the
+  loop starts, and each round reads the element as it is then (a change to a later element is seen, an element pushed
+  meanwhile isn't).
+
+# break and continue {=break, continue}
+
+`break` leaves the closest loop, `continue` goes on with its next round (in a for: after the third part).
+
+# return {=return}
+
+Ends the function (or, at the top level, the file) and gives its value: `return value;`, or `return;` for
+[[undefined]]. A function that ends without a return returns undefined.

@@ -25,6 +25,17 @@ file(GLOB_RECURSE LIBRARY_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/embed/*.cpp"
 )
 
+# every source file needs its own name, not only its own path: Unreal's build tool (the game's plugin compiles these
+# files) names the object files after the file names alone
+set(SEEN_SOURCE_NAMES "")
+foreach(source ${LIBRARY_SOURCES})
+    get_filename_component(source_name "${source}" NAME)
+    if (source_name IN_LIST SEEN_SOURCE_NAMES)
+        message(FATAL_ERROR "two source files are named ${source_name}: give one of them another name (Unreal can't build both)")
+    endif()
+    list(APPEND SEEN_SOURCE_NAMES "${source_name}")
+endforeach()
+
 add_library(bloop_lib STATIC ${LIBRARY_SOURCES})
 
 # the headers need C++20, so a host that links to the library gets it too

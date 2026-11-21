@@ -51,7 +51,7 @@ UpValue* GC::CaptureUpValue(Value* slot) {
     assert(up->location == slot && "Allocated upvalue has wrong location");
     assert(!up->IsClosed() && "New upvalue already marked closed");
 
-#if (DEBUG || _DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
     CheckUpValueList();
 #endif
 
@@ -73,7 +73,7 @@ void GC::CloseUpValues(Value* lastSlot)
 {
     assert(lastSlot != nullptr && "CloseUpValues called with null lastSlot");
 
-#if (DEBUG || _DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
     CheckUpValueList();
 #endif
 
@@ -119,11 +119,11 @@ void GC::CloseUpValues(Value* lastSlot)
         assert(rest->location < lastSlot && "Remaining open upvalue still points >= lastSlot after CloseUpValues");
     }
 
-#if (DEBUG || _DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
     CheckUpValueList();
 #endif
 }
-#if (DEBUG || _DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
 void GC::CheckUpValueList() {
     UpValue* uv = m_pOpenUpValues;
     Value* prevLoc = reinterpret_cast<Value*>(std::numeric_limits<bloop::BloopUInt>::max());
@@ -155,4 +155,4 @@ void GC::CheckUpValueList() {
         }
     }
 }
-#endif
+#endif

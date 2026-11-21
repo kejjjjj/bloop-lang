@@ -1,0 +1,53 @@
+title: Objects
+path: Language / Objects
+defines: object, property
+group: language
+order: 9
+---
+# Object literals {=object literal}
+
+```
+const point = { name: "A", size: 10, position: { x: 1.0, y: 2.0 } };
+std.console.log(point.name, " ", point["size"], " ", point.position.x);
+```
+```output
+A 10 1.000000
+```
+
+An object is properties, each a name (a string) and a value, kept in the order they were added. An object is
+[[shared]]: assigning it or passing it doesn't copy it. Property names in a literal are names (or strings in quotes:
+`{ "with space": 1 }`).
+
+# Properties
+
+- `o.name` or `o["name"]` reads a property. A property that isn't there is a runtime error ("unknown property"):
+  std.object.has checks first, std.object.get gives undefined instead.
+- `o.name = value` or `o[key] = value` sets a property, adding it when it isn't there.
+- std.object.remove removes one, std.object.keys and std.object.values list them (in order), std.length(o) counts
+  them.
+
+```
+const scores = {};
+scores["ada"] = 3;
+scores.grace = 5;
+for (const name : std.object.keys(scores))
+	std.console.log(name, ": ", scores[name]);
+```
+```output
+ada: 3
+grace: 5
+```
+
+# Methods
+
+Objects can hold functions, and `o.f(x)` calls one. There's no `this`: a function that needs the object takes it as
+a parameter.
+
+```
+const counter = { count: 0, add: (c, amount) => { c.count += amount; } };
+counter.add(counter, 2);
+std.console.log(counter.count);
+```
+```output
+2
+```

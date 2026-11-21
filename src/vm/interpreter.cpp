@@ -318,6 +318,12 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 			m_oStack.resize(base);
 			Push(m_oHeap.AllocString(text.data(), text.size()));
 			break;
+		} case TOpCode::TYPEOF: {
+			const Value value = Pop();
+			// a closure is a function to the script
+			const bloop::BloopString name = value.IsClosure() ? BLOOPTEXT("function") : value.TypeToString();
+			Push(m_oHeap.AllocString(name.data(), name.size()));
+			break;
 		} case TOpCode::BITWISE_NOT: {
 			Value value = Pop();
 			Push(~value);
@@ -364,6 +370,7 @@ VM::ExecutionReturnCode VM::CallOp() {
 		// (and get updated in place if the native allocates). The stack never reallocates.
 		assert(m_oStack.size() >= argc);
 		const auto base = m_oStack.size() - argc;
+		m_pCalledNative = native;
 		const auto result = native->m_pFunction(*this, std::span<const Value>(m_oStack.data() + base, argc));
 
 		m_oStack.resize(base);

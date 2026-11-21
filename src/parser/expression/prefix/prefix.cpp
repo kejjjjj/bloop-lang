@@ -22,6 +22,8 @@ std::unique_ptr<BinaryExpression> CPrefixOperation::ToExpression()
 		return std::make_unique<bloop::ast::PrefixIncrement>(m_oDeclPos);
 	case Type::o_decrement:
 		return std::make_unique<bloop::ast::PrefixDecrement>(m_oDeclPos);
+	case Type::o_typeof:
+		return std::make_unique<bloop::ast::TypeOf>(m_oDeclPos);
 	default:
 		throw exception::ParserError(BLOOPTEXT("unknown prefix operation"), m_oDeclPos);
 	}
@@ -35,7 +37,20 @@ CParserPrefix::~CParserPrefix() = default;
 
 bloop::EStatus CParserPrefix::Parse() {
 
-	while (!IsEndOfBuffer() && GetIteratorSafe()->IsOperator()) {
+	while (!IsEndOfBuffer()) {
+
+		// typeof value: a keyword, not punctuation
+		if (GetIteratorSafe()->Type() == ETokenType::tt_typeof) {
+			const auto position = GetIteratorSafe()->GetCodePosition();
+			m_oPrefixes.emplace_back(std::make_unique<CPrefixOperation>(CPrefixOperation::Type::o_typeof));
+			m_oPrefixes.back()->m_oDeclPos = position;
+			Advance(1);
+			continue;
+		}
+
+		if (!GetIteratorSafe()->IsOperator())
+			break;
+
 		const auto punct = GetIteratorSafe()->GetPunctuation();
 		assert(punct);
 

@@ -1,0 +1,61 @@
+title: Coroutines and tasks
+path: Language / Coroutines and tasks
+defines: coroutines and tasks
+group: language
+order: 14
+---
+# Coroutines {=coroutine, coroutines, yield, generator}
+
+A coroutine is a function that can pause in the middle (yield) and be continued later (resumed), where it left off,
+with its variables as they were.
+
+```
+const squares = std.coroutine.create((limit) => {
+	for (let i = 1; i <= limit; i++)
+		std.coroutine.yield(i * i);
+	return 0;
+});
+
+std.console.log(std.coroutine.resume(squares, 3));   // starts it: runs up to the first yield
+std.console.log(std.coroutine.resume(squares));
+std.console.log(std.coroutine.resume(squares));
+std.console.log(std.coroutine.status(squares));
+```
+```output
+1
+4
+9
+suspended
+```
+
+- std.coroutine.create makes one from a function (it doesn't run yet).
+- std.coroutine.resume runs it until it yields or returns, and gives what it yielded or returned. The first resume
+  passes the function's arguments; later ones can pass one value, which is what the yield returns inside.
+- std.coroutine.yield pauses it. It can only yield from its own code, not from inside a callback that a standard
+  function is running (std.array.for_each's).
+- An exception that the coroutine doesn't catch ends it and goes on in the one that resumed it.
+
+The language doesn't decide what a yielded value means: a generator yields the next element, a scheduler can take it
+as "wait this long". The standard library's scheduler is std.task.
+
+# Tasks {=task, tasks}
+
+A task is a coroutine that the program running the script continues for it: std.task.wait(seconds) pauses it without
+stopping anything else, and the program resumes the tasks whose wait is over.
+
+```
+std.task.spawn(() => {
+	std.console.log("started");
+	std.task.wait(5);
+	std.console.log("five seconds later, done");
+});
+std.console.log("meanwhile, the rest goes on");
+```
+```output
+started
+meanwhile, the rest goes on
+five seconds later, done
+```
+
+std.task.spawn runs the function right away, up to its first wait. The standalone interpreter keeps running the tasks
+after the main script until they're all done. See std.task.

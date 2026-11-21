@@ -95,5 +95,5 @@ bool COperatorParser::EndOfExpression(const std::optional<PairMatcher>& eoe) con
 	if (!(*m_iterPos)->IsOperator())
 		return false;
 
-	return eoe->IsClosing(dynamic_cast<const CPunctuationToken*>(*m_iterPos)->m_ePunctuation);
+	return eoe->IsClosing((*m_iterPos)->GetPunctuation()->m_ePunctuation);
 }

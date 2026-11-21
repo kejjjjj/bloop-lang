@@ -1,0 +1,31 @@
+title: Conditions
+path: Language / Conditions
+defines: condition, conditions, truthy, falsy
+group: language
+order: 5
+---
+A condition is what `if`, `while`, `for`, `? :` and the logical operators test. Only three kinds of values can be
+conditions:
+
+| Value | As a condition |
+| a [[boolean]] | itself |
+| a number ([[int]], [[uint]], [[double]]) | false when it's zero, else true |
+| [[undefined]] | false |
+
+Anything else (a string, an array, an object, a function) is a runtime error: "value of type "string" is not
+convertible to a boolean". An empty string or an empty array isn't "false", it's a mistake to test it like that: say
+what's meant.
+
+```
+const name = "";
+if (std.length(name) == 0)      // not: if (!name)
+	std.console.log("no name");
+
+let found = std.array.find([1, 2, 3], (x) => x > 5);
+if (found === undefined)        // undefined alone would do too: if (!found), but 0 would be "not found" as well
+	std.console.log("none");
+```
+```output
+no name
+none
+```

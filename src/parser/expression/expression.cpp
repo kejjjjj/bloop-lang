@@ -147,7 +147,7 @@ bool CParserExpression::EndOfExpression(const std::optional<PairMatcher>& eoe) c
 	if (!(*m_iterPos)->IsOperator())
 		return false;
 
-	return eoe->IsClosing(dynamic_cast<const CPunctuationToken*>(*m_iterPos)->m_ePunctuation);
+	return eoe->IsClosing((*m_iterPos)->GetPunctuation()->m_ePunctuation);
 }
 
 /* EXPRESSION GENERATION */
@@ -180,7 +180,7 @@ UniqueExpression CParserExpression::CreateExpression(Operands& operands, Operato
 
 	UniqueExpression oper;
 	SetBranch(oper, *FindLowestPriorityOperator(operators));
-	CreateExpressionRecursively(dynamic_cast<bloop::ast::BinaryExpression*>(oper.get()), operands, operators);
+	CreateExpressionRecursively(bloop::ast::AsBinary(oper.get()), operands, operators);
 	return oper;
 }
 UniqueExpression CParserExpression::GetLeaf(Operands& operands) {
@@ -235,13 +235,13 @@ void CParserExpression::CreateExpressionRecursively(bloop::ast::BinaryExpression
 		if (_this->left = GetLeaf(lhsOperands), !_this->left) {
 			const auto l = FindLowestPriorityOperator(lhsOperators);
 			SetBranch(_this->left, *l);
-			CreateExpressionRecursively(dynamic_cast<bloop::ast::BinaryExpression*>(_this->left.get()), lhsOperands, lhsOperators);
+			CreateExpressionRecursively(bloop::ast::AsBinary(_this->left.get()), lhsOperands, lhsOperators);
 		}
 	} if (!rhsOperands.empty()) {
 		if (_this->right = GetLeaf(rhsOperands), !_this->right) {
 			const auto l = FindLowestPriorityOperator(rhsOperators);
 			SetBranch(_this->right, *l);
-			CreateExpressionRecursively(dynamic_cast<bloop::ast::BinaryExpression*>(_this->right.get()), rhsOperands, rhsOperators);
+			CreateExpressionRecursively(bloop::ast::AsBinary(_this->right.get()), rhsOperands, rhsOperators);
 		}
 	}
 

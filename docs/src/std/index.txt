@@ -1,0 +1,50 @@
+title: Standard library
+path: Standard library
+defines: standard library, std
+group: std
+order: 0
+---
+`std` is a global in every script: an object whose properties are the library's modules (std.array, std.string...)
+and a few functions of its own. It's always there, no import needed.
+
+# Modules
+
+| Module | What's in it |
+| std.console | printing |
+| std.array | adding, removing, searching, transforming and sorting arrays |
+| std.string | searching, splitting, converting strings |
+| std.object | an object's keys and values, properties that may not be there |
+| std.math | number functions, random numbers |
+| std.json | JSON text to values and back |
+| std.time | clocks |
+| std.task | functions that wait without blocking |
+| std.coroutine | functions that pause and continue |
+| std.fs | files and directories (only when the program running the script allows it) |
+| std.process | arguments, environment, exit (only when allowed) |
+
+# Permissions {=permission, permissions}
+
+The parts of the library that reach outside of the script (std.fs, std.process, std.time.sleep) exist only when the
+program running the script allows them; otherwise they're missing (using them is an error: the property doesn't
+exist). The standalone interpreter allows everything; a program running untrusted scripts would usually allow none of them.
+
+# std.length {=std.length}
+
+decl std.length(value) -> int
+param value | a string, an array or an object
+
+The length of a string (in bytes), the number of elements of an array, the number of properties of an object.
+
+```
+std.console.log(std.length("héllo"), " ", std.length([1, 2, 3]), " ", std.length({ a: 1 }));
+```
+```output
+6 3 1
+```
+
+# std.gc_major, std.gc_minor {=std.gc_major, std.gc_minor}
+
+decl std.gc_major()  // a full collection
+decl std.gc_minor()  // the young objects only
+
+Runs the garbage collector now. Memory is collected by itself; these are for testing and measuring.

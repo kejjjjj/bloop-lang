@@ -229,7 +229,7 @@ namespace bloop::vm
 		void CloseUpValues(Value* lastSlot);
 		void WriteUpValue(UpValue* uv, const Value& value);
 
-#if (DEBUG || _DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
 		void CheckUpValueList();
 #endif
 		UpValue* m_pOpenUpValues{};

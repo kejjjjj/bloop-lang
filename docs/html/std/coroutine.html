@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>std.coroutine - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../std/index.html">Standard library</a> <span class="sep">&rsaquo;</span> std.coroutine</div>
+<h1>std.coroutine</h1>
+<div class="navbar"><a href="../std/index.html">Standard library</a> <a href="../std/console.html">std.console</a> <a href="../std/array.html">std.array</a> <a href="../std/string.html">std.string</a> <a href="../std/object.html">std.object</a> <a href="../std/math.html">std.math</a> <a href="../std/json.html">std.json</a> <a href="../std/time.html">std.time</a> <a href="../std/task.html">std.task</a> <a class="here" href="../std/coroutine.html">std.coroutine</a> <a href="../std/fs.html">std.fs</a> <a href="../std/process.html">std.process</a></div>
+<div id="body">
+<p><a href="../language/functions.html">Functions</a> that pause and continue: see <a href="../language/coroutines.html">coroutines and tasks</a>. <a href="../std/task.html">std.task</a> is a scheduler built on them.</p>
+<div class="code"><pre><span class="kw">fn</span> numbers() {
+	<span class="kw">return</span> <a href="#std-coroutine-create">std.coroutine.create</a>(() =&gt; {
+		<span class="kw">let</span> n = <span class="nu">0</span>;
+		<span class="kw">while</span> (<span class="kw">true</span>) {
+			n++;
+			<a href="#std-coroutine-yield">std.coroutine.yield</a>(n);
+		}
+	});
+}
+
+<span class="kw">const</span> counter = numbers();
+<a href="../std/console.html#std-console-log">std.console.log</a>(<a href="#std-coroutine-resume">std.coroutine.resume</a>(counter), <a href="#std-coroutine-resume">std.coroutine.resume</a>(counter), <a href="#std-coroutine-resume">std.coroutine.resume</a>(counter));</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>123</pre></div>
+<h2 id="std-coroutine-create">std.coroutine.create</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.coroutine.create(function) -&gt; coroutine</code></td><td class="dcl-note"></td></tr></table>
+<p>A <a href="../language/coroutines.html#coroutines">coroutine</a> that will run <a href="../language/functions.html#declaring"><code>function</code></a> (a script <a href="../language/functions.html#declaring">function</a> or <a href="../language/functions.html#lambdas">lambda</a>) when it's first resumed.</p>
+<h2 id="std-coroutine-resume">std.coroutine.resume</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.coroutine.resume(coroutine, arguments...)</code></td><td class="dcl-note"></td></tr></table>
+<p>Runs the <a href="../language/coroutines.html#coroutines">coroutine</a> until it <a href="../language/coroutines.html#coroutines">yields</a> or returns, and returns what it yielded or returned. The first resume passes <code>arguments</code> to its <a href="../language/functions.html#declaring">function</a> (exactly as many as it has <a href="../language/functions.html#declaring">parameters</a>); later ones pass at most one <a href="../language/types.html">value</a>, which is what the <a href="#std-coroutine-yield">std.coroutine.yield</a> it's paused in returns. Resuming one that has ended, or one that's running, is a <a href="../language/errors.html">runtime error</a>. An <a href="../language/exceptions.html">exception</a> that the coroutine doesn't catch ends it, and goes on here.</p>
+<h2 id="std-coroutine-yield">std.coroutine.yield</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.coroutine.yield(value)</code></td><td class="dcl-note"><a href="../language/types.html">value</a> is optional</td></tr></table>
+<p>Pauses the running <a href="../language/coroutines.html#coroutines">coroutine</a>: its resume returns <a href="../language/types.html"><code>value</code></a>, and the next resume continues from here. Only from the coroutine's own code: not from the main script, and not from a callback that a standard <a href="../language/functions.html#declaring">function</a> is running.</p>
+<h2 id="std-coroutine-status">std.coroutine.status</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.coroutine.status(coroutine) -&gt; string</code></td><td class="dcl-note"></td></tr></table>
+<table class="wikitable"><tr><th>Status</th><th></th></tr><tr><td><code>&quot;suspended&quot;</code></td><td>not started yet, or paused in a <a href="../language/coroutines.html#coroutines">yield</a></td></tr><tr><td><code>&quot;running&quot;</code></td><td>the one running now</td></tr><tr><td><code>&quot;normal&quot;</code></td><td>it resumed another one, which hasn't yielded yet</td></tr><tr><td><code>&quot;dead&quot;</code></td><td>it returned, or an <a href="../language/exceptions.html">exception</a> ended it</td></tr></table>
+<h2 id="std-coroutine-running">std.coroutine.running</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.coroutine.running()</code></td><td class="dcl-note"></td></tr></table>
+<p>The <a href="../language/coroutines.html#coroutines">coroutine</a> that's running, or <a href="../language/types.html#undefined">undefined</a> in the main script.</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/std/coroutine.txt</code>.</div></div>
+</body>
+</html>

@@ -10,7 +10,7 @@ void BlockStatement::ResolveStatements(TResolver& resolver) {
 
 
 		if (s->IsFunction()) {
-			const auto asFunc = dynamic_cast<FunctionDeclarationStatement*>(s.get());
+			const auto asFunc = s->AsFunction();
 
 			if (resolver.ResolveSymbol(asFunc->m_sName)) {
 				throw bloop::exception::ResolverError(bloop::fmt::format(BLOOPTEXT("identifier \"{}\" already declared"), asFunc->m_sName), asFunc->m_oApproximatePosition);
@@ -52,7 +52,7 @@ void AssignExpression::EmitByteCode(TBCBuilder& builder, bool want_value) {
 		if (!bloop::bytecode::conversionTable.contains(punct))
 			throw bloop::exception::ByteCodeError(BLOOPTEXT("unsupported operation"), m_oApproximatePosition);
 
-		Emit(builder, bloop::bytecode::conversionTable[punct]);
+		Emit(builder, bloop::bytecode::conversionTable.at(punct));
 	} else {
 		right->EmitByteCode(builder, true);
 	}
@@ -64,15 +64,15 @@ void AssignExpression::Store(TBCBuilder& builder, bool want_value)
 	//look for the identifier from the unary/postfix chain
 	if (const auto ptr = left->GetIdentifier()) {
 
-		if (dynamic_cast<FunctionCall*>(left.get()))
+		if (left->AsFunctionCall())
 			throw exception::ResolverError(BLOOPTEXT("invalid lhs operand"), m_oApproximatePosition);
 
 		// SUBSCRIPT_SET / PROPERTY_SET leave the assigned value on the stack, which is the value
 		// of the expression: (arr[0] = 2) < 10. (Loading it again would evaluate arr and 0 twice)
-		if (auto pf = dynamic_cast<Subscript*>(left.get())) {
+		if (auto pf = left->AsSubscript()) {
 			pf->EmitSet(builder, true);
 		}
-		else if (auto pa = dynamic_cast<PropertyAccess*>(left.get())) {
+		else if (auto pa = left->AsPropertyAccess()) {
 			pa->EmitSet(builder, true);
 		}
 		else {
@@ -91,7 +91,7 @@ void AssignExpression::Store(TBCBuilder& builder, bool want_value)
 void AssignExpression::Resolve(TResolver& resolver) {
 	BinaryExpression::Resolve(resolver);
 
-	if (dynamic_cast<FunctionCall*>(left.get()))
+	if (left->AsFunctionCall())
 		throw exception::ResolverError(BLOOPTEXT("can't assign function calls"), m_oApproximatePosition);
 
 	if (left->IsConst())

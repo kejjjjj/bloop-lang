@@ -35,7 +35,7 @@ void VM::Throw(Value value) {
 
             m_oStack.resize(top.m_uBase);
 
-#if (DEBUG || _DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
             m_oGC.CheckUpValueList();
 #endif
 
@@ -56,10 +56,14 @@ void VM::Throw(Value value) {
             assert(frame->m_pIp < bytecode.data() + bytecode.size() && "Restored IP out of bounds");
 
             frame->m_oExceptionHandlers.pop_back();
+            m_oUnwound.clear(); // (caught: whatever it left behind isn't an error's trace)
 
             assert(!frame->m_oExceptionHandlers.empty() || frame->m_oExceptionHandlers.size() == 0);
             return; 
         }
+
+        // where it was in this call, for the error's trace if nothing catches it
+        m_oUnwound.push_back(frame->GetCurrentPosition(*this));
 
         assert(frame->m_uBase <= m_oStack.size() && "Frame base exceeds stack size before close");
         m_oGC.CloseUpValues(m_oStack.data() + frame->m_uBase);

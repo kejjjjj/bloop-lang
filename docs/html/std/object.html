@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>std.object - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../std/index.html">Standard library</a> <span class="sep">&rsaquo;</span> std.object</div>
+<h1>std.object</h1>
+<div class="navbar"><a href="../std/index.html">Standard library</a> <a href="../std/console.html">std.console</a> <a href="../std/array.html">std.array</a> <a href="../std/string.html">std.string</a> <a class="here" href="../std/object.html">std.object</a> <a href="../std/math.html">std.math</a> <a href="../std/json.html">std.json</a> <a href="../std/time.html">std.time</a> <a href="../std/task.html">std.task</a> <a href="../std/coroutine.html">std.coroutine</a> <a href="../std/fs.html">std.fs</a> <a href="../std/process.html">std.process</a></div>
+<div id="body">
+<p><a href="../language/functions.html">Functions</a> for <a href="../language/objects.html">objects</a>. Keys are <a href="../language/types.html#strings">strings</a>, and lists come in the order the properties were added.</p>
+<h2 id="std-object-keys">std.object.keys</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.object.keys(object) -&gt; array</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.object.values(object) -&gt; array</code></td><td class="dcl-note"></td></tr></table>
+<p>Every <a href="../language/objects.html">property</a>'s <a href="../language/basics.html#identifiers">name</a> (or <a href="../language/types.html">value</a>), in order.</p>
+<div class="code"><pre><span class="kw">const</span> scores = { ada: <span class="nu">3</span>, grace: <span class="nu">5</span> };
+<a href="../std/console.html#std-console-log">std.console.log</a>(<a href="#std-object-keys">std.object.keys</a>(scores), <span class="st">&quot; &quot;</span>, <a href="#std-object-keys">std.object.values</a>(scores));</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>[ ada, grace ] [ 3, 5 ]</pre></div>
+<h2 id="std-object-has">std.object.has</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.object.has(object, key) -&gt; boolean</code></td><td class="dcl-note"></td></tr></table>
+<p>Whether the <a href="../language/objects.html">object</a> has the <a href="../language/objects.html">property</a>: reading one that it doesn't have (<code>o.key</code>) is a <a href="../language/errors.html">runtime error</a>.</p>
+<h2 id="std-object-get">std.object.get</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.object.get(object, key)</code></td><td class="dcl-note"></td></tr></table>
+<p>The <a href="../language/objects.html">property</a>'s <a href="../language/types.html">value</a>, or <a href="../language/types.html#undefined">undefined</a> when it isn't there.</p>
+<h2 id="std-object-set">std.object.set</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.object.set(object, key, value)</code></td><td class="dcl-note"></td></tr></table>
+<p>Adds or changes the <a href="../language/objects.html">property</a>, returns the <a href="../language/types.html">value</a>. The same as <code>object[key] = value</code>.</p>
+<h2 id="std-object-remove">std.object.remove</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.object.remove(object, key) -&gt; boolean</code></td><td class="dcl-note"></td></tr></table>
+<p>Removes the <a href="../language/objects.html">property</a>; returns whether it was there.</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/std/object.txt</code>.</div></div>
+</body>
+</html>

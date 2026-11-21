@@ -1,0 +1,47 @@
+title: Embedding
+path: Embedding
+defines: embedding
+---
+bloop is made to run inside a C++ program: an application that lets users script it, a tool that reads its settings
+or rules from scripts. Everything is in `bloop.hpp`.
+
+```
+bloop::ScriptOptions options;
+options.m_oLimits.m_uInstructions = 1'000'000;   // per call: a script that loops forever stops
+options.m_oLimits.m_uHeapBytes = 64 * bloop::MB;
+options.m_sEventsModule = "events";              // events.on / events.off for the script
+options.m_oModules.push_back(MakeAppModule());    // the program's own functions: a global next to std
+
+bloop::Script script(options);
+if (auto loaded = script.LoadFile("scripts/main.bloop"); !loaded)
+	Log(loaded.m_sError);                          // a compile error (m_oLocation: where)
+else if (auto ran = script.Run(); !ran)
+	Log(ran.m_sError);                             // a runtime error (m_oTrace: the calls)
+
+script.Emit("file_saved", { "notes.txt" });         // every events.on("file_saved", ...) handler
+script.RunTasks();                                  // std.task: whenever the program has time
+```
+
+# What the program decides
+
+- **What scripts can reach**: nothing outside the VM by default. ScriptOptions::m_oEnvironment turns on std.fs (with a
+  root directory it can't leave), std.process, std.time.sleep, and gives std.console.log and std.time.now their output
+  and clock.
+- **Limits**: instructions per call, heap size, how deep native code may recurse. A script that breaks one gets a
+  runtime error; the program goes on.
+- **Its own functions**: `bloop::standard::Bind<&Function>()` turns an ordinary C++ function into one the script can
+  call, with its parameters checked; a module is an object of them.
+- **Where files come from**: imports stay in the main file's directory unless told otherwise, and
+  ScriptOptions::m_fnReadFile reads them from wherever the program keeps them (an archive, memory, a network).
+
+# Calling into scripts
+
+- Script::Call calls an exported function by name, or a function the program kept (a callback a native function got:
+  bloop::Function::Keep).
+- Script::Emit calls every handler of an event, in the order they were added.
+- Script::RunTasks continues the std.task tasks whose wait is over.
+- Values go in and out as bloop::HostValue: undefined, bool, int, double, string, array, object, and handles
+  (HostValue::Handle: a type name and an id, for the program's own objects).
+
+Errors never throw into the program: every call returns a bloop::Result, with the message, the status (compile error,
+runtime error, exited) and, for errors, where they happened.

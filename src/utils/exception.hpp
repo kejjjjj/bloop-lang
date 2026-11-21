@@ -1,8 +1,8 @@
 #pragma once
 #include "utils/defs.hpp"
+#include "utils/fmt.hpp"
 
 #include <stdexcept>
-#include <format>
 #include <optional>
 
 namespace bloop::exception {
@@ -13,7 +13,7 @@ namespace bloop::exception {
     struct CompileError : std::runtime_error {
         CompileError(const bloop::BloopString& msg) : std::runtime_error(msg), m_sMessage(msg) {}
         CompileError(const bloop::BloopString& msg, bloop::CodePosition pos)
-            : std::runtime_error(std::format("{}\nat: {}:{}", msg, std::get<0>(pos), std::get<1>(pos))),
+            : std::runtime_error(bloop::fmt::format(BLOOPTEXT("{}\nat: {}:{}"), msg, std::get<0>(pos), std::get<1>(pos))),
             m_sMessage(msg), m_oPosition(pos) {}
 
         bloop::BloopString m_sMessage;

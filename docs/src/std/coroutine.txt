@@ -1,0 +1,63 @@
+title: std.coroutine
+path: Standard library / std.coroutine
+defines: std.coroutine
+group: std
+order: 9
+---
+Functions that pause and continue: see [[coroutines and tasks]]. std.task is a scheduler built on them.
+
+```
+fn numbers() {
+	return std.coroutine.create(() => {
+		let n = 0;
+		while (true) {
+			n++;
+			std.coroutine.yield(n);
+		}
+	});
+}
+
+const counter = numbers();
+std.console.log(std.coroutine.resume(counter), std.coroutine.resume(counter), std.coroutine.resume(counter));
+```
+```output
+123
+```
+
+# std.coroutine.create {=std.coroutine.create}
+
+decl std.coroutine.create(function) -> coroutine
+
+A coroutine that will run `function` (a script function or lambda) when it's first resumed.
+
+# std.coroutine.resume {=std.coroutine.resume}
+
+decl std.coroutine.resume(coroutine, arguments...)
+
+Runs the coroutine until it yields or returns, and returns what it yielded or returned. The first resume passes
+`arguments` to its function (exactly as many as it has parameters); later ones pass at most one value, which is what
+the std.coroutine.yield it's paused in returns. Resuming one that has ended, or one that's running, is a runtime
+error. An exception that the coroutine doesn't catch ends it, and goes on here.
+
+# std.coroutine.yield {=std.coroutine.yield}
+
+decl std.coroutine.yield(value)  // value is optional
+
+Pauses the running coroutine: its resume returns `value`, and the next resume continues from here. Only from the
+coroutine's own code: not from the main script, and not from a callback that a standard function is running.
+
+# std.coroutine.status {=std.coroutine.status}
+
+decl std.coroutine.status(coroutine) -> string
+
+| Status | |
+| `"suspended"` | not started yet, or paused in a yield |
+| `"running"` | the one running now |
+| `"normal"` | it resumed another one, which hasn't yielded yet |
+| `"dead"` | it returned, or an exception ended it |
+
+# std.coroutine.running {=std.coroutine.running}
+
+decl std.coroutine.running()
+
+The coroutine that's running, or [[undefined]] in the main script.

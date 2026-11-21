@@ -84,6 +84,7 @@ namespace bloop {
 		[[nodiscard]] constexpr auto& Source() const noexcept { return m_sSource; }
 		[[nodiscard]] constexpr auto& GetCodePosition() const noexcept { return m_oSourcePosition; }
 		[[nodiscard]] virtual constexpr CPunctuationToken* GetPunctuation() noexcept { return nullptr; }
+		[[nodiscard]] virtual constexpr const CPunctuationToken* GetPunctuation() const noexcept { return nullptr; }
 	private:
 		ETokenType m_eTokenType{ ETokenType::tt_error };
 		CodePosition m_oSourcePosition{ 1, 1 };
@@ -103,8 +104,9 @@ namespace bloop {
 		[[nodiscard]] bool IsOperator(EPunctuation p) const noexcept override { return m_ePunctuation == p; }
 
 		[[nodiscard]] constexpr CPunctuationToken* GetPunctuation() noexcept override { return this; }
+		[[nodiscard]] constexpr const CPunctuationToken* GetPunctuation() const noexcept override { return this; }
 
 		EPunctuation m_ePunctuation{};
 		EOperatorPriority m_ePriority{};
 	};
-}
+}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>std.console - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../std/index.html">Standard library</a> <span class="sep">&rsaquo;</span> std.console</div>
+<h1>std.console</h1>
+<div class="navbar"><a href="../std/index.html">Standard library</a> <a class="here" href="../std/console.html">std.console</a> <a href="../std/array.html">std.array</a> <a href="../std/string.html">std.string</a> <a href="../std/object.html">std.object</a> <a href="../std/math.html">std.math</a> <a href="../std/json.html">std.json</a> <a href="../std/time.html">std.time</a> <a href="../std/task.html">std.task</a> <a href="../std/coroutine.html">std.coroutine</a> <a href="../std/fs.html">std.fs</a> <a href="../std/process.html">std.process</a></div>
+<div id="body">
+<h2 id="std-console-log">std.console.log</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.console.log(values...)</code></td><td class="dcl-note"></td></tr></table>
+<p>Prints the <a href="../language/types.html">values</a> one after another, without anything between them, and a new line after the last one. <a href="../language/types.html#strings">Strings</a> print as they are; <a href="../language/types.html#numbers">numbers</a>, <a href="../language/types.html#booleans">booleans</a> and undefined as text (<a href="../language/types.html#double">doubles</a> with six decimals); <a href="../language/arrays.html">arrays</a> and <a href="../language/objects.html">objects</a> in a <a href="../std/json.html">JSON</a>-like form. The program running the script decides where it goes (the standalone interpreter: the standard output).</p>
+<div class="code"><pre><span class="kw">const</span> name = <span class="st">&quot;Ada&quot;</span>;
+<a href="#std-console-log">std.console.log</a>(<span class="st">&quot;hello &quot;</span>, name, <span class="st">&quot;, &quot;</span>, <span class="nu">2</span>, <span class="st">&quot; &quot;</span>, <span class="nu">2.5</span>, <span class="st">&quot; &quot;</span>, [<span class="nu">1</span>, <span class="st">&quot;x&quot;</span>], <span class="st">&quot; &quot;</span>, <span class="kw">undefined</span>);
+<a href="#std-console-log">std.console.log</a>({ a: <span class="nu">1</span>, b: [<span class="kw">true</span>] });</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>hello Ada, 2 2.500000 [ 1, x ] undefined
+{
+  &quot;a&quot;: 1,
+  &quot;b&quot;: [ true ]
+}</pre></div>
+<p><a href="../std/string.html#std-string-from">std.string.from</a> gives the same text as a string; a <a href="../language/strings.html#template-strings">template string</a> uses it too.</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/std/console.txt</code>.</div></div>
+</body>
+</html>

@@ -90,6 +90,7 @@ namespace bloop::vm::detail
 		case Object::Type::ot_string:
 		case Object::Type::ot_function:
 		case Object::Type::ot_nativefunction:
+		case Object::Type::ot_handle:
 			break;
 		}
 	}
@@ -126,6 +127,7 @@ namespace bloop::vm::detail
 		case Object::Type::ot_function:
 		case Object::Type::ot_nativefunction:
 		case Object::Type::ot_coroutine: // (never moves anyway)
+		case Object::Type::ot_handle:
 			break;
 		}
 	}

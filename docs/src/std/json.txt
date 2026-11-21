@@ -1,0 +1,42 @@
+title: std.json
+path: Standard library / std.json
+defines: std.json, JSON
+group: std
+order: 6
+---
+# std.json.stringify {=std.json.stringify}
+
+decl std.json.stringify(value, indent) -> string  // indent is optional
+
+The value as JSON text. [[undefined]] becomes `null`; numbers as short as they read back exactly; object keys in their
+order. With an `indent` above 0, every element goes on its own line, indented by that many spaces per level.
+Functions, NaN, infinities and values that contain themselves can't be converted: a runtime error.
+
+```
+std.console.log(std.json.stringify({ name: "Ada", tags: ["a", "b"], score: 10.0, gone: undefined }));
+std.console.log(std.json.stringify([1, { x: true }], 2));
+```
+```output
+{"name":"Ada","tags":["a","b"],"score":10,"gone":null}
+[
+  1,
+  {
+    "x": true
+  }
+]
+```
+
+# std.json.parse {=std.json.parse}
+
+decl std.json.parse(text)
+
+The value that JSON text describes: objects, arrays, strings, booleans, numbers (an int when it's a whole number that
+fits, else a double), `null` as undefined. Text that isn't valid JSON gives [[undefined]].
+
+```
+const data = std.json.parse("{\"items\": [1, 2.5], \"ok\": true}");
+std.console.log(data.items, " ", data.ok);
+```
+```output
+[ 1, 2.500000 ] true
+```

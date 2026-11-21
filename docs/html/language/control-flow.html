@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control flow - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../language/index.html">Language</a> <span class="sep">&rsaquo;</span> Control flow</div>
+<h1>Control flow</h1>
+<div class="navbar"><a href="../language/index.html">Language</a> <a href="../language/basics.html">Basic concepts</a> <a href="../language/types.html">Types</a> <a href="../language/variables.html">Variables</a> <a href="../language/operators.html">Operators</a> <a href="../language/conditions.html">Conditions</a> <a class="here" href="../language/control-flow.html">Control flow</a> <a href="../language/functions.html">Functions</a> <a href="../language/strings.html">Strings</a> <a href="../language/objects.html">Objects</a> <a href="../language/arrays.html">Arrays</a> <a href="../language/modules.html">Modules</a> <a href="../language/exceptions.html">Exceptions</a> <a href="../language/errors.html">Errors</a> <a href="../language/coroutines.html">Coroutines and tasks</a></div>
+<div id="body">
+<h2 id="if">if</h2>
+<div class="code"><pre><span class="kw">if</span> (score &gt; <span class="nu">90</span>) {
+	grade = <span class="st">&quot;A&quot;</span>;
+} <span class="kw">else</span> <span class="kw">if</span> (score &gt; <span class="nu">75</span>) {
+	grade = <span class="st">&quot;B&quot;</span>;
+} <span class="kw">else</span> {
+	grade = <span class="st">&quot;C&quot;</span>;
+}</pre></div>
+<p>The <a href="../language/conditions.html">condition</a> is a <a href="../language/conditions.html">condition</a>. A body without braces is the one <a href="../language/basics.html">statement</a> after it.</p>
+<h2 id="while">while</h2>
+<div class="code"><pre><span class="kw">let</span> n = <span class="nu">3</span>;
+<span class="kw">while</span> (n &gt; <span class="nu">0</span>) {
+	<a href="../std/console.html#std-console-log">std.console.log</a>(n);
+	n--;
+}</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>3
+2
+1</pre></div>
+<p>There's no do-while: <code>while (true) { ...; if (done) break; }</code> does the same.</p>
+<h2 id="for">for</h2>
+<div class="code"><pre><span class="kw">for</span> (<span class="kw">let</span> i = <span class="nu">0</span>; i &lt; <span class="nu">3</span>; i++)
+	<a href="../std/console.html#std-console-log">std.console.log</a>(i);</pre></div>
+<p>The three parts (a declaration or an expression, the <a href="../language/conditions.html">condition</a>, what happens after every round) are as in C and JavaScript. A <a href="../language/variables.html">variable</a> declared in the first part exists in the <a href="#while">loop</a> only.</p>
+<h2 id="ranged-for">Ranged for</h2>
+<div class="code"><pre><span class="kw">for</span> (<span class="kw">const</span> item : [<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>])
+	<a href="../std/console.html#std-console-log">std.console.log</a>(item);
+
+<span class="kw">for</span> (<span class="kw">const</span> c : <span class="st">&quot;hi&quot;</span>)             <span class="co">// a string: its bytes, each a string of one</span>
+	<a href="../std/console.html#std-console-log">std.console.log</a>(c);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>a
+b
+c
+h
+i</pre></div>
+<p><code>for (const name : container)</code> goes over the <a href="../language/arrays.html">elements</a> of an <a href="../language/arrays.html">array</a> (or the bytes of a <a href="../language/types.html#strings">string</a>) in order. With <a href="../language/variables.html"><code>let</code></a> the <a href="../language/variables.html">variable</a> can be assigned in the <a href="#while">loop</a> (the array doesn't change). <a href="../language/objects.html">Objects</a> can't be iterated this way: <a href="../std/object.html#std-object-keys">std.object.keys</a>(o) gives their keys as an array.</p>
+<div class="note">Changing an array while a ranged for goes over it is allowed: the <a href="../language/types.html#numbers">number</a> of rounds is the array's length when the loop starts, and each round reads the element as it is then (a change to a later element is seen, an element pushed meanwhile isn't).</div>
+<h2 id="break-and-continue">break and continue</h2>
+<p><code>break</code> leaves the closest <a href="#while">loop</a>, <code>continue</code> goes on with its next round (in a for: after the third part).</p>
+<h2 id="return">return</h2>
+<p>Ends the <a href="../language/functions.html#declaring">function</a> (or, at the top level, the file) and gives its <a href="../language/types.html">value</a>: <code>return value;</code>, or <code>return;</code> for <a href="../language/types.html#undefined">undefined</a>. A function that ends without a return returns undefined.</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/language/control-flow.txt</code>.</div></div>
+</body>
+</html>

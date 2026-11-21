@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Basic concepts - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../language/index.html">Language</a> <span class="sep">&rsaquo;</span> Basic concepts</div>
+<h1>Basic concepts</h1>
+<div class="navbar"><a href="../language/index.html">Language</a> <a class="here" href="../language/basics.html">Basic concepts</a> <a href="../language/types.html">Types</a> <a href="../language/variables.html">Variables</a> <a href="../language/operators.html">Operators</a> <a href="../language/conditions.html">Conditions</a> <a href="../language/control-flow.html">Control flow</a> <a href="../language/functions.html">Functions</a> <a href="../language/strings.html">Strings</a> <a href="../language/objects.html">Objects</a> <a href="../language/arrays.html">Arrays</a> <a href="../language/modules.html">Modules</a> <a href="../language/exceptions.html">Exceptions</a> <a href="../language/errors.html">Errors</a> <a href="../language/coroutines.html">Coroutines and tasks</a></div>
+<div id="body">
+<h2 id="source-files">Source files</h2>
+<p>A bloop program is a text file (UTF-8, usually ending in <code>.bloop</code>) of statements. They run from top to bottom; a <a href="../language/control-flow.html#return"><code>return</code></a> at the top level ends the file, and its <a href="../language/types.html">value</a> is what the file returns to whoever ran it. The <a href="../language/functions.html">functions</a> that a file declares can be used before their declaration (see <a href="../language/functions.html#hoisting">hoisting</a>).</p>
+<div class="code"><pre><a href="../std/console.html#std-console-log">std.console.log</a>(<span class="st">&quot;first&quot;</span>);
+<a href="../std/console.html#std-console-log">std.console.log</a>(add(<span class="nu">1</span>, <span class="nu">2</span>));     <span class="co">// add is declared further down</span>
+
+<span class="kw">fn</span> add(a, b) {
+	<span class="kw">return</span> a + b;
+}</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>first
+3</pre></div>
+<h2 id="statements">Statements</h2>
+<p>A statement ends with a semicolon, except the ones that end with a <a href="../language/variables.html#scope">block</a>: <a href="../language/functions.html"><code>fn</code></a>, <a href="../language/control-flow.html#if"><code>if</code></a>, <a href="../language/control-flow.html#while"><code>while</code></a>, <a href="../language/control-flow.html#for"><code>for</code></a>, <a href="../language/exceptions.html"><code>try</code></a>. A block is statements between braces, and it can't be empty: <code>{ }</code> is a <a href="../language/errors.html">compile error</a>. The body of an if, a while or a for can also be a single statement without braces.</p>
+<div class="code"><pre><span class="kw">if</span> (count &gt; <span class="nu">10</span>)
+	<a href="../std/console.html#std-console-log">std.console.log</a>(<span class="st">&quot;a lot&quot;</span>);
+
+<span class="kw">while</span> (count &gt; <span class="nu">0</span>) {
+	count--;
+}</pre></div>
+<h2 id="comments">Comments</h2>
+<p><code>//</code> starts a comment that goes to the end of the line, <code>/* */</code> one that can span lines. Comments don't nest.</p>
+<h2 id="identifiers">Identifiers</h2>
+<p>Names of <a href="../language/variables.html">variables</a>, <a href="../language/functions.html">functions</a> and <a href="../language/functions.html#declaring">parameters</a>: letters, digits and underscores, not starting with a digit. They're case sensitive. A name can't be one of the keywords, and it can't be declared twice where both are visible: an inner <a href="../language/variables.html#scope">block</a> or a <a href="../language/functions.html#declaring">function</a> inside another can't declare a name that the outer one already has (see <a href="../language/variables.html#no-shadowing">shadowing</a>).</p>
+<h2 id="keywords">Keywords</h2>
+<p><a href="../language/functions.html"><code>fn</code></a> <a href="../language/variables.html"><code>let</code></a> <a href="../language/variables.html"><code>const</code></a> <a href="../language/control-flow.html#if"><code>if</code></a> <a href="../language/control-flow.html#if"><code>else</code></a> <a href="../language/control-flow.html#while"><code>while</code></a> <a href="../language/control-flow.html#for"><code>for</code></a> <a href="../language/control-flow.html#return"><code>return</code></a> <a href="../language/control-flow.html#break-and-continue"><code>break</code></a> <a href="../language/control-flow.html#break-and-continue"><code>continue</code></a> <a href="../language/exceptions.html"><code>try</code></a> <a href="../language/exceptions.html"><code>catch</code></a> <a href="../language/exceptions.html"><code>throw</code></a> <a href="../language/modules.html"><code>import</code></a> <a href="../language/modules.html"><code>export</code></a> <a href="../language/operators.html#typeof"><code>typeof</code></a> <a href="../language/types.html#booleans"><code>true</code></a> <a href="../language/types.html#booleans"><code>false</code></a> <a href="../language/types.html#undefined"><code>undefined</code></a></p>
+<p><code>from</code> has a meaning in an <a href="../language/modules.html"><code>import</code></a> statement only.</p>
+<h2 id="literals">Literals</h2>
+<table class="wikitable"><tr><th>Literal</th><th><a href="../language/types.html">Type</a></th><th>Examples</th></tr><tr><td><a href="../language/types.html#int">integer</a></td><td><a href="../language/types.html#int">int</a></td><td><code>42</code>, <code>-7</code>, <code>1_000_000</code> (underscores between digits are ignored), <code>0x1F</code> (hexadecimal)</td></tr><tr><td>unsigned integer</td><td><a href="../language/types.html#uint">uint</a></td><td><code>42u</code></td></tr><tr><td><a href="../language/types.html#double">floating point</a></td><td><a href="../language/types.html#double">double</a></td><td><code>3.14</code>, <code>0.5</code>, <code>.5</code>, <code>5.</code>; with an exponent <code>1e6</code>, <code>2.5e-3</code>, <code>1E+9</code> (always a <a href="../language/types.html#double">double</a>)</td></tr><tr><td><a href="../language/types.html#strings">string</a></td><td><a href="../language/types.html#strings">string</a></td><td><code>&quot;text&quot;</code>, <code>'text'</code> (the same), escapes like <code>\n</code> (see <a href="../language/strings.html">strings</a>)</td></tr><tr><td><a href="../language/strings.html#template-strings">template string</a></td><td>string</td><td>text between backticks, with <code>${expression}</code> parts in it (see <a href="../language/strings.html#template-strings">template string</a>)</td></tr><tr><td><a href="../language/types.html#booleans">boolean</a></td><td><a href="../language/types.html#booleans">boolean</a></td><td><a href="../language/types.html#booleans"><code>true</code></a>, <a href="../language/types.html#booleans"><code>false</code></a></td></tr><tr><td>undefined</td><td><a href="../language/types.html#undefined">undefined</a></td><td><a href="../language/types.html#undefined"><code>undefined</code></a></td></tr><tr><td><a href="../language/arrays.html">array</a></td><td><a href="../language/arrays.html">array</a></td><td><code>[1, 2, 3]</code>, <code>[]</code></td></tr><tr><td><a href="../language/objects.html">object</a></td><td><a href="../language/objects.html">object</a></td><td><code>{ x: 1, y: 2 }</code>, <code>{}</code></td></tr></table>
+<div class="note">An exponent (<code>e</code> or <code>E</code>, an optional sign, digits) makes a literal a double, even without a decimal point: <code>1e3</code> is <code>1000.0</code>. Hexadecimal literals have no exponent: <code>0x1e5</code> is the <a href="../language/types.html#int">int</a> <code>485</code>.</div>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/language/basics.txt</code>.</div></div>
+</body>
+</html>

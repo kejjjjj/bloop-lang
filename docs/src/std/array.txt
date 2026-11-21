@@ -1,0 +1,227 @@
+title: std.array
+path: Standard library / std.array
+defines: std.array
+group: std
+order: 2
+---
+Functions for [[language/arrays|arrays]]. The ones that change the array change it in place (arrays are shared:
+everybody who has it sees the change); the ones that make something new say so.
+
+Callbacks get `(element, index)`; a callback with fewer parameters gets only the first ones: `(x) => x * 2` works.
+
+| Function | |
+| std.array.create | a new array of a given length |
+| std.array.push, std.array.push_front | add to the end / the front |
+| std.array.pop, std.array.pop_front | take from the end / the front |
+| std.array.insert, std.array.remove | add / take at an index |
+| std.array.resize, std.array.fill | change the length, set many elements |
+| std.array.slice, std.array.concat | copies of parts, two joined |
+| std.array.index_of, std.array.contains | find a value |
+| std.array.find, std.array.find_last, std.array.find_index, std.array.find_last_index | find by a callback |
+| std.array.transform, std.array.filter, std.array.accumulate | new arrays and values from callbacks |
+| std.array.all, std.array.any, std.array.for_each | test or visit every element |
+| std.array.reverse, std.array.sort | order |
+| std.array.join | the elements as one string |
+
+# std.array.create {=std.array.create}
+
+decl std.array.create(count, fill) -> array  // fill is optional
+param count | the length
+param fill | every element's value (undefined if left out)
+
+# std.array.push {=std.array.push}
+
+decl std.array.push(array, values...) -> int
+
+Adds the values to the end, in order. Returns the new length.
+
+```
+const list = [1];
+std.array.push(list, 2, 3);
+std.console.log(list);
+```
+```output
+[ 1, 2, 3 ]
+```
+
+# std.array.push_front {=std.array.push_front}
+
+decl std.array.push_front(array, values...) -> int
+
+Adds the values to the front (in the given order: `push_front(a, 1, 2)` makes `a` start with `1, 2`). Returns the new
+length.
+
+# std.array.pop {=std.array.pop}
+
+decl std.array.pop(array)
+
+Removes the last element and returns it; [[undefined]] for an empty array.
+
+# std.array.pop_front {=std.array.pop_front}
+
+decl std.array.pop_front(array)
+
+Removes the first element and returns it; undefined for an empty array.
+
+# std.array.insert {=std.array.insert}
+
+decl std.array.insert(array, index, value) -> int
+param index | where: the value goes before the element at `index`; the length appends
+
+Returns the new length. An index outside `0` to the length is a runtime error.
+
+# std.array.remove {=std.array.remove}
+
+decl std.array.remove(array, index)
+
+Removes the element at `index` and returns it. An index outside the array is a runtime error.
+
+# std.array.resize {=std.array.resize}
+
+decl std.array.resize(array, count, fill) -> array  // fill is optional
+
+Makes the array `count` long: cut at the end, or new elements set to `fill` (undefined if left out). Returns the
+array.
+
+# std.array.fill {=std.array.fill}
+
+decl std.array.fill(array, value, start, end) -> array  // start and end are optional
+
+Sets the elements from `start` up to (not including) `end` to `value`: all of them without `start` and `end`.
+Returns the array.
+
+# std.array.slice {=std.array.slice}
+
+decl std.array.slice(array, start, end) -> array  // start and end are optional
+
+A new array with the elements from `start` up to (not including) `end`. Negative indexes count from the end (`-1` is
+the last); out of range ones are clamped. Without `end`: to the end; without both: a copy.
+
+```
+std.console.log(std.array.slice([1, 2, 3, 4], 1, 3), " ", std.array.slice([1, 2, 3, 4], -2));
+```
+```output
+[ 2, 3 ] [ 3, 4 ]
+```
+
+# std.array.concat {=std.array.concat}
+
+decl std.array.concat(a, b) -> array
+
+A new array: the elements of `a`, then the elements of `b`.
+
+# std.array.index_of {=std.array.index_of}
+
+decl std.array.index_of(array, value) -> int
+
+The index of the first element that is strictly equal (`===`) to `value`, or `-1`.
+
+# std.array.contains {=std.array.contains}
+
+decl std.array.contains(array, value) -> boolean
+
+Whether an element is strictly equal (`===`) to `value`.
+
+# std.array.find {=std.array.find, std.array.find_last}
+
+decl std.array.find(array, callback)
+decl std.array.find_last(array, callback)
+
+The first (last) element for which `callback(element, index)` is true, or undefined.
+
+```
+const people = [{ name: "Ada", age: 36 }, { name: "Grace", age: 85 }];
+const old = std.array.find(people, (p) => p.age > 50);
+std.console.log(old.name);
+```
+```output
+Grace
+```
+
+# std.array.find_index {=std.array.find_index, std.array.find_last_index}
+
+decl std.array.find_index(array, callback) -> int
+decl std.array.find_last_index(array, callback) -> int
+
+The index of the first (last) element for which `callback(element, index)` is true, or `-1`.
+
+# std.array.transform {=std.array.transform}
+
+decl std.array.transform(array, callback) -> array
+
+A new array with `callback(element, index)` for every element (JavaScript's map).
+
+```
+std.console.log(std.array.transform([1, 2, 3], (x, i) => x * 10 + i));
+```
+```output
+[ 10, 21, 32 ]
+```
+
+# std.array.filter {=std.array.filter}
+
+decl std.array.filter(array, callback) -> array
+
+A new array with the elements for which `callback(element, index)` is true.
+
+# std.array.accumulate {=std.array.accumulate}
+
+decl std.array.accumulate(array, callback, initial)  // initial is optional
+
+Folds the array into one value (JavaScript's reduce): the result starts as `initial` and becomes
+`callback(result, element, index)` for every element. Without `initial`, it starts as the first element (and the
+callback isn't called for it).
+
+```
+std.console.log(std.array.accumulate([1, 2, 3, 4], (sum, x) => sum + x, 0));
+```
+```output
+10
+```
+
+# std.array.all {=std.array.all}
+
+decl std.array.all(array, callback) -> boolean
+
+Whether `callback(element, index)` is true for every element (true for an empty array).
+
+# std.array.any {=std.array.any}
+
+decl std.array.any(array, callback) -> boolean
+
+Whether `callback(element, index)` is true for any element (false for an empty array).
+
+# std.array.for_each {=std.array.for_each}
+
+decl std.array.for_each(array, callback)
+
+Calls `callback(element, index)` for every element. A [[ranged for]] does the same without a function.
+
+# std.array.reverse {=std.array.reverse}
+
+decl std.array.reverse(array) -> array
+
+Reverses the order in place; returns the array.
+
+# std.array.sort {=std.array.sort}
+
+decl std.array.sort(array, comparator) -> array  // comparator is optional
+
+Sorts in place and returns the array. Without a comparator the elements must be all numbers or all strings, and go
+in ascending order. With one, `comparator(a, b)` returns a negative number when `a` goes before `b`, a positive one
+when after, `0` when it doesn't matter. The sort is stable (equal elements keep their order).
+
+```
+const words = ["pear", "fig", "banana"];
+std.array.sort(words, (a, b) => std.length(a) - std.length(b));
+std.console.log(words);
+```
+```output
+[ fig, pear, banana ]
+```
+
+# std.array.join {=std.array.join}
+
+decl std.array.join(array, separator) -> string  // separator is optional
+
+The elements as text (as std.string.from gives them), with `separator` between them (`","` if left out).

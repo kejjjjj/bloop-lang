@@ -196,6 +196,7 @@ bloop::EStatus bloop::parser::ParseToken(const CParserContext& ctx) {
 	case ETokenType::tt_string:
 	case ETokenType::tt_template_head:
 	case ETokenType::tt_name:
+	case ETokenType::tt_typeof:
 		return CreateParser<CParserExpressionStatement>(ctx);
 	case ETokenType::tt_operator:
 		return ParseOperator(ctx);

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>std.json - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../std/index.html">Standard library</a> <span class="sep">&rsaquo;</span> std.json</div>
+<h1>std.json</h1>
+<div class="navbar"><a href="../std/index.html">Standard library</a> <a href="../std/console.html">std.console</a> <a href="../std/array.html">std.array</a> <a href="../std/string.html">std.string</a> <a href="../std/object.html">std.object</a> <a href="../std/math.html">std.math</a> <a class="here" href="../std/json.html">std.json</a> <a href="../std/time.html">std.time</a> <a href="../std/task.html">std.task</a> <a href="../std/coroutine.html">std.coroutine</a> <a href="../std/fs.html">std.fs</a> <a href="../std/process.html">std.process</a></div>
+<div id="body">
+<h2 id="std-json-stringify">std.json.stringify</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.json.stringify(value, indent) -&gt; string</code></td><td class="dcl-note">indent is optional</td></tr></table>
+<p>The <a href="../language/types.html">value</a> as JSON text. <a href="../language/types.html#undefined">undefined</a> becomes <code>null</code>; <a href="../language/types.html#numbers">numbers</a> as short as they read back exactly; <a href="../language/objects.html">object</a> keys in their order. With an <code>indent</code> above 0, every <a href="../language/arrays.html">element</a> goes on its own line, indented by that many spaces per level. <a href="../language/functions.html">Functions</a>, NaN, infinities and values that contain themselves can't be converted: a <a href="../language/errors.html">runtime error</a>.</p>
+<div class="code"><pre><a href="../std/console.html#std-console-log">std.console.log</a>(<a href="#std-json-stringify">std.json.stringify</a>({ name: <span class="st">&quot;Ada&quot;</span>, tags: [<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>], score: <span class="nu">10.0</span>, gone: <span class="kw">undefined</span> }));
+<a href="../std/console.html#std-console-log">std.console.log</a>(<a href="#std-json-stringify">std.json.stringify</a>([<span class="nu">1</span>, { x: <span class="kw">true</span> }], <span class="nu">2</span>));</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>{&quot;name&quot;:&quot;Ada&quot;,&quot;tags&quot;:[&quot;a&quot;,&quot;b&quot;],&quot;score&quot;:10,&quot;gone&quot;:null}
+[
+  1,
+  {
+    &quot;x&quot;: true
+  }
+]</pre></div>
+<h2 id="std-json-parse">std.json.parse</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.json.parse(text)</code></td><td class="dcl-note"></td></tr></table>
+<p>The <a href="../language/types.html">value</a> that JSON text describes: <a href="../language/objects.html">objects</a>, <a href="../language/arrays.html">arrays</a>, <a href="../language/types.html#strings">strings</a>, <a href="../language/types.html#booleans">booleans</a>, <a href="../language/types.html#numbers">numbers</a> (an <a href="../language/types.html#int">int</a> when it's a whole number that fits, else a <a href="../language/types.html#double">double</a>), <code>null</code> as undefined. Text that isn't valid JSON gives <a href="../language/types.html#undefined">undefined</a>.</p>
+<div class="code"><pre><span class="kw">const</span> data = <a href="#std-json-parse">std.json.parse</a>(<span class="st">&quot;{\&quot;items\&quot;: [1, 2.5], \&quot;ok\&quot;: true}&quot;</span>);
+<a href="../std/console.html#std-console-log">std.console.log</a>(data.items, <span class="st">&quot; &quot;</span>, data.ok);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>[ 1, 2.500000 ] true</pre></div>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/std/json.txt</code>.</div></div>
+</body>
+</html>

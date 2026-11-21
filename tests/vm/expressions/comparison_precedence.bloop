@@ -1,0 +1,8 @@
+// relational operators bind tighter than equality ones, as in C and JavaScript
+return [
+    1 < 2 == true,
+    2 > 1 != 3 > 4,
+    1 + 1 == 2 && 3 >= 3 === true,
+    2 <= 1 == 3 < 1,
+    !(1 < 2 !== 4 > 3)
+];

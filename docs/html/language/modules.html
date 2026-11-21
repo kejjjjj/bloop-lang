@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modules - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../language/index.html">Language</a> <span class="sep">&rsaquo;</span> Modules</div>
+<h1>Modules</h1>
+<div class="navbar"><a href="../language/index.html">Language</a> <a href="../language/basics.html">Basic concepts</a> <a href="../language/types.html">Types</a> <a href="../language/variables.html">Variables</a> <a href="../language/operators.html">Operators</a> <a href="../language/conditions.html">Conditions</a> <a href="../language/control-flow.html">Control flow</a> <a href="../language/functions.html">Functions</a> <a href="../language/strings.html">Strings</a> <a href="../language/objects.html">Objects</a> <a href="../language/arrays.html">Arrays</a> <a class="here" href="../language/modules.html">Modules</a> <a href="../language/exceptions.html">Exceptions</a> <a href="../language/errors.html">Errors</a> <a href="../language/coroutines.html">Coroutines and tasks</a></div>
+<div id="body">
+<p>Every file is a module: it has its own <a href="../language/variables.html#globals-and-modules">globals</a>, and shares only what it exports.</p>
+<h2 id="export">export</h2>
+<div class="code"><pre><span class="co">// shapes.bloop</span>
+<span class="kw">export</span> <span class="kw">const</span> unit = <span class="nu">1.0</span>;
+
+<span class="kw">export</span> <span class="kw">fn</span> area(width, height) {
+	<span class="kw">return</span> width * height;
+}
+
+<span class="kw">fn</span> helper() { <span class="kw">return</span> <span class="nu">0</span>; }      <span class="co">// not exported: only this file sees it</span></pre></div>
+<p><code>export</code> before a top-level <a href="../language/functions.html"><code>fn</code></a>, <a href="../language/variables.html"><code>let</code></a> or <a href="../language/variables.html"><code>const</code></a> makes it visible to the files that import this one.</p>
+<h2 id="import">import</h2>
+<div class="code"><pre><span class="co">// main.bloop</span>
+<span class="kw">import</span> area, unit <span class="kw">from</span> <span class="st">&quot;shapes.bloop&quot;</span>;
+
+<a href="../std/console.html#std-console-log">std.console.log</a>(area(<span class="nu">2</span>, <span class="nu">3</span>), <span class="st">&quot; &quot;</span>, unit);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>6 1.000000</pre></div>
+<p><code>import name, other from &quot;path&quot;;</code> makes exported <a href="../language/basics.html#identifiers">names</a> of another file usable here. Imports come first in a file, before any other <a href="../language/basics.html">statement</a>. The path is relative to the importing file's directory (<code>&quot;lib/math.bloop&quot;</code>, <code>&quot;../shared.bloop&quot;</code>); a program running scripts can keep imports inside one directory, so that a script can't read files outside of it.</p>
+<h2 id="how-modules-run">How modules run</h2>
+<ul><li>A module runs once, before the file that imports it, however many files import it. The modules it imports run before it.</li><li>Imports see the exported <a href="../language/variables.html">variables</a> as they are now, not a copy from when they were imported: when the module changes one, the importer sees the new <a href="../language/types.html">value</a>. <a href="../language/arrays.html">Arrays</a> and <a href="../language/objects.html">objects</a> are <a href="../language/types.html#arrays-and-objects">shared</a> as always.</li><li>An imported <a href="../language/basics.html#identifiers">name</a> can't be assigned to (it's the other module's).</li><li>Importing a file that imports this one, directly or through others, is a <a href="../language/errors.html">compile error</a> (&quot;circular import&quot;).</li><li>An <a href="../language/exceptions.html">exception</a> thrown in an imported <a href="../language/functions.html#declaring">function</a> is caught by the importer like any other.</li><li><a href="../language/errors.html">Errors</a> in a module name the module's file and its own line <a href="../language/types.html#numbers">numbers</a>.</li></ul>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/language/modules.txt</code>.</div></div>
+</body>
+</html>

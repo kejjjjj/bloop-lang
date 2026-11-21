@@ -3,6 +3,8 @@
 #include "std/vm/to_vm.hpp"
 #include "utils/fmt.hpp"
 #include "vm.hpp"
+#include "vm/tasks.hpp"
+#include "vm/heap/coroutine.hpp"
 #include "vm/exception.hpp"
 #include "vm/frame.hpp"
 #include "vm/heap/dvalue.hpp"
@@ -37,7 +39,7 @@ std::vector<Value> VM::BuildConstants(const std::vector<bloop::ConstantData>& co
 	return vals;
 }
 VM::VM(bloop::metadata::Metadata& metadata, bloop::standard::Environment environment)
-	: m_oEnvironment(std::move(environment)), m_oHeap(&m_oGC), m_oGC(this), m_refMetaData(metadata) {
+	: m_oEnvironment(std::move(environment)), m_oHeap(&m_oGC), m_oGC(this), m_pTasks(std::make_unique<TaskList>()), m_refMetaData(metadata) {
 
 	m_oRandom.Seed(m_oEnvironment.m_oRandomSeed ? *m_oEnvironment.m_oRandomSeed
 		: (static_cast<std::uint64_t>(std::random_device{}()) << 32u) ^ std::random_device{}()
@@ -96,6 +98,7 @@ Value VM::Run() {
 	//}
 
 	m_uInstructionsUsed = 0u;
+	m_oUnwound.clear();
 
 	m_uStackBase = NativeStackAddress();
 
@@ -120,7 +123,14 @@ Value VM::Run() {
 }
 void VM::ReportError(const std::exception& error) {
 	m_bFailed = true;
-	const auto positions = StackTrace();
+
+	// the calls that an uncaught exception already left (innermost first), then the ones still on the stack
+	auto positions = std::exchange(m_oUnwound, {});
+	const auto remaining = StackTrace();
+	positions.insert(positions.end(), remaining.begin(), remaining.end());
+
+	m_sErrorMessage = error.what();
+	m_oErrorTrace = positions;
 	m_oStack.clear();
 
 	bloop::BloopString msg = BLOOPTEXT("\nruntime error\n\n");
@@ -149,6 +159,7 @@ std::optional<Value> VM::CallFromHost(const Value& callee, std::span<const Value
 	assert(!IsRunning());
 
 	m_uInstructionsUsed = 0u;
+	m_oUnwound.clear();
 	m_bFailed = false;
 	m_sError.clear();
 	m_eNativeSignal = NativeSignal::none;
@@ -170,6 +181,55 @@ std::optional<Value> VM::CallFromHost(const Value& callee, std::span<const Value
 	return std::nullopt;
 }
 
+std::optional<Value> VM::ResumeFromHost(Object* coroutine, std::span<const Value> args) {
+	assert(!IsRunning());
+
+	m_uInstructionsUsed = 0u;
+	m_oUnwound.clear();
+	m_bFailed = false;
+	m_sError.clear();
+	m_eNativeSignal = NativeSignal::none;
+	m_oTransfer = Value{};
+
+	m_uStackBase = NativeStackAddress();
+
+	try {
+		auto result = ResumeCoroutine(coroutine, args);
+
+		// an exception that the coroutine didn't catch: nothing in the host catches it either
+		if (std::exchange(m_eNativeSignal, NativeSignal::none) == NativeSignal::raise) {
+			const auto value = std::exchange(m_oTransfer, Value{});
+			ThrowError(bloop::fmt::format(BLOOPTEXT("uncaught exception: {}"), value.ValueToString()));
+		}
+
+		m_oStack.clear();
+		return result;
+	} catch (exception::ExitRequest& exit) {
+		[[maybe_unused]] const auto positions = StackTrace();
+		m_oStack.clear();
+		m_oExitCode = exit.m_iCode;
+	} catch (exception::VMError& ex) {
+		ReportError(ex);
+	}
+	m_oTransfer = Value{};
+	return std::nullopt;
+}
+
+double VM::Now() const {
+	if (m_oEnvironment.m_fnClock)
+		return m_oEnvironment.m_fnClock();
+
+	const auto elapsed = std::chrono::steady_clock::now() - m_oCreationTime;
+	return std::chrono::duration<double>(elapsed).count();
+}
+
+const bloop::BloopString* VM::GetHandleType(bloop::BloopStringView name) {
+	for (const auto& type : m_oHandleTypes) {
+		if (*type == name)
+			return type.get();
+	}
+	return m_oHandleTypes.emplace_back(std::make_unique<bloop::BloopString>(name)).get();
+}
 bool VM::Execute(bloop::BloopSize stopDepth) {
 	assert(m_oFrames.size() > stopDepth);
 
@@ -296,6 +356,7 @@ Value VM::Call(const Value& callee, std::span<const Value> args) {
 		if (native->m_uParamCount != bloop::VARIADIC_PARAMETER_COUNT && native->m_uParamCount != argc)
 			throw exception::VMError(bloop::fmt::format(BLOOPTEXT("passed {} arguments, but expected {}"), argc, native->m_uParamCount));
 
+		m_pCalledNative = native;
 		const auto result = native->m_pFunction(*this, std::span<const Value>(m_oStack.data() + base, argc));
 		m_oStack.resize(base);
 

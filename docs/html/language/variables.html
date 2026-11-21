@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Variables - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../language/index.html">Language</a> <span class="sep">&rsaquo;</span> Variables</div>
+<h1>Variables</h1>
+<div class="navbar"><a href="../language/index.html">Language</a> <a href="../language/basics.html">Basic concepts</a> <a href="../language/types.html">Types</a> <a class="here" href="../language/variables.html">Variables</a> <a href="../language/operators.html">Operators</a> <a href="../language/conditions.html">Conditions</a> <a href="../language/control-flow.html">Control flow</a> <a href="../language/functions.html">Functions</a> <a href="../language/strings.html">Strings</a> <a href="../language/objects.html">Objects</a> <a href="../language/arrays.html">Arrays</a> <a href="../language/modules.html">Modules</a> <a href="../language/exceptions.html">Exceptions</a> <a href="../language/errors.html">Errors</a> <a href="../language/coroutines.html">Coroutines and tasks</a></div>
+<div id="body">
+<h2 id="declaring">Declaring</h2>
+<div class="code"><pre><span class="kw">let</span> count = <span class="nu">0</span>;          <span class="co">// a variable: it can be assigned again</span>
+<span class="kw">const</span> limit = <span class="nu">10</span>;       <span class="co">// a constant: it can't</span>
+<span class="kw">let</span> name;               <span class="co">// no value yet: undefined</span></pre></div>
+<p><code>let</code> declares a variable, <code>const</code> a constant: assigning to a constant is a <a href="../language/errors.html">compile error</a>. A constant that holds an <a href="../language/arrays.html">array</a> or an <a href="../language/objects.html">object</a> still lets the array or object change (the constant is which array it is, not what's in it).</p>
+<h2 id="scope">Scope</h2>
+<p>A variable declared in a block (between braces) exists from its declaration to the end of the block. Variables declared at the top level of a file are <a href="#globals-and-modules">globals</a>: every <a href="../language/functions.html#declaring">function</a> of the file can use them, also <a href="../language/functions.html">functions</a> declared before them (they're there once the file has run up to their declaration).</p>
+<div class="code"><pre><span class="kw">let</span> total = <span class="nu">0</span>;
+
+<span class="kw">fn</span> add(amount) {
+	total += amount;     <span class="co">// the global</span>
+}
+
+add(<span class="nu">5</span>);
+<a href="../std/console.html#std-console-log">std.console.log</a>(total);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>5</pre></div>
+<h2 id="no-shadowing">No shadowing</h2>
+<p>A <a href="../language/basics.html#identifiers">name</a> can't be declared again where the earlier one is still visible: not in an inner <a href="#scope">block</a>, not as a <a href="../language/functions.html#declaring">parameter</a> or variable of a <a href="../language/functions.html#declaring">function</a> inside the <a href="#scope">scope</a> that has it. The compiler says &quot;<a href="../language/basics.html">identifier</a> ... already declared&quot;. Two <a href="../language/functions.html">functions</a> can each have a variable with the same name, and so can two blocks next to each other.</p>
+<div class="code"><pre><span class="kw">let</span> x = <span class="nu">1</span>;
+{
+	<span class="kw">let</span> x = <span class="nu">2</span>;           <span class="co">// compile error: identifier &quot;x&quot; already declared</span>
+}
+
+<span class="kw">fn</span> first() { <span class="kw">let</span> n = <span class="nu">1</span>; <span class="kw">return</span> n; }
+<span class="kw">fn</span> second() { <span class="kw">let</span> n = <span class="nu">2</span>; <span class="kw">return</span> n; }   <span class="co">// fine: different functions</span></pre></div>
+<div class="note">A top-level function or variable's name can't be a parameter's name in a function declared after it: give <a href="#globals-and-modules">globals</a> names that read as globals (<code>siteTitle</code>, not <code>title</code>).</div>
+<h2 id="globals-and-modules">Globals and modules</h2>
+<p>Every <a href="../language/modules.html">module</a> has its own globals: a <a href="../language/modules.html">module</a>'s globals are visible to another only when it <a href="../language/modules.html">exports</a> them and the other imports them.</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/language/variables.txt</code>.</div></div>
+</body>
+</html>

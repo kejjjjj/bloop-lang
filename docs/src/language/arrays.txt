@@ -1,0 +1,40 @@
+title: Arrays
+path: Language / Arrays
+defines: array, element
+group: language
+order: 10
+---
+# Array literals
+
+```
+const empty = [];
+const mixed = [1, "two", [3], { four: 4 }];
+std.console.log(mixed[1], " ", std.length(mixed));
+```
+```output
+two 4
+```
+
+An array is a list of values of any types, from index `0`. It's [[shared]]: assigning it or passing it doesn't copy
+it.
+
+# Elements
+
+- `a[i]` reads an element, `a[i] = value` sets one. An index outside `0` to the length minus one is a runtime error
+  ("out of bounds index"): an array doesn't grow by assigning past its end.
+- std.array.push adds to the end, std.array.pop takes from it; std.array.insert and std.array.remove anywhere.
+- std.length(a) is the number of elements.
+- `for (const x : a)` goes over them ([[ranged for]]).
+
+```
+const list = [3, 1, 2];
+std.array.push(list, 0);
+std.array.sort(list);
+std.console.log(list, " ", std.array.join(list, "-"));
+```
+```output
+[ 0, 1, 2, 3 ] 0-1-2-3
+```
+
+The functions are in std.array: searching (std.array.find, std.array.index_of), transforming (std.array.transform,
+std.array.filter, std.array.accumulate), sorting, slicing.

@@ -1,0 +1,2069 @@
+# bloop reference, as plain text
+
+Generated from docs/src by docs/build.bloop. Every page of the html reference, in reading order.
+
+# bloop reference
+
+(index.html)
+
+bloop is a small scripting language for embedding in C++ programs: applications, tools, anything that wants to be scripted. It looks like JavaScript, but it's strict: mistakes stop the script with an error that says where, instead of being papered over.
+
+```bloop
+fn greet(name) {
+	return `Hello, ${name}!`;
+}
+
+const names = ["Ada", "Grace"];
+for (const name : names)
+	std.console.log(greet(name));
+```
+
+```output
+Hello, Ada!
+Hello, Grace!
+```
+
+### Language
+
+- Basic concepts: source files, comments, identifiers, literals
+- Types: undefined, booleans, numbers, strings, arrays, objects
+- Variables: let, const, scope
+- Operators
+- Conditions: what can be true or false
+- Control flow: if, while, for, ranged for
+- Functions, lambdas and closures
+- Strings and template strings
+- Objects and arrays
+- Modules: import and export
+- Exceptions: throw, try, catch
+- Errors: compile errors and runtime errors
+- Coroutines and tasks
+
+### Standard library
+
+- std: what's in it, std.length, permissions
+- std.console: printing
+- std.array: array functions
+- std.string: string functions
+- std.object: object functions
+- std.math: numbers
+- std.json: JSON text
+- std.time: clocks
+- std.task: waiting without blocking
+- std.coroutine: coroutines
+- std.fs: files (when allowed)
+- std.process: arguments, exit (when allowed)
+
+### Using bloop
+
+- Embedding: running scripts from C++
+- The standalone interpreter: `bloop file.bloop [arguments...]` runs a file; std.process.args() has the arguments
+- This reference is plain text turned into html by a bloop script: `docs/build.bloop`
+
+# For agents
+
+(agents.html)
+
+This page is for AI agents writing bloop (and for anyone who knows JavaScript). bloop looks like JavaScript, so JavaScript habits are where almost every mistake comes from: this page lists them, with the error each one gives.
+
+The whole reference is also available as plain text, which is easier for a program to read than these pages: llms.txt (everything) and llms-short.txt (this page and every standard library signature).
+
+## The rules in short
+
+- Statements end with `;`. Blocks use `{ }`.
+- `let` and `const` only. Functions are `fn name(a, b) { ... }` or lambdas `(a, b) => expression` (parentheses always).
+- A name can't be declared again while it's visible: not in an inner block, not as a parameter, not even when the outer name is a global declared above the function.
+- Only booleans, numbers and undefined can be conditions. `0`, `0.0` and undefined are false.
+- `==` compares values of the same kind (numbers and booleans count as one kind). Between other kinds it's an error. `===` compares anything: different types are simply not equal.
+- A function takes exactly as many arguments as it has parameters.
+- Reading a missing property or an index outside of an array is an error.
+- `try`/`catch` catches what `throw` throws. Errors (a missing property, a wrong call...) can't be caught: they stop the script.
+- `std.console.log` prints its arguments with nothing between them.
+- Scripts run with no std.fs, std.process or std.time.sleep unless the program running them allows it (the standalone interpreter `bloop file.bloop` does).
+
+## Not JavaScript
+
+| JavaScript habit | In bloop | What you get |
+| --- | --- | --- |
+| `if (text)`, `if (object)` | `if (text != "")`, `if (object !== undefined)` | `value of type "string" is not convertible to a boolean` |
+| `value \|\| fallback` | `value !== undefined ? value : fallback` | a boolean: `&&` and `\|\|` always give `true` or `false` |
+| `"n = " + 1` | `` `n = ${1}` `` or `"n = " + std.string.from(1)` | `cannot promote from "int" to "object"` |
+| `1 == "1"`, `"a" == true` | compare values of the same kind | `cannot promote from ...` |
+| `text == undefined`, `array == undefined` | `text === undefined` | `cannot promote from "undefined" to "object"` |
+| `"a" < "b"` | `std.array.sort` sorts strings; or compare std.string.get_code_at | `incompatible operands "string" and "string"` |
+| `7 / 2` is 3.5 | `7 / 2` is `3` (two ints divide as ints); write `7.0 / 2` | no error: a wrong number |
+| `object.missing` is undefined | `std.object.has(object, "missing")` first | `unknown property "missing"` |
+| `array[10]` is undefined | check `i < std.length(array)` | `out of bounds index [10]` |
+| `array.length`, `text.length` | `std.length(array)`, `std.length(text)` (bytes) | `a value of type "array" is not an aggregate type` |
+| `array.push(x)`, `text.split(",")` | `std.array.push(array, x)`, `std.string.split(text, ",")` | `a value of type "array" is not an aggregate type` |
+| `f(1)` for `fn f(a, b)` | pass every argument; there are no default parameters | `passed 1 arguments, but expected 2` |
+| `x => x + 1` | `(x) => x + 1` | `unsupported: >` |
+| `{ if: 1 }` | `{ "if": 1 }` (keywords as keys need quotes) | `expected an identifier` |
+| `for (const v of array)` | `for (const v : array)` | `expected "=" or end of statement` |
+| `for (const k in object)` | `for (const k : std.object.keys(object))` | `expected "=" or end of statement` |
+| `null` | `undefined` | `unknown identifier: null` |
+| `typeof x == "number"` | `typeof` gives `"int"`, `"uint"` or `"double"`; `typeof [1]` is `"array"` | no error: never true |
+| a missing `;` | end every statement with `;` | `unexpected end of expression` on the next line |
+| `std.array.sort(a, (x, y) => x < y)` | the comparator returns a number: `(x, y) => x - y` | `the comparator must return a number` |
+| `catch { }` | `catch (e) { }` | `expected a "("` |
+| `console.log(a, b)` prints `a b` | `std.console.log(a, " ", b)` | no error: `ab` |
+| `const f = () => i` in a `for (let i ...)` loop: each gets its own `i` | every closure shares the one `i` | no error: they all see the last value |
+| `[1] == [1]` is false | the same: arrays, objects and functions compare by identity |  |
+
+These don't exist: `var`, `function`, `class`, `this`, `new`, `switch`, `do ... while`, `instanceof`, `null`, `??`, `?.`, `...` (spread and rest), destructuring, default parameters, getters, regular expressions. Methods are functions in properties that take the object as a parameter: `o.add(o, 2)`.
+
+## Reading an error
+
+A compile error stops the file before anything runs and gives a line and column (`at: 2:13`). A runtime error gives the message, `at [line, column]`, the line with a `^` under the spot, and the calls that led there.
+
+| Message | Usually |
+| --- | --- |
+| `identifier "x" already declared` | a parameter or an inner variable reuses a name that's visible there: rename it |
+| `unknown identifier: x` | a typo, a variable used before its declaration, or something JavaScript has and bloop doesn't (`null`, `this`) |
+| `lhs is declared as const` | assigning to a `const` |
+| `unexpected end of expression: x` | a missing `;` before `x`, or syntax bloop doesn't have (`var`, `function`, `do`) |
+| `unsupported: ...` | an operator bloop doesn't have (`??`, `?.`, `x => x` without parentheses) |
+| `expected an identifier` | a keyword used as a name or an object key, or destructuring |
+| `cannot promote from "A" to "B"` | `+` or `==` with values of different kinds: a string and a number, anything and undefined |
+| `value of type "T" is not convertible to a boolean` | a string, array, object or function used as a condition |
+| `unknown property "p"` | the property isn't there: check with std.object.has |
+| `out of bounds index [i]` | the index is past the end (or negative) |
+| `passed N arguments, but expected M` | a call with too few or too many arguments |
+| `is not an aggregate type` | `.something` on a value that isn't an object (`array.length`, `text.split(",")`) |
+| `exceeded 1024 call frames` | recursion too deep |
+| `uncaught exception: v` | a `throw` nothing caught |
+
+The full list is on Errors.
+
+## A script that uses the common parts
+
+```bloop
+// counts the words of a text and prints the three most common
+fn count_words(text) {
+	let counts = {};
+	for (const raw : std.string.split(text, " ")) {
+		const word = std.string.to_lower(std.string.trim(raw));
+		if (word == "")
+			continue;
+		counts[word] = std.object.has(counts, word) ? counts[word] + 1 : 1;
+	}
+	return counts;
+}
+
+const counts = count_words("the cat and the dog and the bird");
+let words = std.object.keys(counts);
+std.array.sort(words, (a, b) => counts[b] - counts[a]);
+
+for (const word : std.array.slice(words, 0, 3))
+	std.console.log(`${word}: ${counts[word]}`);
+```
+
+```output
+the: 3
+and: 2
+cat: 1
+```
+
+## Checking your work
+
+- Run a file with `bloop file.bloop`: a compile error or a runtime error prints where it is.
+- Signatures: every standard function is on its page, and all of them are in llms-short.txt.
+- When something works in JavaScript but not here, look it up in the table above before working around it.
+
+# Language
+
+(language/index.html)
+
+A bloop program is a file of statements that run from top to bottom, with functions, closures and modules for structure. The syntax is JavaScript's, the rules are stricter: there's no implicit conversion between strings and numbers, only booleans, numbers and undefined can be conditions, functions take exactly as many arguments as they have parameters, and reading a property or an element that isn't there is an error.
+
+## The pages
+
+| Page | What's in it |
+| --- | --- |
+| language/basics\|Basic concepts | source files, statements, comments, identifiers, keywords, literals |
+| language/types\|Types | the kinds of values, which ones are copied and which ones are shared |
+| language/variables\|Variables | let, const, blocks, globals, no shadowing |
+| language/operators\|Operators | arithmetic, comparison, logic, bits, assignment, precedence |
+| language/conditions\|Conditions | what if, while and the logical operators accept |
+| language/control-flow\|Control flow | if, while, for, ranged for, break, continue, return |
+| language/functions\|Functions | fn, parameters, lambdas, closures, hoisting |
+| language/strings\|Strings | string literals, escapes, template strings |
+| language/objects\|Objects | object literals, properties |
+| language/arrays\|Arrays | array literals, elements |
+| language/modules\|Modules | import, export, how modules run |
+| language/exceptions\|Exceptions | throw, try, catch |
+| language/errors\|Errors | compile errors, runtime errors |
+| language/coroutines\|Coroutines and tasks | functions that pause |
+
+## Keywords
+
+`fn` `let` `const` `if` `else` `while` `for` `return` `break` `continue` `try` `catch` `throw` `import` `export` `typeof` `true` `false` `undefined`
+
+# Basic concepts
+
+(language/basics.html)
+
+## Source files
+
+A bloop program is a text file (UTF-8, usually ending in `.bloop`) of statements. They run from top to bottom; a `return` at the top level ends the file, and its value is what the file returns to whoever ran it. The functions that a file declares can be used before their declaration (see hoisting).
+
+```bloop
+std.console.log("first");
+std.console.log(add(1, 2));     // add is declared further down
+
+fn add(a, b) {
+	return a + b;
+}
+```
+
+```output
+first
+3
+```
+
+## Statements
+
+A statement ends with a semicolon, except the ones that end with a block: `fn`, `if`, `while`, `for`, `try`. A block is statements between braces, and it can't be empty: `{ }` is a compile error. The body of an if, a while or a for can also be a single statement without braces.
+
+```bloop
+if (count > 10)
+	std.console.log("a lot");
+
+while (count > 0) {
+	count--;
+}
+```
+
+## Comments
+
+`//` starts a comment that goes to the end of the line, `/* */` one that can span lines. Comments don't nest.
+
+## Identifiers
+
+Names of variables, functions and parameters: letters, digits and underscores, not starting with a digit. They're case sensitive. A name can't be one of the keywords, and it can't be declared twice where both are visible: an inner block or a function inside another can't declare a name that the outer one already has (see shadowing).
+
+## Keywords
+
+`fn` `let` `const` `if` `else` `while` `for` `return` `break` `continue` `try` `catch` `throw` `import` `export` `typeof` `true` `false` `undefined`
+
+`from` has a meaning in an `import` statement only.
+
+## Literals
+
+| Literal | Type | Examples |
+| --- | --- | --- |
+| integer | int | `42`, `-7`, `1_000_000` (underscores between digits are ignored), `0x1F` (hexadecimal) |
+| unsigned integer | uint | `42u` |
+| floating point | double | `3.14`, `0.5`, `.5`, `5.`; with an exponent `1e6`, `2.5e-3`, `1E+9` (always a double) |
+| string | string | `"text"`, `'text'` (the same), escapes like `\n` (see language/strings\|strings) |
+| template string | string | text between backticks, with `${expression}` parts in it (see template string) |
+| boolean | boolean | `true`, `false` |
+| undefined | undefined | `undefined` |
+| array | array | `[1, 2, 3]`, `[]` |
+| object | object | `{ x: 1, y: 2 }`, `{}` |
+
+> An exponent (`e` or `E`, an optional sign, digits) makes a literal a double, even without a decimal point: `1e3` is `1000.0`. Hexadecimal literals have no exponent: `0x1e5` is the int `485`.
+
+# Types
+
+(language/types.html)
+
+Every value has one of these types. A variable can hold any of them, and change from one to another. The names are the ones that error messages use.
+
+| Type | What it is | Copied or shared |
+| --- | --- | --- |
+| `undefined` | no value: what a variable without an initial value holds, what a function without a return returns | copied |
+| `boolean` | `true` or `false` | copied |
+| `int` | a 64-bit signed integer | copied |
+| `uint` | a 64-bit unsigned integer | copied |
+| `double` | a 64-bit floating point number | copied |
+| `string` | text: a sequence of bytes | shared, but never changes |
+| `array` | an ordered list of values | shared |
+| `object` | named properties with values, in the order they were added | shared |
+| `function` | a function or a lambda (closures too) | shared |
+| `coroutine` | a function that can pause (std.coroutine) | shared |
+| handles | handles that the program running the script gives it (`task`, ...) | copied |
+
+## undefined
+
+The value that means nothing: a variable declared without a value, a missing optional argument of a standard function, a function that ends without returning a value, std.array.pop() of an empty array. `undefined` is a condition that is false.
+
+## Booleans
+
+`true` and `false`, what comparisons and the logical operators give. In arithmetic a boolean counts as `1` or `0` (`true + 1` is `2`).
+
+## Numbers
+
+### int
+
+The usual number: a 64-bit signed integer. Integer literals are ints. Arithmetic on ints stays int: `7 / 2` is `3`, dividing by zero is a runtime error, and going past the largest or smallest int wraps around.
+
+### uint
+
+A 64-bit unsigned integer, written with a `u` after the number (`5u`). Subtracting past zero wraps around to the largest values, and a uint can't be negated.
+
+### double
+
+A 64-bit floating point number (IEEE 754): literals with a decimal point, and the results of arithmetic that has a double in it. Dividing by zero gives `inf` (or `-inf`, or `nan` for 0 / 0), no error.
+
+When an operator gets an int and a double, the int is converted to a double first: `1 + 2.5` is `3.5`. Between an int and a uint, the uint becomes an int.
+
+## Strings
+
+Text, as a sequence of bytes (UTF-8 for anything that isn't ASCII): indexes and lengths count bytes. Strings never change: every function that "changes" one returns a new string. See Strings.
+
+## Arrays and objects
+
+Arrays and objects are shared, not copied: assigning one to another variable, passing it to a function or putting it in another array gives that place the same array, and a change through any of them is seen through all of them. `==` compares them by identity: two different arrays with the same elements aren't equal.
+
+```bloop
+const a = [1, 2];
+const b = a;
+std.array.push(b, 3);
+std.console.log(a, " ", a == b, " ", [1] == [1]);
+```
+
+```output
+[ 1, 2, 3 ] true false
+```
+
+See Arrays and Objects.
+
+## Functions
+
+Functions are values: they can be stored in variables, arrays and objects, passed to other functions and returned from them. See Functions.
+
+## Handles
+
+A program that runs a script can give it handles: values that stand for something of the program's (a file, a window, a task). A script keeps them, compares them (`==`: the same thing) and passes them back to the program's functions, but can't look inside them or make one. They print as their type and a number, like `task#2`.
+
+# Variables
+
+(language/variables.html)
+
+## Declaring
+
+```bloop
+let count = 0;          // a variable: it can be assigned again
+const limit = 10;       // a constant: it can't
+let name;               // no value yet: undefined
+```
+
+`let` declares a variable, `const` a constant: assigning to a constant is a compile error. A constant that holds an array or an object still lets the array or object change (the constant is which array it is, not what's in it).
+
+## Scope
+
+A variable declared in a block (between braces) exists from its declaration to the end of the block. Variables declared at the top level of a file are globals: every function of the file can use them, also functions declared before them (they're there once the file has run up to their declaration).
+
+```bloop
+let total = 0;
+
+fn add(amount) {
+	total += amount;     // the global
+}
+
+add(5);
+std.console.log(total);
+```
+
+```output
+5
+```
+
+## No shadowing
+
+A name can't be declared again where the earlier one is still visible: not in an inner block, not as a parameter or variable of a function inside the scope that has it. The compiler says "identifier ... already declared". Two functions can each have a variable with the same name, and so can two blocks next to each other.
+
+```bloop
+let x = 1;
+{
+	let x = 2;           // compile error: identifier "x" already declared
+}
+
+fn first() { let n = 1; return n; }
+fn second() { let n = 2; return n; }   // fine: different functions
+```
+
+> A top-level function or variable's name can't be a parameter's name in a function declared after it: give globals names that read as globals (`siteTitle`, not `title`).
+
+## Globals and modules
+
+Every module has its own globals: a module's globals are visible to another only when it exports them and the other imports them.
+
+# Operators
+
+(language/operators.html)
+
+## Arithmetic
+
+| Operator | What it does |
+| --- | --- |
+| `a + b` | addition; two strings: joined (see language/strings\|strings) |
+| `a - b` | subtraction |
+| `a * b` | multiplication |
+| `a / b` | division: ints give an int (rounded towards zero), by an int zero a runtime error; a double in it gives a double |
+| `a % b` | the remainder (the sign of `a`): `7 % 3` is `1`, `-7 % 3` is `-1`; on doubles too |
+| `-a` | negation (not on a uint) |
+| `++a`, `a++` | adds one: before (the new value) or after (the old value) |
+| `--a`, `a--` | subtracts one |
+
+An int and a double: the int becomes a double. A boolean counts as `0` or `1`. Anything else (a string with a number, two arrays) is a runtime error: there's no implicit conversion, std.string.from and std.string.parse_int convert.
+
+## Comparison
+
+| Operator | What it does |
+| --- | --- |
+| `a == b`, `a != b` | equal: numbers by value across types (`1 == 1.0`, `1 == true`), strings by content, arrays, objects and functions by identity |
+| `a === b`, `a !== b` | strictly equal: the same type and equal (`1 === 1.0` is false) |
+| `a < b`, `a <= b`, `a > b`, `a >= b` | numbers only |
+
+Comparing a number with a string (`1 == "1"`) is a runtime error, not false. Strings can't be compared with `<`.
+
+## Logic
+
+| Operator | What it does |
+| --- | --- |
+| `a && b` | true when both are; `b` isn't evaluated when `a` is false |
+| `a \|\| b` | true when either is; `b` isn't evaluated when `a` is true |
+| `!a` | not |
+| `c ? a : b` | `a` when `c` is true, else `b` (only the one chosen is evaluated) |
+
+The operands are conditions, and the result of `&&`, `||` and `!` is always a boolean: `undefined || 5` is `true`, not `5`.
+
+## Bits
+
+| Operator | What it does |
+| --- | --- |
+| `a & b`, `a \| b`, `a ^ b` | and, or, exclusive or |
+| `~a` | complement |
+| `a << b`, `a >> b` | shift left, shift right (keeping the sign) |
+
+On ints and uints.
+
+## Assignment
+
+`a = b` assigns and gives the value assigned. `a += b`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=` combine an operator with assignment. The left side is a variable (not a constant), an element `a[i]` or a property `o.p` / `o["p"]`.
+
+## typeof
+
+`typeof value` gives the name of the value's type, as a string:
+
+| Value | `typeof` gives |
+| --- | --- |
+| undefined | `"undefined"` |
+| `true`, `false` | `"boolean"` |
+| `1`, `1u`, `1.5` | `"int"`, `"uint"`, `"double"` (there's no `"number"`) |
+| `"text"` | `"string"` |
+| `[1, 2]` | `"array"` |
+| `{ a: 1 }` | `"object"` |
+| a function, a lambda, a standard function | `"function"` |
+| a coroutine | `"coroutine"` |
+| a handle | its type's name, like `"task"` |
+
+It's a prefix operator: `typeof a.b[0]` is the type of `a.b[0]`, and `typeof x == "int"` is `(typeof x) == "int"`.
+
+```bloop
+fn describe(value) {
+	const type = typeof value;
+	if (type == "int" || type == "uint" || type == "double")
+		return "number";
+	return type;
+}
+
+std.console.log(describe(1.5), ", ", describe([1]), ", ", describe(describe));
+```
+
+```output
+number, array, function
+```
+
+## Calls, elements, properties
+
+`f(a, b)` calls a function, `a[i]` is an element of an array or a byte of a string, `o.name` and `o["name"]` a property of an object (std.array, std.string... are objects too: `std.array.push`).
+
+## Precedence
+
+From the tightest:
+
+| Operators |  |
+| --- | --- |
+| `f()` `a[i]` `o.p` `a++` `a--` | postfix |
+| `!` `-` `~` `++a` `--a` `typeof` | prefix |
+| `*` `/` `%` | multiplicative |
+| `+` `-` | additive |
+| `<<` `>>` | shift |
+| `<` `<=` `>` `>=` | relational |
+| `==` `!=` `===` `!==` | equality |
+| `&` | bitwise and |
+| `^` | bitwise exclusive or |
+| `\|` | bitwise or |
+| `&&` | logical and |
+| `\|\|` | logical or |
+| `? :` | conditional |
+| `=` `+=` `-=` ... | assignment (right to left) |
+
+> As in C and JavaScript, the bitwise operators bind looser than the comparisons: `flags & 4 == 4` is `flags & (4 == 4)`. Write `(flags & 4) == 4`.
+
+# Conditions
+
+(language/conditions.html)
+
+A condition is what `if`, `while`, `for`, `? :` and the logical operators test. Only three kinds of values can be conditions:
+
+| Value | As a condition |
+| --- | --- |
+| a boolean | itself |
+| a number (int, uint, double) | false when it's zero, else true |
+| undefined | false |
+
+Anything else (a string, an array, an object, a function) is a runtime error: "value of type "string" is not convertible to a boolean". An empty string or an empty array isn't "false", it's a mistake to test it like that: say what's meant.
+
+```bloop
+const name = "";
+if (std.length(name) == 0)      // not: if (!name)
+	std.console.log("no name");
+
+let found = std.array.find([1, 2, 3], (x) => x > 5);
+if (found === undefined)        // undefined alone would do too: if (!found), but 0 would be "not found" as well
+	std.console.log("none");
+```
+
+```output
+no name
+none
+```
+
+# Control flow
+
+(language/control-flow.html)
+
+## if
+
+```bloop
+if (score > 90) {
+	grade = "A";
+} else if (score > 75) {
+	grade = "B";
+} else {
+	grade = "C";
+}
+```
+
+The condition is a condition. A body without braces is the one statement after it.
+
+## while
+
+```bloop
+let n = 3;
+while (n > 0) {
+	std.console.log(n);
+	n--;
+}
+```
+
+```output
+3
+2
+1
+```
+
+There's no do-while: `while (true) { ...; if (done) break; }` does the same.
+
+## for
+
+```bloop
+for (let i = 0; i < 3; i++)
+	std.console.log(i);
+```
+
+The three parts (a declaration or an expression, the condition, what happens after every round) are as in C and JavaScript. A variable declared in the first part exists in the loop only.
+
+## Ranged for
+
+```bloop
+for (const item : ["a", "b", "c"])
+	std.console.log(item);
+
+for (const c : "hi")             // a string: its bytes, each a string of one
+	std.console.log(c);
+```
+
+```output
+a
+b
+c
+h
+i
+```
+
+`for (const name : container)` goes over the elements of an array (or the bytes of a string) in order. With `let` the variable can be assigned in the loop (the array doesn't change). Objects can't be iterated this way: std.object.keys(o) gives their keys as an array.
+
+> Changing an array while a ranged for goes over it is allowed: the number of rounds is the array's length when the loop starts, and each round reads the element as it is then (a change to a later element is seen, an element pushed meanwhile isn't).
+
+## break and continue
+
+`break` leaves the closest loop, `continue` goes on with its next round (in a for: after the third part).
+
+## return
+
+Ends the function (or, at the top level, the file) and gives its value: `return value;`, or `return;` for undefined. A function that ends without a return returns undefined.
+
+# Functions
+
+(language/functions.html)
+
+## Declaring
+
+```bloop
+fn area(width, height) {
+	return width * height;
+}
+
+std.console.log(area(3, 4));
+```
+
+```output
+12
+```
+
+`fn name(parameters) { body }` declares a function: a constant with that name. A call has to pass exactly as many arguments as the function has parameters: `area(3)` is a runtime error ("passed 1 arguments, but expected 2"). There are no default values; a function that needs an optional value takes one that can be undefined. (The standard library's functions have optional parameters: their pages say which.)
+
+Functions can be declared inside other functions; they're visible in the block that declares them.
+
+## Hoisting
+
+A file's functions can be called anywhere in it, also above their declaration: they're all created before the file starts running. (The globals they use are there only once the file has run up to them.)
+
+## Lambdas
+
+```bloop
+const double = (x) => x * 2;              // the value of one expression
+const describe = (name, count) => {        // a block, with return
+	return `${name}: ${count}`;
+};
+
+std.console.log(double(21), " ", describe("apples", 3));
+std.console.log(std.array.transform([1, 2, 3], (x) => x * x));
+```
+
+```output
+42 apples: 3
+[ 1, 4, 9 ]
+```
+
+A lambda is a function without a name, as a value: `(parameters) => expression` or `(parameters) => { body }`. The parentheses are needed also with one parameter, and with none: `() => 0`.
+
+## Closures
+
+A function or lambda inside another uses the outer one's variables as they are, not copies of them: they stay alive as long as the inner function does, and changes are seen both ways.
+
+```bloop
+fn counter() {
+	let count = 0;
+	return () => {
+		count++;
+		return count;
+	};
+}
+
+const next = counter();
+next();
+next();
+std.console.log(next());
+```
+
+```output
+3
+```
+
+## Functions as values
+
+A function is a value of type `function`: it can be stored, passed and returned. Calling something that isn't a function is a runtime error.
+
+## Recursion
+
+A function can call itself, up to 1024 calls deep (more is a runtime error: "exceeded 1024 call frames"). Calls between script functions don't use the C++ stack; calls through a standard function that takes a callback (std.array.transform) do, and the program running the script limits how deep those go.
+
+# Strings
+
+(language/strings.html)
+
+## String literals
+
+`"text"` and `'text'` are the same. A string is a sequence of bytes; text that isn't ASCII is UTF-8, and indexes and lengths count bytes.
+
+| Escape | Is |
+| --- | --- |
+| `\n` | a new line |
+| `\t` | a tab |
+| `\r` | a carriage return |
+| `\\` | a backslash |
+| `\"`, `\'` | a quote |
+
+## Using strings
+
+```bloop
+const word = "bloop";
+std.console.log(std.length(word), " ", word[0], " ", word + "!");
+std.console.log(std.string.to_upper(word), " ", std.string.find(word, "o"));
+```
+
+```output
+5 b bloop!
+BLOOP 2
+```
+
+- `a + b` joins two strings. A string and anything else is a runtime error: convert with std.string.from, or use a template string.
+- `s[i]` is the byte at `i` as a string of one; strings can't be changed (`s[0] = "x"` is an error).
+- `==` and `!=` compare the contents; `<` and `>` don't work on strings.
+- `for (const c : s)` goes over the bytes.
+- std.length(s) is the length in bytes. The other functions are in std.string.
+
+## Template strings
+
+Text between backticks, with `${expression}` parts that are replaced by the expression's value as text (the same text std.console.log prints, so numbers, arrays and objects work too):
+
+```bloop
+const count = 3;
+const items = ["a", "b"];
+std.console.log(`${count} apples, ${count * 2} halves, ${items}`);
+```
+
+```output
+3 apples, 6 halves, [ a, b ]
+```
+
+A template string can span lines; the line breaks are part of it.
+
+# Objects
+
+(language/objects.html)
+
+## Object literals
+
+```bloop
+const point = { name: "A", size: 10, position: { x: 1.0, y: 2.0 } };
+std.console.log(point.name, " ", point["size"], " ", point.position.x);
+```
+
+```output
+A 10 1.000000
+```
+
+An object is properties, each a name (a string) and a value, kept in the order they were added. An object is shared: assigning it or passing it doesn't copy it. Property names in a literal are names (or strings in quotes: `{ "with space": 1 }`).
+
+## Properties
+
+- `o.name` or `o["name"]` reads a property. A property that isn't there is a runtime error ("unknown property"): std.object.has checks first, std.object.get gives undefined instead.
+- `o.name = value` or `o[key] = value` sets a property, adding it when it isn't there.
+- std.object.remove removes one, std.object.keys and std.object.values list them (in order), std.length(o) counts them.
+
+```bloop
+const scores = {};
+scores["ada"] = 3;
+scores.grace = 5;
+for (const name : std.object.keys(scores))
+	std.console.log(name, ": ", scores[name]);
+```
+
+```output
+ada: 3
+grace: 5
+```
+
+## Methods
+
+Objects can hold functions, and `o.f(x)` calls one. There's no `this`: a function that needs the object takes it as a parameter.
+
+```bloop
+const counter = { count: 0, add: (c, amount) => { c.count += amount; } };
+counter.add(counter, 2);
+std.console.log(counter.count);
+```
+
+```output
+2
+```
+
+# Arrays
+
+(language/arrays.html)
+
+## Array literals
+
+```bloop
+const empty = [];
+const mixed = [1, "two", [3], { four: 4 }];
+std.console.log(mixed[1], " ", std.length(mixed));
+```
+
+```output
+two 4
+```
+
+An array is a list of values of any types, from index `0`. It's shared: assigning it or passing it doesn't copy it.
+
+## Elements
+
+- `a[i]` reads an element, `a[i] = value` sets one. An index outside `0` to the length minus one is a runtime error ("out of bounds index"): an array doesn't grow by assigning past its end.
+- std.array.push adds to the end, std.array.pop takes from it; std.array.insert and std.array.remove anywhere.
+- std.length(a) is the number of elements.
+- `for (const x : a)` goes over them (ranged for).
+
+```bloop
+const list = [3, 1, 2];
+std.array.push(list, 0);
+std.array.sort(list);
+std.console.log(list, " ", std.array.join(list, "-"));
+```
+
+```output
+[ 0, 1, 2, 3 ] 0-1-2-3
+```
+
+The functions are in std.array: searching (std.array.find, std.array.index_of), transforming (std.array.transform, std.array.filter, std.array.accumulate), sorting, slicing.
+
+# Modules
+
+(language/modules.html)
+
+Every file is a module: it has its own globals, and shares only what it exports.
+
+## export
+
+```bloop
+// shapes.bloop
+export const unit = 1.0;
+
+export fn area(width, height) {
+	return width * height;
+}
+
+fn helper() { return 0; }      // not exported: only this file sees it
+```
+
+`export` before a top-level `fn`, `let` or `const` makes it visible to the files that import this one.
+
+## import
+
+```bloop
+// main.bloop
+import area, unit from "shapes.bloop";
+
+std.console.log(area(2, 3), " ", unit);
+```
+
+```output
+6 1.000000
+```
+
+`import name, other from "path";` makes exported names of another file usable here. Imports come first in a file, before any other statement. The path is relative to the importing file's directory (`"lib/math.bloop"`, `"../shared.bloop"`); a program running scripts can keep imports inside one directory, so that a script can't read files outside of it.
+
+## How modules run
+
+- A module runs once, before the file that imports it, however many files import it. The modules it imports run before it.
+- Imports see the exported variables as they are now, not a copy from when they were imported: when the module changes one, the importer sees the new value. Arrays and objects are shared as always.
+- An imported name can't be assigned to (it's the other module's).
+- Importing a file that imports this one, directly or through others, is a compile error ("circular import").
+- An exception thrown in an imported function is caught by the importer like any other.
+- Errors in a module name the module's file and its own line numbers.
+
+# Exceptions
+
+(language/exceptions.html)
+
+```bloop
+fn parse_age(text) {
+	const age = std.string.parse_int(text);
+	if (age === undefined)
+		throw { message: `not a number: ${text}` };
+	return age;
+}
+
+try {
+	std.console.log(parse_age("42"));
+	std.console.log(parse_age("forty"));
+} catch (error) {
+	std.console.log("failed: ", error.message);
+}
+```
+
+```output
+42
+failed: not a number: forty
+```
+
+- `throw value;` throws any value: a string, an object with details, a number.
+- `try { ... } catch (name) { ... }` runs the try block; when something in it throws (also in functions it calls, however deep), the rest is skipped and the catch block runs with the thrown value in `name`.
+- An exception that nothing catches ends the script with a runtime error: "uncaught exception: " and the value, and where it was thrown.
+- Try blocks nest: the closest one catches.
+
+## Exceptions are not errors
+
+A runtime error (a wrong type in an operator, an index out of bounds, a wrong number of arguments, a standard function used wrongly) is a mistake in the script, and `catch` doesn't catch it: it ends the script. Exceptions are for what the script expects can happen and wants to handle. See Errors.
+
+# Errors
+
+(language/errors.html)
+
+bloop is strict: a mistake stops the script with a message that says what and where, instead of carrying on with a guess.
+
+## Compile errors
+
+Found before anything runs: syntax, an unknown name, a name declared twice (shadowing), assigning to a constant, an import that can't be found. Nothing of the program runs.
+
+```bloop
+let total = 0;
+totl += 1;
+```
+
+```output
+unknown identifier: totl
+at: 2:1
+```
+
+## Runtime errors
+
+Found while it runs, they end the script (or, in a program running it, the call that was running): `catch` can't catch them. The message has a stack trace: where it happened, then the calls that led there.
+
+```bloop
+fn second(list) {
+	return list[5];
+}
+fn first() {
+	return second([1, 2]);
+}
+first();
+```
+
+```output
+runtime error
+
+
+out of bounds index [5]
+
+at [2, 16]
+return list[5];
+           ^
+at [5, 18]
+return second([1, 2]);
+             ^
+at [7, 6]
+first();
+     ^
+```
+
+The usual ones:
+
+| Message | Cause |
+| --- | --- |
+| `cannot promote from "int" to "object"` | an operator with a number and a string (`"n" + 1`): convert first |
+| `value of type "string" is not convertible to a boolean` | a string (or array, object) used as a condition |
+| `out of bounds index [5]` | an array index past its end |
+| `unknown property "b"` | reading a property an object doesn't have |
+| `passed 1 arguments, but expected 2` | a call with the wrong number of arguments |
+| `division by 0` | an int divided by an int zero |
+| `exceeded 1024 call frames` | recursion too deep |
+| `uncaught exception: ...` | a throw that no catch caught |
+| `the script ran too long` | the program running the script limits how much it may do in one call |
+
+## Standard functions
+
+A standard function used wrongly (an argument of the wrong type, a negative count) is a runtime error. What can fail when everything is right returns undefined instead: std.fs.read of a file that isn't there, std.json.parse of text that isn't JSON, std.string.parse_int of text that isn't a number.
+
+# Coroutines and tasks
+
+(language/coroutines.html)
+
+## Coroutines
+
+A coroutine is a function that can pause in the middle (yield) and be continued later (resumed), where it left off, with its variables as they were.
+
+```bloop
+const squares = std.coroutine.create((limit) => {
+	for (let i = 1; i <= limit; i++)
+		std.coroutine.yield(i * i);
+	return 0;
+});
+
+std.console.log(std.coroutine.resume(squares, 3));   // starts it: runs up to the first yield
+std.console.log(std.coroutine.resume(squares));
+std.console.log(std.coroutine.resume(squares));
+std.console.log(std.coroutine.status(squares));
+```
+
+```output
+1
+4
+9
+suspended
+```
+
+- std.coroutine.create makes one from a function (it doesn't run yet).
+- std.coroutine.resume runs it until it yields or returns, and gives what it yielded or returned. The first resume passes the function's arguments; later ones can pass one value, which is what the yield returns inside.
+- std.coroutine.yield pauses it. It can only yield from its own code, not from inside a callback that a standard function is running (std.array.for_each's).
+- An exception that the coroutine doesn't catch ends it and goes on in the one that resumed it.
+
+The language doesn't decide what a yielded value means: a generator yields the next element, a scheduler can take it as "wait this long". The standard library's scheduler is std.task.
+
+## Tasks
+
+A task is a coroutine that the program running the script continues for it: std.task.wait(seconds) pauses it without stopping anything else, and the program resumes the tasks whose wait is over.
+
+```bloop
+std.task.spawn(() => {
+	std.console.log("started");
+	std.task.wait(5);
+	std.console.log("five seconds later, done");
+});
+std.console.log("meanwhile, the rest goes on");
+```
+
+```output
+started
+meanwhile, the rest goes on
+five seconds later, done
+```
+
+std.task.spawn runs the function right away, up to its first wait. The standalone interpreter keeps running the tasks after the main script until they're all done. See std.task.
+
+# Standard library
+
+(std/index.html)
+
+`std` is a global in every script: an object whose properties are the library's modules (std.array, std.string...) and a few functions of its own. It's always there, no import needed.
+
+## Modules
+
+| Module | What's in it |
+| --- | --- |
+| std.console | printing |
+| std.array | adding, removing, searching, transforming and sorting arrays |
+| std.string | searching, splitting, converting strings |
+| std.object | an object's keys and values, properties that may not be there |
+| std.math | number functions, random numbers |
+| std.json | JSON text to values and back |
+| std.time | clocks |
+| std.task | functions that wait without blocking |
+| std.coroutine | functions that pause and continue |
+| std.fs | files and directories (only when the program running the script allows it) |
+| std.process | arguments, environment, exit (only when allowed) |
+
+## Permissions
+
+The parts of the library that reach outside of the script (std.fs, std.process, std.time.sleep) exist only when the program running the script allows them; otherwise they're missing (using them is an error: the property doesn't exist). The standalone interpreter allows everything; a program running untrusted scripts would usually allow none of them.
+
+## std.length
+
+```
+std.length(value) -> int
+```
+
+- `value`: a string, an array or an object
+
+The length of a string (in bytes), the number of elements of an array, the number of properties of an object.
+
+```bloop
+std.console.log(std.length("héllo"), " ", std.length([1, 2, 3]), " ", std.length({ a: 1 }));
+```
+
+```output
+6 3 1
+```
+
+## std.gc_major, std.gc_minor
+
+```
+std.gc_major()  // a full collection
+std.gc_minor()  // the young objects only
+```
+
+Runs the garbage collector now. Memory is collected by itself; these are for testing and measuring.
+
+# std.console
+
+(std/console.html)
+
+## std.console.log
+
+```
+std.console.log(values...)
+```
+
+Prints the values one after another, without anything between them, and a new line after the last one. Strings print as they are; numbers, booleans and undefined as text (doubles with six decimals); arrays and objects in a JSON-like form. The program running the script decides where it goes (the standalone interpreter: the standard output).
+
+```bloop
+const name = "Ada";
+std.console.log("hello ", name, ", ", 2, " ", 2.5, " ", [1, "x"], " ", undefined);
+std.console.log({ a: 1, b: [true] });
+```
+
+```output
+hello Ada, 2 2.500000 [ 1, x ] undefined
+{
+  "a": 1,
+  "b": [ true ]
+}
+```
+
+std.string.from gives the same text as a string; a template string uses it too.
+
+# std.array
+
+(std/array.html)
+
+Functions for arrays. The ones that change the array change it in place (arrays are shared: everybody who has it sees the change); the ones that make something new say so.
+
+Callbacks get `(element, index)`; a callback with fewer parameters gets only the first ones: `(x) => x * 2` works.
+
+| Function |  |
+| --- | --- |
+| std.array.create | a new array of a given length |
+| std.array.push, std.array.push_front | add to the end / the front |
+| std.array.pop, std.array.pop_front | take from the end / the front |
+| std.array.insert, std.array.remove | add / take at an index |
+| std.array.resize, std.array.fill | change the length, set many elements |
+| std.array.slice, std.array.concat | copies of parts, two joined |
+| std.array.index_of, std.array.contains | find a value |
+| std.array.find, std.array.find_last, std.array.find_index, std.array.find_last_index | find by a callback |
+| std.array.transform, std.array.filter, std.array.accumulate | new arrays and values from callbacks |
+| std.array.all, std.array.any, std.array.for_each | test or visit every element |
+| std.array.reverse, std.array.sort | order |
+| std.array.join | the elements as one string |
+
+## std.array.create
+
+```
+std.array.create(count, fill) -> array  // fill is optional
+```
+
+- `count`: the length
+- `fill`: every element's value (undefined if left out)
+
+## std.array.push
+
+```
+std.array.push(array, values...) -> int
+```
+
+Adds the values to the end, in order. Returns the new length.
+
+```bloop
+const list = [1];
+std.array.push(list, 2, 3);
+std.console.log(list);
+```
+
+```output
+[ 1, 2, 3 ]
+```
+
+## std.array.push_front
+
+```
+std.array.push_front(array, values...) -> int
+```
+
+Adds the values to the front (in the given order: `push_front(a, 1, 2)` makes `a` start with `1, 2`). Returns the new length.
+
+## std.array.pop
+
+```
+std.array.pop(array)
+```
+
+Removes the last element and returns it; undefined for an empty array.
+
+## std.array.pop_front
+
+```
+std.array.pop_front(array)
+```
+
+Removes the first element and returns it; undefined for an empty array.
+
+## std.array.insert
+
+```
+std.array.insert(array, index, value) -> int
+```
+
+- `index`: where: the value goes before the element at `index`; the length appends
+
+Returns the new length. An index outside `0` to the length is a runtime error.
+
+## std.array.remove
+
+```
+std.array.remove(array, index)
+```
+
+Removes the element at `index` and returns it. An index outside the array is a runtime error.
+
+## std.array.resize
+
+```
+std.array.resize(array, count, fill) -> array  // fill is optional
+```
+
+Makes the array `count` long: cut at the end, or new elements set to `fill` (undefined if left out). Returns the array.
+
+## std.array.fill
+
+```
+std.array.fill(array, value, start, end) -> array  // start and end are optional
+```
+
+Sets the elements from `start` up to (not including) `end` to `value`: all of them without `start` and `end`. Returns the array.
+
+## std.array.slice
+
+```
+std.array.slice(array, start, end) -> array  // start and end are optional
+```
+
+A new array with the elements from `start` up to (not including) `end`. Negative indexes count from the end (`-1` is the last); out of range ones are clamped. Without `end`: to the end; without both: a copy.
+
+```bloop
+std.console.log(std.array.slice([1, 2, 3, 4], 1, 3), " ", std.array.slice([1, 2, 3, 4], -2));
+```
+
+```output
+[ 2, 3 ] [ 3, 4 ]
+```
+
+## std.array.concat
+
+```
+std.array.concat(a, b) -> array
+```
+
+A new array: the elements of `a`, then the elements of `b`.
+
+## std.array.index_of
+
+```
+std.array.index_of(array, value) -> int
+```
+
+The index of the first element that is strictly equal (`===`) to `value`, or `-1`.
+
+## std.array.contains
+
+```
+std.array.contains(array, value) -> boolean
+```
+
+Whether an element is strictly equal (`===`) to `value`.
+
+## std.array.find
+
+```
+std.array.find(array, callback)
+std.array.find_last(array, callback)
+```
+
+The first (last) element for which `callback(element, index)` is true, or undefined.
+
+```bloop
+const people = [{ name: "Ada", age: 36 }, { name: "Grace", age: 85 }];
+const old = std.array.find(people, (p) => p.age > 50);
+std.console.log(old.name);
+```
+
+```output
+Grace
+```
+
+## std.array.find_index
+
+```
+std.array.find_index(array, callback) -> int
+std.array.find_last_index(array, callback) -> int
+```
+
+The index of the first (last) element for which `callback(element, index)` is true, or `-1`.
+
+## std.array.transform
+
+```
+std.array.transform(array, callback) -> array
+```
+
+A new array with `callback(element, index)` for every element (JavaScript's map).
+
+```bloop
+std.console.log(std.array.transform([1, 2, 3], (x, i) => x * 10 + i));
+```
+
+```output
+[ 10, 21, 32 ]
+```
+
+## std.array.filter
+
+```
+std.array.filter(array, callback) -> array
+```
+
+A new array with the elements for which `callback(element, index)` is true.
+
+## std.array.accumulate
+
+```
+std.array.accumulate(array, callback, initial)  // initial is optional
+```
+
+Folds the array into one value (JavaScript's reduce): the result starts as `initial` and becomes `callback(result, element, index)` for every element. Without `initial`, it starts as the first element (and the callback isn't called for it).
+
+```bloop
+std.console.log(std.array.accumulate([1, 2, 3, 4], (sum, x) => sum + x, 0));
+```
+
+```output
+10
+```
+
+## std.array.all
+
+```
+std.array.all(array, callback) -> boolean
+```
+
+Whether `callback(element, index)` is true for every element (true for an empty array).
+
+## std.array.any
+
+```
+std.array.any(array, callback) -> boolean
+```
+
+Whether `callback(element, index)` is true for any element (false for an empty array).
+
+## std.array.for_each
+
+```
+std.array.for_each(array, callback)
+```
+
+Calls `callback(element, index)` for every element. A ranged for does the same without a function.
+
+## std.array.reverse
+
+```
+std.array.reverse(array) -> array
+```
+
+Reverses the order in place; returns the array.
+
+## std.array.sort
+
+```
+std.array.sort(array, comparator) -> array  // comparator is optional
+```
+
+Sorts in place and returns the array. Without a comparator the elements must be all numbers or all strings, and go in ascending order. With one, `comparator(a, b)` returns a negative number when `a` goes before `b`, a positive one when after, `0` when it doesn't matter. The sort is stable (equal elements keep their order).
+
+```bloop
+const words = ["pear", "fig", "banana"];
+std.array.sort(words, (a, b) => std.length(a) - std.length(b));
+std.console.log(words);
+```
+
+```output
+[ fig, pear, banana ]
+```
+
+## std.array.join
+
+```
+std.array.join(array, separator) -> string  // separator is optional
+```
+
+The elements as text (as std.string.from gives them), with `separator` between them (`","` if left out).
+
+# std.string
+
+(std/string.html)
+
+Functions for strings. Strings never change: every function returns a new one. Indexes count bytes from `0`.
+
+| Function |  |
+| --- | --- |
+| std.string.substring | a part |
+| std.string.find, std.string.find_last, std.string.contains, std.string.starts_with, std.string.ends_with | searching |
+| std.string.split, std.string.replace, std.string.clone, std.string.trim | making new strings |
+| std.string.to_upper, std.string.to_lower | case |
+| std.string.get_code_at, std.string.from_char_code | bytes |
+| std.string.from, std.string.parse_int, std.string.parse_float | converting |
+
+## std.string.substring
+
+```
+std.string.substring(s, start, end) -> string  // start and end are optional
+```
+
+The bytes from `start` up to (not including) `end`. Negative indexes count from the end; out of range ones are clamped. Without `end`: to the end.
+
+```bloop
+std.console.log(std.string.substring("bloop", 1, 3), " ", std.string.substring("bloop", -2));
+```
+
+```output
+lo op
+```
+
+## std.string.find
+
+```
+std.string.find(s, part, from) -> int  // from is optional
+std.string.find_last(s, part, from) -> int  // from is optional
+```
+
+The index of the first occurrence of `part` at or after `from` (`0` if left out), or `-1`. find_last: the last one that starts at or before `from` (anywhere if left out).
+
+## std.string.contains
+
+```
+std.string.contains(s, part) -> boolean
+std.string.starts_with(s, prefix) -> boolean
+std.string.ends_with(s, suffix) -> boolean
+```
+
+## std.string.split
+
+```
+std.string.split(s, separator) -> array
+```
+
+The parts between every `separator`, as an array of strings (empty ones too: `"a,,b"` gives three). An empty separator splits into single bytes.
+
+```bloop
+std.console.log(std.string.split("a,b,,c", ","), " ", std.string.split("hey", ""));
+```
+
+```output
+[ a, b, , c ] [ h, e, y ]
+```
+
+## std.string.replace
+
+```
+std.string.replace(s, from, to) -> string
+```
+
+Every occurrence of `from` replaced by `to`.
+
+## std.string.clone
+
+```
+std.string.clone(s, count) -> string
+```
+
+`s` repeated `count` times.
+
+## std.string.trim
+
+```
+std.string.trim(s) -> string
+```
+
+Without the whitespace (spaces, tabs, new lines) at both ends.
+
+## std.string.to_upper
+
+```
+std.string.to_upper(s) -> string
+std.string.to_lower(s) -> string
+```
+
+ASCII letters in upper or lower case; other bytes stay as they are.
+
+## std.string.get_code_at
+
+```
+std.string.get_code_at(s, index) -> int
+```
+
+The byte at `index`, as a number from `0` to `255`.
+
+## std.string.from_char_code
+
+```
+std.string.from_char_code(code) -> string
+```
+
+A string of one byte.
+
+## std.string.from
+
+```
+std.string.from(value) -> string
+```
+
+Any value as text: what std.console.log prints for it. The way to put a number into a string with `+`.
+
+```bloop
+const count = 3;
+std.console.log("count: " + std.string.from(count));
+```
+
+```output
+count: 3
+```
+
+## std.string.parse_int
+
+```
+std.string.parse_int(s)  // an int, or undefined
+std.string.parse_float(s)  // a double, or undefined
+```
+
+The number that the whole string is (whitespace around it allowed), or undefined when it isn't one.
+
+```bloop
+std.console.log(std.string.parse_int(" 42 "), " ", std.string.parse_int("42px"), " ", std.string.parse_float("2.5"));
+```
+
+```output
+42 undefined 2.500000
+```
+
+# std.object
+
+(std/object.html)
+
+Functions for objects. Keys are strings, and lists come in the order the properties were added.
+
+## std.object.keys
+
+```
+std.object.keys(object) -> array
+std.object.values(object) -> array
+```
+
+Every property's name (or value), in order.
+
+```bloop
+const scores = { ada: 3, grace: 5 };
+std.console.log(std.object.keys(scores), " ", std.object.values(scores));
+```
+
+```output
+[ ada, grace ] [ 3, 5 ]
+```
+
+## std.object.has
+
+```
+std.object.has(object, key) -> boolean
+```
+
+Whether the object has the property: reading one that it doesn't have (`o.key`) is a runtime error.
+
+## std.object.get
+
+```
+std.object.get(object, key)
+```
+
+The property's value, or undefined when it isn't there.
+
+## std.object.set
+
+```
+std.object.set(object, key, value)
+```
+
+Adds or changes the property, returns the value. The same as `object[key] = value`.
+
+## std.object.remove
+
+```
+std.object.remove(object, key) -> boolean
+```
+
+Removes the property; returns whether it was there.
+
+# std.math
+
+(std/math.html)
+
+abs, min, max, clamp and sign keep their argument's type (an int stays an int). floor, ceil, round and trunc give an int, so the result can index an array. Everything else gives a double, with the usual IEEE results (`sqrt(-1)` is nan).
+
+## Constants
+
+| Name | Value |
+| --- | --- |
+| `std.math.pi` | 3.14159... |
+| `std.math.tau` | 2 pi |
+| `std.math.e` | 2.71828... |
+| `std.math.inf` | infinity |
+
+## std.math.abs
+
+```
+std.math.abs(x)
+std.math.sign(x)  // -1, 0 or 1
+```
+
+## std.math.min
+
+```
+std.math.min(values...)
+std.math.max(values...)
+```
+
+The smallest or largest of one or more numbers.
+
+## std.math.clamp
+
+```
+std.math.clamp(x, low, high)
+```
+
+`x`, but at least `low` and at most `high`.
+
+## std.math.floor
+
+```
+std.math.floor(x) -> int  // down
+std.math.ceil(x) -> int  // up
+std.math.round(x) -> int  // to the nearest, halves away from zero
+std.math.trunc(x) -> int  // towards zero
+```
+
+A double that doesn't fit in an int is a runtime error.
+
+## Powers and logarithms
+
+```
+std.math.sqrt(x) -> double
+std.math.cbrt(x) -> double
+std.math.pow(base, exponent) -> double
+std.math.exp(x) -> double  // e to the x
+std.math.log(x) -> double  // natural logarithm
+std.math.log2(x) -> double
+std.math.log10(x) -> double
+std.math.hypot(x, y) -> double  // the square root of x * x + y * y
+```
+
+## Trigonometry
+
+```
+std.math.sin(x) -> double
+std.math.cos(x) -> double
+std.math.tan(x) -> double
+std.math.asin(x) -> double
+std.math.acos(x) -> double
+std.math.atan(x) -> double
+std.math.atan2(y, x) -> double  // the angle of the point (x, y)
+std.math.to_radians(degrees) -> double
+std.math.to_degrees(radians) -> double
+```
+
+Angles in radians.
+
+## std.math.lerp
+
+```
+std.math.lerp(a, b, t) -> double
+```
+
+`a + (b - a) * t`: `a` at `t = 0`, `b` at `t = 1`.
+
+## std.math.is_nan
+
+```
+std.math.is_nan(x) -> boolean
+std.math.is_finite(x) -> boolean
+```
+
+## Random numbers
+
+```
+std.math.random() -> double  // in [0, 1)
+std.math.random_int(low, high) -> int  // in [low, high], both included
+std.math.seed(seed)
+```
+
+Every script has its own generator. The same seed gives the same numbers again: a script that has to repeat a run (a replay, a generated world) seeds it. The program running the script may seed it first; otherwise every run is different.
+
+```bloop
+std.math.seed(7);
+const first = std.math.random_int(1, 6);
+std.math.seed(7);
+std.console.log(first == std.math.random_int(1, 6));
+```
+
+```output
+true
+```
+
+# std.json
+
+(std/json.html)
+
+## std.json.stringify
+
+```
+std.json.stringify(value, indent) -> string  // indent is optional
+```
+
+The value as JSON text. undefined becomes `null`; numbers as short as they read back exactly; object keys in their order. With an `indent` above 0, every element goes on its own line, indented by that many spaces per level. Functions, NaN, infinities and values that contain themselves can't be converted: a runtime error.
+
+```bloop
+std.console.log(std.json.stringify({ name: "Ada", tags: ["a", "b"], score: 10.0, gone: undefined }));
+std.console.log(std.json.stringify([1, { x: true }], 2));
+```
+
+```output
+{"name":"Ada","tags":["a","b"],"score":10,"gone":null}
+[
+  1,
+  {
+    "x": true
+  }
+]
+```
+
+## std.json.parse
+
+```
+std.json.parse(text)
+```
+
+The value that JSON text describes: objects, arrays, strings, booleans, numbers (an int when it's a whole number that fits, else a double), `null` as undefined. Text that isn't valid JSON gives undefined.
+
+```bloop
+const data = std.json.parse("{\"items\": [1, 2.5], \"ok\": true}");
+std.console.log(data.items, " ", data.ok);
+```
+
+```output
+[ 1, 2.500000 ] true
+```
+
+# std.time
+
+(std/time.html)
+
+Clocks, in seconds (doubles).
+
+## std.time.now
+
+```
+std.time.now() -> double
+```
+
+A clock for measuring time: seconds since the script started, never going backwards. The program running the script can give it its own clock (one that pauses with the program, say). std.task waits by this clock.
+
+```bloop
+const start = std.time.now();
+// ... work ...
+std.console.log("took ", std.time.now() - start, " s");
+```
+
+## std.time.unix
+
+```
+std.time.unix() -> double
+```
+
+The wall clock: seconds since 1970-01-01 00:00 UTC. For timestamps; it can jump when the computer's clock is set.
+
+## std.time.sleep
+
+```
+std.time.sleep(seconds)
+```
+
+Blocks the script (and the program running it) for that long. Only when the program allows it (a permission): it blocks everything else too, so where the program keeps running, scripts wait with std.task.wait instead.
+
+# std.task
+
+(std/task.html)
+
+Tasks are functions that run alongside everything else and can wait without stopping anything: the program running the script continues the tasks whose wait is over (the standalone interpreter: once the main script has finished, until they're all done). See coroutines and tasks.
+
+```bloop
+const job = std.task.spawn((seconds) => {
+	std.console.log("started");
+	const waited = std.task.wait(seconds);
+	std.console.log("finished after ", waited, " s");
+}, 2);
+std.console.log("alive: ", std.task.alive(job));
+```
+
+```output
+started
+alive: true
+finished after 2.000000 s
+```
+
+(The waited time is measured by std.time.now: it can be a little more than asked, when the program continues the tasks only now and then.)
+
+## std.task.spawn
+
+```
+std.task.spawn(function, arguments...) -> task
+```
+
+- `function`: a script function or lambda; it gets `arguments` (exactly as many as it has parameters)
+
+Starts a task and runs it right away, until its first wait or its end. Returns the task: a handle like `task#1`. An exception that the task doesn't catch before its first wait goes on in the code that spawned it; after that, it ends the task and goes to the program as a runtime error.
+
+## std.task.wait
+
+```
+std.task.wait(seconds) -> double  // seconds is optional
+```
+
+Pauses the running task for `seconds`, or without seconds until the next time the program continues the tasks. Returns how long it waited. Only a task can wait: the main script, an event handler or a plain coroutine that has to wait spawns a task.
+
+## std.task.cancel
+
+```
+std.task.cancel(task) -> boolean
+```
+
+Stops a task: it won't continue from its wait. Returns whether it was still alive. A task can cancel itself; it ends at its next wait (or when it returns).
+
+## std.task.alive
+
+```
+std.task.alive(task) -> boolean
+```
+
+Whether the task hasn't ended and wasn't cancelled.
+
+## std.task.current
+
+```
+std.task.current()
+```
+
+The task that's running, or undefined outside of one.
+
+# std.coroutine
+
+(std/coroutine.html)
+
+Functions that pause and continue: see coroutines and tasks. std.task is a scheduler built on them.
+
+```bloop
+fn numbers() {
+	return std.coroutine.create(() => {
+		let n = 0;
+		while (true) {
+			n++;
+			std.coroutine.yield(n);
+		}
+	});
+}
+
+const counter = numbers();
+std.console.log(std.coroutine.resume(counter), std.coroutine.resume(counter), std.coroutine.resume(counter));
+```
+
+```output
+123
+```
+
+## std.coroutine.create
+
+```
+std.coroutine.create(function) -> coroutine
+```
+
+A coroutine that will run `function` (a script function or lambda) when it's first resumed.
+
+## std.coroutine.resume
+
+```
+std.coroutine.resume(coroutine, arguments...)
+```
+
+Runs the coroutine until it yields or returns, and returns what it yielded or returned. The first resume passes `arguments` to its function (exactly as many as it has parameters); later ones pass at most one value, which is what the std.coroutine.yield it's paused in returns. Resuming one that has ended, or one that's running, is a runtime error. An exception that the coroutine doesn't catch ends it, and goes on here.
+
+## std.coroutine.yield
+
+```
+std.coroutine.yield(value)  // value is optional
+```
+
+Pauses the running coroutine: its resume returns `value`, and the next resume continues from here. Only from the coroutine's own code: not from the main script, and not from a callback that a standard function is running.
+
+## std.coroutine.status
+
+```
+std.coroutine.status(coroutine) -> string
+```
+
+| Status |  |
+| --- | --- |
+| `"suspended"` | not started yet, or paused in a yield |
+| `"running"` | the one running now |
+| `"normal"` | it resumed another one, which hasn't yielded yet |
+| `"dead"` | it returned, or an exception ended it |
+
+## std.coroutine.running
+
+```
+std.coroutine.running()
+```
+
+The coroutine that's running, or undefined in the main script.
+
+# std.fs
+
+(std/fs.html)
+
+Files and directories. Only when the program running the script allows it (a permission): the standalone interpreter does. Paths are relative to the working directory, or to a root directory the program sets (and then a path outside of it is a runtime error). What can fail on its own (a missing file, no access) returns undefined or `false`.
+
+```bloop
+std.fs.make_dir("out");
+std.fs.write("out/notes.txt", "first line\n");
+std.fs.append("out/notes.txt", "second line\n");
+std.console.log(std.fs.read("out/notes.txt"), std.fs.list("out"));
+```
+
+```output
+first line
+second line
+[ notes.txt ]
+```
+
+## std.fs.read
+
+```
+std.fs.read(path)  // a string, or undefined
+```
+
+The file's contents, or undefined if it can't be read.
+
+## std.fs.write
+
+```
+std.fs.write(path, text) -> boolean  // replaces the file
+std.fs.append(path, text) -> boolean  // adds to its end
+```
+
+Create the file if it isn't there. Return whether it worked.
+
+## std.fs.exists
+
+```
+std.fs.exists(path) -> boolean
+std.fs.is_file(path) -> boolean
+std.fs.is_dir(path) -> boolean
+```
+
+## std.fs.list
+
+```
+std.fs.list(path)  // an array, or undefined
+```
+
+The names of what's in a directory (files and directories, sorted), or undefined if it can't be listed.
+
+## std.fs.make_dir
+
+```
+std.fs.make_dir(path) -> boolean
+```
+
+Creates the directory, and the ones above it that are missing. Returns whether it exists now.
+
+## std.fs.remove
+
+```
+std.fs.remove(path) -> boolean
+```
+
+Removes a file or an empty directory (never anything with things in it). Returns whether something was removed.
+
+## std.fs.rename
+
+```
+std.fs.rename(from, to) -> boolean
+```
+
+Moves or renames a file or a directory. Returns whether it worked.
+
+# std.process
+
+(std/process.html)
+
+The program the script runs in. Only when the program allows it (a permission): the standalone interpreter does.
+
+## std.process.args
+
+```
+std.process.args() -> array
+```
+
+The arguments the program gave the script: for the standalone interpreter, what comes after the script's path (`bloop build.bloop src out` gives `["src", "out"]`).
+
+## std.process.env
+
+```
+std.process.env(name)  // a string, or undefined
+```
+
+The value of an environment variable, or undefined when it isn't set.
+
+## std.process.exit
+
+```
+std.process.exit(code)  // code is optional
+```
+
+Ends the script now. The standalone interpreter exits with `code` (0 if it's left out).
+
+## std.process.platform
+
+```
+std.process.platform  // a string, not a function
+```
+
+`"windows"`, `"linux"`, `"macos"` or `"unknown"`.
+
+# Embedding
+
+(embedding.html)
+
+bloop is made to run inside a C++ program: an application that lets users script it, a tool that reads its settings or rules from scripts. Everything is in `bloop.hpp`.
+
+```bloop
+bloop::ScriptOptions options;
+options.m_oLimits.m_uInstructions = 1'000'000;   // per call: a script that loops forever stops
+options.m_oLimits.m_uHeapBytes = 64 * bloop::MB;
+options.m_sEventsModule = "events";              // events.on / events.off for the script
+options.m_oModules.push_back(MakeAppModule());    // the program's own functions: a global next to std
+
+bloop::Script script(options);
+if (auto loaded = script.LoadFile("scripts/main.bloop"); !loaded)
+	Log(loaded.m_sError);                          // a compile error (m_oLocation: where)
+else if (auto ran = script.Run(); !ran)
+	Log(ran.m_sError);                             // a runtime error (m_oTrace: the calls)
+
+script.Emit("file_saved", { "notes.txt" });         // every events.on("file_saved", ...) handler
+script.RunTasks();                                  // std.task: whenever the program has time
+```
+
+## What the program decides
+
+- What scripts can reach: nothing outside the VM by default. ScriptOptions::m_oEnvironment turns on std.fs (with a root directory it can't leave), std.process, std.time.sleep, and gives std.console.log and std.time.now their output and clock.
+- Limits: instructions per call, heap size, how deep native code may recurse. A script that breaks one gets a runtime error; the program goes on.
+- Its own functions: `bloop::standard::Bind<&Function>()` turns an ordinary C++ function into one the script can call, with its parameters checked; a module is an object of them.
+- Where files come from: imports stay in the main file's directory unless told otherwise, and ScriptOptions::m_fnReadFile reads them from wherever the program keeps them (an archive, memory, a network).
+
+## Calling into scripts
+
+- Script::Call calls an exported function by name, or a function the program kept (a callback a native function got: bloop::Function::Keep).
+- Script::Emit calls every handler of an event, in the order they were added.
+- Script::RunTasks continues the std.task tasks whose wait is over.
+- Values go in and out as bloop::HostValue: undefined, bool, int, double, string, array, object, and handles (HostValue::Handle: a type name and an id, for the program's own objects).
+
+Errors never throw into the program: every call returns a bloop::Result, with the message, the status (compile error, runtime error, exited) and, for errors, where they happened.

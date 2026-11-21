@@ -1,0 +1,60 @@
+title: Variables
+path: Language / Variables
+defines: variable, let, const, constant
+group: language
+order: 3
+---
+# Declaring
+
+```
+let count = 0;          // a variable: it can be assigned again
+const limit = 10;       // a constant: it can't
+let name;               // no value yet: undefined
+```
+
+`let` declares a variable, `const` a constant: assigning to a constant is a compile error. A constant that holds an
+array or an object still lets the array or object change (the constant is which array it is, not what's in it).
+
+# Scope {=scope, block}
+
+A variable declared in a block (between braces) exists from its declaration to the end of the block. Variables
+declared at the top level of a file are globals: every function of the file can use them, also functions declared
+before them (they're there once the file has run up to their declaration).
+
+```
+let total = 0;
+
+fn add(amount) {
+	total += amount;     // the global
+}
+
+add(5);
+std.console.log(total);
+```
+```output
+5
+```
+
+# No shadowing {=shadowing}
+
+A name can't be declared again where the earlier one is still visible: not in an inner block, not as a parameter or
+variable of a function inside the scope that has it. The compiler says "identifier ... already declared". Two
+functions can each have a variable with the same name, and so can two blocks next to each other.
+
+```
+let x = 1;
+{
+	let x = 2;           // compile error: identifier "x" already declared
+}
+
+fn first() { let n = 1; return n; }
+fn second() { let n = 2; return n; }   // fine: different functions
+```
+
+> A top-level function or variable's name can't be a parameter's name in a function declared after it: give
+  globals names that read as globals (`siteTitle`, not `title`).
+
+# Globals and modules {=global}
+
+Every [[module]] has its own globals: a module's globals are visible to another only when it [[export|exports]]
+them and the other imports them.

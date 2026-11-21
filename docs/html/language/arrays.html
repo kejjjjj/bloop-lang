@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arrays - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../language/index.html">Language</a> <span class="sep">&rsaquo;</span> Arrays</div>
+<h1>Arrays</h1>
+<div class="navbar"><a href="../language/index.html">Language</a> <a href="../language/basics.html">Basic concepts</a> <a href="../language/types.html">Types</a> <a href="../language/variables.html">Variables</a> <a href="../language/operators.html">Operators</a> <a href="../language/conditions.html">Conditions</a> <a href="../language/control-flow.html">Control flow</a> <a href="../language/functions.html">Functions</a> <a href="../language/strings.html">Strings</a> <a href="../language/objects.html">Objects</a> <a class="here" href="../language/arrays.html">Arrays</a> <a href="../language/modules.html">Modules</a> <a href="../language/exceptions.html">Exceptions</a> <a href="../language/errors.html">Errors</a> <a href="../language/coroutines.html">Coroutines and tasks</a></div>
+<div id="body">
+<h2 id="array-literals">Array literals</h2>
+<div class="code"><pre><span class="kw">const</span> empty = [];
+<span class="kw">const</span> mixed = [<span class="nu">1</span>, <span class="st">&quot;two&quot;</span>, [<span class="nu">3</span>], { four: <span class="nu">4</span> }];
+<a href="../std/console.html#std-console-log">std.console.log</a>(mixed[<span class="nu">1</span>], <span class="st">&quot; &quot;</span>, <a href="../std/index.html#std-length">std.length</a>(mixed));</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>two 4</pre></div>
+<p>An array is a list of <a href="../language/types.html">values</a> of any <a href="../language/types.html">types</a>, from index <code>0</code>. It's <a href="../language/types.html#arrays-and-objects">shared</a>: assigning it or passing it doesn't copy it.</p>
+<h2 id="elements">Elements</h2>
+<ul><li><code>a[i]</code> reads an element, <code>a[i] = value</code> sets one. An index outside <code>0</code> to the length minus one is a <a href="../language/errors.html">runtime error</a> (&quot;out of bounds index&quot;): an array doesn't grow by assigning past its end.</li><li><a href="../std/array.html#std-array-push">std.array.push</a> adds to the end, <a href="../std/array.html#std-array-pop">std.array.pop</a> takes from it; <a href="../std/array.html#std-array-insert">std.array.insert</a> and <a href="../std/array.html#std-array-remove">std.array.remove</a> anywhere.</li><li><a href="../std/index.html#std-length">std.length</a>(a) is the <a href="../language/types.html#numbers">number</a> of elements.</li><li><code>for (const x : a)</code> goes over them (<a href="../language/control-flow.html#ranged-for">ranged for</a>).</li></ul>
+<div class="code"><pre><span class="kw">const</span> list = [<span class="nu">3</span>, <span class="nu">1</span>, <span class="nu">2</span>];
+<a href="../std/array.html#std-array-push">std.array.push</a>(list, <span class="nu">0</span>);
+<a href="../std/array.html#std-array-sort">std.array.sort</a>(list);
+<a href="../std/console.html#std-console-log">std.console.log</a>(list, <span class="st">&quot; &quot;</span>, <a href="../std/array.html#std-array-join">std.array.join</a>(list, <span class="st">&quot;-&quot;</span>));</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>[ 0, 1, 2, 3 ] 0-1-2-3</pre></div>
+<p>The <a href="../language/functions.html">functions</a> are in <a href="../std/array.html">std.array</a>: searching (<a href="../std/array.html#std-array-find">std.array.find</a>, <a href="../std/array.html#std-array-index-of">std.array.index_of</a>), transforming (<a href="../std/array.html#std-array-transform">std.array.transform</a>, <a href="../std/array.html#std-array-filter">std.array.filter</a>, <a href="../std/array.html#std-array-accumulate">std.array.accumulate</a>), sorting, slicing.</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/language/arrays.txt</code>.</div></div>
+</body>
+</html>

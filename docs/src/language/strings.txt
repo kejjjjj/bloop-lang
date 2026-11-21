@@ -1,0 +1,52 @@
+title: Strings
+path: Language / Strings
+defines: string literal, escape sequence
+group: language
+order: 8
+---
+# String literals
+
+`"text"` and `'text'` are the same. A string is a sequence of bytes; text that isn't ASCII is UTF-8, and indexes and
+lengths count bytes.
+
+| Escape | Is |
+| `\n` | a new line |
+| `\t` | a tab |
+| `\r` | a carriage return |
+| `\\` | a backslash |
+| `\"`, `\'` | a quote |
+
+# Using strings
+
+```
+const word = "bloop";
+std.console.log(std.length(word), " ", word[0], " ", word + "!");
+std.console.log(std.string.to_upper(word), " ", std.string.find(word, "o"));
+```
+```output
+5 b bloop!
+BLOOP 2
+```
+
+- `a + b` joins two strings. A string and anything else is a runtime error: convert with std.string.from, or use a
+  template string.
+- `s[i]` is the byte at `i` as a string of one; strings can't be changed (`s[0] = "x"` is an error).
+- `==` and `!=` compare the contents; `<` and `>` don't work on strings.
+- `for (const c : s)` goes over the bytes.
+- std.length(s) is the length in bytes. The other functions are in std.string.
+
+# Template strings {=template string, template strings, interpolation}
+
+Text between backticks, with `${expression}` parts that are replaced by the expression's value as text (the same text
+std.console.log prints, so numbers, arrays and objects work too):
+
+```
+const count = 3;
+const items = ["a", "b"];
+std.console.log(`${count} apples, ${count * 2} halves, ${items}`);
+```
+```output
+3 apples, 6 halves, [ a, b ]
+```
+
+A template string can span lines; the line breaks are part of it.

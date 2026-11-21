@@ -1,21 +1,5 @@
 R"(
-fn wait(seconds) { std.coroutine.yield(seconds); }
 
-const counter = std.coroutine.create(() => {
-	for (let i = 1; i <= 10; i++) {
-		std.console.log(`${i} at ${std.time.now()}s`);
-		wait(1.0);
-	}
-});
-
-let wake = 0.0;
-while (std.coroutine.status(counter) != "dead") {
-    if (std.time.now() >= wake) {
-        const seconds = std.coroutine.resume(counter);
-        if (std.coroutine.status(counter) != "dead")
-            wake += seconds; // from when it was due, so the late frames don't add up
-    }
-    std.time.sleep(0.016);
-}
+return false && "assadasd".shit;
 
 )"

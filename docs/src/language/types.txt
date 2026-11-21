@@ -1,0 +1,86 @@
+title: Types
+path: Language / Types
+defines: type, value
+group: language
+order: 2
+---
+Every value has one of these types. A variable can hold any of them, and change from one to another. The names are
+the ones that error messages use.
+
+| Type | What it is | Copied or shared |
+| `undefined` | no value: what a variable without an initial value holds, what a function without a return returns | copied |
+| `boolean` | `true` or `false` | copied |
+| `int` | a 64-bit signed integer | copied |
+| `uint` | a 64-bit unsigned integer | copied |
+| `double` | a 64-bit floating point number | copied |
+| `string` | text: a sequence of bytes | shared, but never changes |
+| `array` | an ordered list of values | shared |
+| `object` | named properties with values, in the order they were added | shared |
+| `function` | a function or a lambda (closures too) | shared |
+| `coroutine` | a function that can pause (std.coroutine) | shared |
+| handles | handles that the program running the script gives it (`task`, ...) | copied |
+
+# undefined {=undefined}
+
+The value that means nothing: a variable declared without a value, a missing optional argument of a standard
+function, a function that ends without returning a value, std.array.pop() of an empty array. `undefined` is a
+[[condition]] that is false.
+
+# Booleans {=boolean, true, false}
+
+`true` and `false`, what comparisons and the logical operators give. In arithmetic a boolean counts as `1` or `0`
+(`true + 1` is `2`).
+
+# Numbers {=number}
+
+## int {=int, integer}
+
+The usual number: a 64-bit signed integer. Integer literals are ints. Arithmetic on ints stays int: `7 / 2` is `3`,
+dividing by zero is a runtime error, and going past the largest or smallest int wraps around.
+
+## uint {=uint}
+
+A 64-bit unsigned integer, written with a `u` after the number (`5u`). Subtracting past zero wraps around to the
+largest values, and a uint can't be negated.
+
+## double {=double, floating point}
+
+A 64-bit floating point number (IEEE 754): literals with a decimal point, and the results of arithmetic that has a
+double in it. Dividing by zero gives `inf` (or `-inf`, or `nan` for 0 / 0), no error.
+
+When an operator gets an int and a double, the int is converted to a double first: `1 + 2.5` is `3.5`. Between an int
+and a uint, the uint becomes an int.
+
+# Strings {=string}
+
+Text, as a sequence of bytes (UTF-8 for anything that isn't ASCII): indexes and lengths count bytes. Strings never
+change: every function that "changes" one returns a new string. See [[language/strings|Strings]].
+
+# Arrays and objects {=reference, shared}
+
+Arrays and objects are shared, not copied: assigning one to another variable, passing it to a function or putting it
+in another array gives that place the same array, and a change through any of them is seen through all of them.
+`==` compares them by identity: two different arrays with the same elements aren't equal.
+
+```
+const a = [1, 2];
+const b = a;
+std.array.push(b, 3);
+std.console.log(a, " ", a == b, " ", [1] == [1]);
+```
+```output
+[ 1, 2, 3 ] true false
+```
+
+See [[language/arrays|Arrays]] and [[language/objects|Objects]].
+
+# Functions
+
+Functions are values: they can be stored in variables, arrays and objects, passed to other functions and returned
+from them. See [[language/functions|Functions]].
+
+# Handles {=handle}
+
+A program that runs a script can give it handles: values that stand for something of the program's (a file, a
+window, a task). A script keeps them, compares them (`==`: the same thing) and passes them back to the program's functions,
+but can't look inside them or make one. They print as their type and a number, like `task#2`.

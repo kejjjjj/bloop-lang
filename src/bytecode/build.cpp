@@ -19,7 +19,7 @@ void bloop::bytecode::BuildByteCode(bloop::ast::Program* code, bloop::metadata::
 	//todo: include lambdas
 	for (const auto& stmt : code->m_oStatements) {
 		if (stmt->IsFunction()) {
-			CByteCodeFunction f(dynamic_cast<bloop::ast::FunctionDeclarationStatement*>(stmt.get()));
+			CByteCodeFunction f(stmt->AsFunction());
 			f.Generate(metadata);
 		}
 	}

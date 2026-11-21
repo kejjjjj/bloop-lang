@@ -7,6 +7,8 @@
 #include "vm/heap/dvalue.hpp"
 #include "vm/heap/heap.hpp"
 #include "vm/gc/handles.hpp"
+#include "vm/tasks.hpp"
+#include "std/lib/task/stdtask.hpp"
 #include "utils/exception.hpp"
 #include "utils/fmt.hpp"
 
@@ -49,7 +51,7 @@ std::string HostValue::TypeName() const {
 	case 4: return "string";
 	case 5: return "array";
 	case 6: return "object";
-	default: return AsOpaque().m_sType;
+	default: return IsHandle() ? AsHandle().m_sType : AsOpaque().m_sType;
 	}
 }
 
@@ -104,6 +106,8 @@ namespace {
 				Write(out, value.AsObject()[i].second, false);
 			}
 			out += '}';
+		} else if (value.IsHandle()) {
+			out += value.AsHandle().m_sType + '#' + std::to_string(value.AsHandle().m_uId);
 		} else {
 			out += '<' + value.AsOpaque().m_sType + '>';
 		}
@@ -136,6 +140,9 @@ namespace {
 		const auto* obj = value.obj;
 		if (obj->IsString())
 			return HostValue(std::string(obj->string.data, static_cast<std::size_t>(obj->string.len)));
+
+		if (obj->IsHandle())
+			return HostValue(HostValue::Handle{ *obj->handle.type, obj->handle.id });
 
 		if (!obj->IsArray() && !obj->IsObject())
 			return HostValue(HostValue::Opaque{ value.TypeToString() });
@@ -179,6 +186,7 @@ namespace {
 		if (value.IsInt())       return Value{ value.AsInt() };
 		if (value.IsDouble())    return Value{ static_cast<bloop::BloopDouble>(value.AsDouble()) };
 		if (value.IsString())    return Value{ heap.AllocString(value.AsString().data(), value.AsString().size()) };
+		if (value.IsHandle())    return Value{ heap.AllocHandle(vm.GetHandleType(value.AsHandle().m_sType), value.AsHandle().m_uId) };
 
 		if (value.IsArray()) {
 			const auto& items = value.AsArray();
@@ -295,6 +303,30 @@ Function Function::Keep(bloop::vm::VM& vm, const Value& callable) {
  *                              Script
  ***********************************************************************/
 
+namespace {
+	// a position (lines counted across every file of the program) in its own file
+	ErrorLocation Locate(const bloop::metadata::Metadata& metadata, const bloop::BloopString& message, const bloop::CodePosition& position) {
+		const auto [line, column] = position;
+
+		ErrorLocation location;
+		location.m_sMessage = message;
+		location.m_uLine = line;
+		location.m_uColumn = column;
+
+		if (const auto* file = metadata.FindSourceFile(line)) {
+			location.m_sFile = file->m_sName;
+			location.m_uLine = line - file->m_uFirstLine + 1u;
+		}
+		if (line >= 1u && line - 1u < metadata.m_oLineMap.size()) {
+			location.m_sSourceLine = std::string(metadata.m_oLineMap[line - 1u]);
+			// (a file with windows line endings: the line without its \r)
+			while (!location.m_sSourceLine.empty() && (location.m_sSourceLine.back() == '\r' || location.m_sSourceLine.back() == '\n'))
+				location.m_sSourceLine.pop_back();
+		}
+		return location;
+	}
+}
+
 struct Script::Impl {
 	ScriptOptions m_oOptions;
 
@@ -316,6 +348,7 @@ struct Script::Impl {
 
 		bloop::module::CompileOptions compileOptions;
 		compileOptions.m_oHostModules = m_oOptions.m_oModules;
+		compileOptions.m_fnReadFile = m_oOptions.m_fnReadFile;
 		if (!m_oOptions.m_sEventsModule.empty()) {
 			bloop::standard::NativeDef events(m_oOptions.m_sEventsModule, bloop::standard::NativeObject{});
 			AddEventFunctions(events);
@@ -326,6 +359,12 @@ struct Script::Impl {
 
 		try {
 			m_pProgram = compile(*m_pMetadata, compileOptions);
+		} catch (bloop::exception::CompileError& ex) {
+			auto result = Result::Failure(Result::Status::compile_error, ex.what());
+			if (ex.m_oPosition)
+				result.m_oLocation = Locate(*m_pMetadata, ex.m_sMessage, *ex.m_oPosition);
+			m_pMetadata.reset();
+			return result;
 		} catch (std::exception& ex) {
 			m_pMetadata.reset();
 			return Result::Failure(Result::Status::compile_error, ex.what());
@@ -343,8 +382,14 @@ struct Script::Impl {
 		if (const auto code = m_pVM->GetExitCode())
 			return Result::Exited(*code);
 
-		if (!value || m_pVM->Failed())
-			return Result::Failure(Result::Status::runtime_error, m_pVM->GetError());
+		if (!value || m_pVM->Failed()) {
+			auto result = Result::Failure(Result::Status::runtime_error, m_pVM->GetError());
+			for (const auto& call : m_pVM->GetErrorTrace())
+				result.m_oTrace.push_back(Locate(*m_pMetadata, result.m_oTrace.empty() ? m_pVM->GetErrorMessage() : bloop::BloopString{}, call.m_oPosition));
+			if (!result.m_oTrace.empty())
+				result.m_oLocation = result.m_oTrace.front();
+			return result;
+		}
 
 		return Result::Success(ToHostValue(*value));
 	}
@@ -547,6 +592,39 @@ bool Script::HasHandlers(std::string_view event) const {
 	const auto& events = m_pImpl->m_oEvents.m_oEvents;
 	const auto itr = events.find(std::string(event));
 	return itr != events.end() && !itr->second.empty();
+}
+
+Result Script::RunTasks() {
+	if (auto problem = m_pImpl->CheckReady(true))
+		return *problem;
+
+	std::optional<Result> firstError;
+	std::optional<Result> exited;
+
+	const auto ran = bloop::standard::RunDueTasks(*m_pImpl->m_pVM, [&](const std::optional<Value>& value) {
+		auto result = m_pImpl->Ended(value);
+		if (result.m_eStatus == Result::Status::exited) {
+			exited = std::move(result);
+			return false;
+		}
+		if (!result.Ok() && !firstError)
+			firstError = std::move(result);
+		return true;
+	});
+
+	if (exited)
+		return *exited;
+	if (firstError)
+		return *firstError;
+	return Result::Success(HostValue(static_cast<bloop::BloopInt>(ran)));
+}
+
+std::size_t Script::TaskCount() const noexcept {
+	return m_pImpl->m_pVM ? m_pImpl->m_pVM->GetTasks().m_oTasks.size() : 0u;
+}
+
+std::optional<double> Script::NextTaskTime() const {
+	return m_pImpl->m_pVM ? bloop::standard::NextTaskTime(*m_pImpl->m_pVM) : std::nullopt;
 }
 
 Result Script::Get(std::string_view name) const {

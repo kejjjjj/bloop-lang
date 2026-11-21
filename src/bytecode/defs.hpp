@@ -15,7 +15,9 @@ namespace bloop::bytecode
 		#undef BLOOP_OP
 	};
 
-	static std::unordered_map<EPunctuation, EOpCode> conversionTable = {
+	// (const: several threads may compile scripts at once, and only reading a container is safe then.
+	// inline: one table for the program, not one per .cpp file)
+	inline const std::unordered_map<EPunctuation, EOpCode> conversionTable = {
 		{ EPunctuation::p_add, EOpCode::ADD },
 		{ EPunctuation::p_sub, EOpCode::SUB },
 		{ EPunctuation::p_multiplication, EOpCode::MUL },
@@ -39,7 +41,7 @@ namespace bloop::bytecode
 		{ EPunctuation::p_comma, EOpCode::SEQUENCE },
 	};
 
-	static std::unordered_map<EOpCode, bloop::BloopString> stringConversionTable = {
+	inline const std::unordered_map<EOpCode, bloop::BloopString> stringConversionTable = {
 		#define BLOOP_OP(name) { EOpCode::name, #name },
 		#include "opcode.def"
 		#undef BLOOP_OP

@@ -30,6 +30,9 @@ TEST_CASE("std.json.stringify primitives") {
 	ExpectJson("-7", "-7");
 	ExpectJson("1.5", "1.5");
 	ExpectJson("0.1", "0.1");
+	// plain digits while they're reasonable, the exponent form only past that
+	ExpectJson("10.0", "10");
+	ExpectJson("[100.0, 2500.0, 0.001, 100000000000000000000.0, 0.000001]", "[100,2500,0.001,1e+20,1e-06]");
 	ExpectJson("1.0 / 3.0", "0.3333333333333333");
 	ExpectJson("\"text\"", "\"text\"");
 }

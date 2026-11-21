@@ -27,6 +27,7 @@ namespace bloop::lexer {
 		[[nodiscard]] bloop::EStatus ReadMultiLineComment();
 
 		[[nodiscard]] bloop::EStatus ReadNumber(bloop::CToken& token);
+		bool ReadExponent(bloop::CToken& token);
 		[[nodiscard]] bloop::EStatus ReadInteger(bloop::CToken& token);
 		[[nodiscard]] bloop::EStatus ReadHex(bloop::CToken& token);
 

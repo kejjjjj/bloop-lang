@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Errors - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../language/index.html">Language</a> <span class="sep">&rsaquo;</span> Errors</div>
+<h1>Errors</h1>
+<div class="navbar"><a href="../language/index.html">Language</a> <a href="../language/basics.html">Basic concepts</a> <a href="../language/types.html">Types</a> <a href="../language/variables.html">Variables</a> <a href="../language/operators.html">Operators</a> <a href="../language/conditions.html">Conditions</a> <a href="../language/control-flow.html">Control flow</a> <a href="../language/functions.html">Functions</a> <a href="../language/strings.html">Strings</a> <a href="../language/objects.html">Objects</a> <a href="../language/arrays.html">Arrays</a> <a href="../language/modules.html">Modules</a> <a href="../language/exceptions.html">Exceptions</a> <a class="here" href="../language/errors.html">Errors</a> <a href="../language/coroutines.html">Coroutines and tasks</a></div>
+<div id="body">
+<p>bloop is strict: a mistake stops the script with a message that says what and where, instead of carrying on with a guess.</p>
+<h2 id="compile-errors">Compile errors</h2>
+<p>Found before anything runs: syntax, an unknown <a href="../language/basics.html#identifiers">name</a>, a name declared twice (<a href="../language/variables.html#no-shadowing">shadowing</a>), assigning to a <a href="../language/variables.html">constant</a>, an import that can't be found. Nothing of the program runs.</p>
+<div class="code"><pre><span class="kw">let</span> total = <span class="nu">0</span>;
+totl += <span class="nu">1</span>;</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>unknown identifier: totl
+at: 2:1</pre></div>
+<h2 id="runtime-errors">Runtime errors</h2>
+<p>Found while it runs, they end the script (or, in a program running it, the call that was running): <a href="../language/exceptions.html"><code>catch</code></a> can't catch them. The message has a stack trace: where it happened, then the calls that led there.</p>
+<div class="code"><pre><span class="kw">fn</span> second(list) {
+	<span class="kw">return</span> list[<span class="nu">5</span>];
+}
+<span class="kw">fn</span> first() {
+	<span class="kw">return</span> second([<span class="nu">1</span>, <span class="nu">2</span>]);
+}
+first();</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>runtime error
+
+
+out of bounds index [5]
+
+at [2, 16]
+return list[5];
+           ^
+at [5, 18]
+return second([1, 2]);
+             ^
+at [7, 6]
+first();
+     ^</pre></div>
+<p>The usual ones:</p>
+<table class="wikitable"><tr><th>Message</th><th>Cause</th></tr><tr><td><code>cannot promote from &quot;int&quot; to &quot;object&quot;</code></td><td>an <a href="../language/operators.html">operator</a> with a <a href="../language/types.html#numbers">number</a> and a <a href="../language/types.html#strings">string</a> (<code>&quot;n&quot; + 1</code>): convert first</td></tr><tr><td><code>value of type &quot;string&quot; is not convertible to a boolean</code></td><td>a string (or <a href="../language/arrays.html">array</a>, <a href="../language/objects.html">object</a>) used as a <a href="../language/conditions.html">condition</a></td></tr><tr><td><code>out of bounds index [5]</code></td><td>an array index past its end</td></tr><tr><td><code>unknown property &quot;b&quot;</code></td><td>reading a <a href="../language/objects.html">property</a> an object doesn't have</td></tr><tr><td><code>passed 1 arguments, but expected 2</code></td><td>a call with the wrong number of <a href="../language/functions.html#declaring">arguments</a></td></tr><tr><td><code>division by 0</code></td><td>an <a href="../language/types.html#int">int</a> divided by an int zero</td></tr><tr><td><code>exceeded 1024 call frames</code></td><td><a href="../language/functions.html#recursion">recursion</a> too deep</td></tr><tr><td><code>uncaught exception: ...</code></td><td>a <a href="../language/exceptions.html">throw</a> that no <a href="../language/exceptions.html">catch</a> caught</td></tr><tr><td><code>the script ran too long</code></td><td>the program running the script limits how much it may do in one call</td></tr></table>
+<h2 id="standard-functions">Standard functions</h2>
+<p>A standard <a href="../language/functions.html#declaring">function</a> used wrongly (an <a href="../language/functions.html#declaring">argument</a> of the wrong <a href="../language/types.html">type</a>, a negative count) is a runtime error. What can fail when everything is right returns <a href="../language/types.html#undefined">undefined</a> instead: <a href="../std/fs.html#std-fs-read">std.fs.read</a> of a file that isn't there, <a href="../std/json.html#std-json-parse">std.json.parse</a> of text that isn't <a href="../std/json.html">JSON</a>, <a href="../std/string.html#std-string-parse-int">std.string.parse_int</a> of text that isn't a <a href="../language/types.html#numbers">number</a>.</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/language/errors.txt</code>.</div></div>
+</body>
+</html>

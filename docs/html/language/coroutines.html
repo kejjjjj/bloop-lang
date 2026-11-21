@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coroutines and tasks - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../language/index.html">Language</a> <span class="sep">&rsaquo;</span> Coroutines and tasks</div>
+<h1>Coroutines and tasks</h1>
+<div class="navbar"><a href="../language/index.html">Language</a> <a href="../language/basics.html">Basic concepts</a> <a href="../language/types.html">Types</a> <a href="../language/variables.html">Variables</a> <a href="../language/operators.html">Operators</a> <a href="../language/conditions.html">Conditions</a> <a href="../language/control-flow.html">Control flow</a> <a href="../language/functions.html">Functions</a> <a href="../language/strings.html">Strings</a> <a href="../language/objects.html">Objects</a> <a href="../language/arrays.html">Arrays</a> <a href="../language/modules.html">Modules</a> <a href="../language/exceptions.html">Exceptions</a> <a href="../language/errors.html">Errors</a> <a class="here" href="../language/coroutines.html">Coroutines and tasks</a></div>
+<div id="body">
+<h2 id="coroutines">Coroutines</h2>
+<p>A coroutine is a <a href="../language/functions.html#declaring">function</a> that can pause in the middle (yield) and be continued later (resumed), where it left off, with its <a href="../language/variables.html">variables</a> as they were.</p>
+<div class="code"><pre><span class="kw">const</span> squares = <a href="../std/coroutine.html#std-coroutine-create">std.coroutine.create</a>((limit) =&gt; {
+	<span class="kw">for</span> (<span class="kw">let</span> i = <span class="nu">1</span>; i &lt;= limit; i++)
+		<a href="../std/coroutine.html#std-coroutine-yield">std.coroutine.yield</a>(i * i);
+	<span class="kw">return</span> <span class="nu">0</span>;
+});
+
+<a href="../std/console.html#std-console-log">std.console.log</a>(<a href="../std/coroutine.html#std-coroutine-resume">std.coroutine.resume</a>(squares, <span class="nu">3</span>));   <span class="co">// starts it: runs up to the first yield</span>
+<a href="../std/console.html#std-console-log">std.console.log</a>(<a href="../std/coroutine.html#std-coroutine-resume">std.coroutine.resume</a>(squares));
+<a href="../std/console.html#std-console-log">std.console.log</a>(<a href="../std/coroutine.html#std-coroutine-resume">std.coroutine.resume</a>(squares));
+<a href="../std/console.html#std-console-log">std.console.log</a>(<a href="../std/coroutine.html#std-coroutine-status">std.coroutine.status</a>(squares));</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>1
+4
+9
+suspended</pre></div>
+<ul><li><a href="../std/coroutine.html#std-coroutine-create">std.coroutine.create</a> makes one from a function (it doesn't run yet).</li><li><a href="../std/coroutine.html#std-coroutine-resume">std.coroutine.resume</a> runs it until it yields or returns, and gives what it yielded or returned. The first resume passes the function's <a href="../language/functions.html#declaring">arguments</a>; later ones can pass one <a href="../language/types.html">value</a>, which is what the yield returns inside.</li><li><a href="../std/coroutine.html#std-coroutine-yield">std.coroutine.yield</a> pauses it. It can only yield from its own code, not from inside a callback that a standard function is running (<a href="../std/array.html#std-array-for-each">std.array.for_each</a>'s).</li><li>An <a href="../language/exceptions.html">exception</a> that the coroutine doesn't catch ends it and goes on in the one that resumed it.</li></ul>
+<p>The <a href="../language/index.html">language</a> doesn't decide what a yielded value means: a generator yields the next <a href="../language/arrays.html">element</a>, a scheduler can take it as &quot;wait this long&quot;. The <a href="../std/index.html">standard library</a>'s scheduler is <a href="../std/task.html">std.task</a>.</p>
+<h2 id="tasks">Tasks</h2>
+<p>A task is a <a href="#coroutines">coroutine</a> that the program running the script continues for it: <a href="../std/task.html#std-task-wait">std.task.wait</a>(seconds) pauses it without stopping anything else, and the program resumes the tasks whose wait is over.</p>
+<div class="code"><pre><a href="../std/task.html#std-task-spawn">std.task.spawn</a>(() =&gt; {
+	<a href="../std/console.html#std-console-log">std.console.log</a>(<span class="st">&quot;started&quot;</span>);
+	<a href="../std/task.html#std-task-wait">std.task.wait</a>(<span class="nu">5</span>);
+	<a href="../std/console.html#std-console-log">std.console.log</a>(<span class="st">&quot;five seconds later, done&quot;</span>);
+});
+<a href="../std/console.html#std-console-log">std.console.log</a>(<span class="st">&quot;meanwhile, the rest goes on&quot;</span>);</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>started
+meanwhile, the rest goes on
+five seconds later, done</pre></div>
+<p><a href="../std/task.html#std-task-spawn">std.task.spawn</a> runs the <a href="../language/functions.html#declaring">function</a> right away, up to its first wait. The standalone interpreter keeps running the tasks after the main script until they're all done. See <a href="../std/task.html">std.task</a>.</p>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/language/coroutines.txt</code>.</div></div>
+</body>
+</html>

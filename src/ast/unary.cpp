@@ -16,10 +16,8 @@ IdentifierExpression* Unary::GetIdentifier() noexcept {
 		if (const auto identifier = _left->GetIdentifier())
 			return identifier;
 
-		BinaryExpression* expr = dynamic_cast<Prefix*>(_left);
-
-		if (!expr)
-			expr = dynamic_cast<Postfix*>(_left);
+		// through the prefixes and postfixes around it
+		BinaryExpression* expr = _left->AsUnary();
 
 		if (!expr)
 			break;
@@ -34,10 +32,10 @@ IdentifierExpression* Unary::GetIdentifier() noexcept {
 void bloop::ast::ResolveStep(TResolver& resolver, Expression& operand, const bloop::BloopString& verb, const bloop::CodePosition& position) {
 	operand.Resolve(resolver);
 
-	if (dynamic_cast<Subscript*>(&operand) || dynamic_cast<PropertyAccess*>(&operand))
+	if (operand.AsSubscript() || operand.AsPropertyAccess())
 		return;
 
-	if (auto* identifier = dynamic_cast<IdentifierExpression*>(&operand)) {
+	if (auto* identifier = operand.AsIdentifier()) {
 		if (identifier->IsConst())
 			throw exception::ResolverError(bloop::fmt::format(BLOOPTEXT("can't {} a const value"), verb), position);
 		return;
@@ -50,8 +48,8 @@ void bloop::ast::EmitStep(TBCBuilder& builder, const AbstractSyntaxTree& self, E
 
 	operand.EmitByteCode(builder, true); // the current value
 
-	auto* subscript = dynamic_cast<Subscript*>(&operand);
-	auto* property = dynamic_cast<PropertyAccess*>(&operand);
+	auto* subscript = operand.AsSubscript();
+	auto* property = operand.AsPropertyAccess();
 
 	if (subscript || property) {
 		// x++ evaluates to the old value: keep a copy under the new one
@@ -71,7 +69,7 @@ void bloop::ast::EmitStep(TBCBuilder& builder, const AbstractSyntaxTree& self, E
 		return;
 	}
 
-	auto* identifier = dynamic_cast<IdentifierExpression*>(&operand);
+	auto* identifier = operand.AsIdentifier();
 	assert(identifier);
 
 	if (!prefix && want_value)

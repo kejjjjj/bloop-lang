@@ -48,6 +48,12 @@
 //     game.on("player_died", (name) => { std.console.log(name, " died"); });   // in the script
 //     script.Emit("player_died", { "bob" });                                   // in the host
 //
+// Tasks: std.task.spawn starts a function that can std.task.wait(seconds) without blocking anything, and the
+// host continues the waiting ones with Script::RunTasks (every frame, or whenever it likes):
+//
+//     std.task.spawn(() => { std.task.wait(2); std.console.log("two seconds later"); }); // in the script
+//     script.RunTasks();                                                                    // in the host, every frame
+//
 // A native function can also keep any function it gets (a callback) with Function::Keep,
 // and the host calls it later with Script::Call(function, args).
 
@@ -59,6 +65,7 @@
 #include "vm/gc/handles.hpp" // RootScope, for native functions that allocate
 
 #include <filesystem>
+#include <functional>
 #include <initializer_list>
 #include <memory>
 #include <optional>
@@ -82,6 +89,14 @@ namespace bloop {
 			std::string m_sType;
 			[[nodiscard]] bool operator==(const Opaque&) const = default;
 		};
+		// a reference to something of the host's (a game object): scripts can keep it, compare it (two handles with
+		// the same type and id are equal) and pass it back, but can't make one or look inside. What the id means
+		// is up to the host (an index into its own table, say). It prints as type#id
+		struct Handle {
+			std::string m_sType;
+			std::uint64_t m_uId{};
+			[[nodiscard]] bool operator==(const Handle&) const = default;
+		};
 
 		HostValue() = default; // undefined
 		HostValue(bool value) : m_oData(value) {}
@@ -94,6 +109,7 @@ namespace bloop {
 		HostValue(Array value) : m_oData(std::move(value)) {}
 		HostValue(Object value) : m_oData(std::move(value)) {}
 		HostValue(Opaque value) : m_oData(std::move(value)) {}
+		HostValue(Handle value) : m_oData(std::move(value)) {}
 
 		[[nodiscard]] bool IsUndefined() const noexcept { return std::holds_alternative<std::monostate>(m_oData); }
 		[[nodiscard]] bool IsBool() const noexcept { return std::holds_alternative<bool>(m_oData); }
@@ -104,6 +120,7 @@ namespace bloop {
 		[[nodiscard]] bool IsArray() const noexcept { return std::holds_alternative<Array>(m_oData); }
 		[[nodiscard]] bool IsObject() const noexcept { return std::holds_alternative<Object>(m_oData); }
 		[[nodiscard]] bool IsOpaque() const noexcept { return std::holds_alternative<Opaque>(m_oData); }
+		[[nodiscard]] bool IsHandle() const noexcept { return std::holds_alternative<Handle>(m_oData); }
 
 		// these throw std::bad_variant_access for the wrong type
 		[[nodiscard]] bool AsBool() const { return std::get<bool>(m_oData); }
@@ -114,18 +131,19 @@ namespace bloop {
 		[[nodiscard]] const Array& AsArray() const { return std::get<Array>(m_oData); }
 		[[nodiscard]] const Object& AsObject() const { return std::get<Object>(m_oData); }
 		[[nodiscard]] const Opaque& AsOpaque() const { return std::get<Opaque>(m_oData); }
+		[[nodiscard]] const Handle& AsHandle() const { return std::get<Handle>(m_oData); }
 
 		// a property of an object, or nullptr
 		[[nodiscard]] const HostValue* Find(std::string_view key) const;
 
-		// "undefined", "bool", "int", "double", "string", "array", "object" or the type of an opaque value
+		// "undefined", "bool", "int", "double", "string", "array", "object" or the type of an opaque value or a handle
 		[[nodiscard]] std::string TypeName() const;
 		// readable text: a string as it is, everything else as json (opaque values as <type>)
 		[[nodiscard]] std::string ToString() const;
 
 		[[nodiscard]] bool operator==(const HostValue& other) const = default;
 
-		std::variant<std::monostate, bool, bloop::BloopInt, double, std::string, Array, Object, Opaque> m_oData;
+		std::variant<std::monostate, bool, bloop::BloopInt, double, std::string, Array, Object, Opaque, Handle> m_oData;
 	};
 
 	// a script function that the host keeps: an exported function (Script::GetFunction) or a callback
@@ -167,6 +185,10 @@ namespace bloop {
 		std::filesystem::path m_oImportRoot;
 		bool m_bUnrestrictedImports{};
 
+		// reads the script's files (the main file and its imports): the contents, or nothing if it can't. Empty: from
+		// the disk. For files that aren't on the disk as they are (inside a game's archives). The paths are absolute
+		std::function<std::optional<std::string>(const std::filesystem::path&)> m_fnReadFile;
+
 		// VM::GetUserData() in native functions
 		void* m_pUserData{};
 
@@ -175,6 +197,15 @@ namespace bloop {
 
 		// also print runtime errors to std::cout (they're always in Result::m_sError)
 		bool m_bPrintErrors{};
+	};
+
+	// where an error is, for a host that shows it nicely (an editor, a game's error screen)
+	struct ErrorLocation {
+		std::string m_sFile;       // the file's name as in the messages (the main file's, or an imported one's)
+		std::size_t m_uLine{};     // in that file, from 1
+		std::size_t m_uColumn{};   // from 1
+		std::string m_sMessage;    // what's wrong, without the position
+		std::string m_sSourceLine; // that line of the file (empty if unknown)
 	};
 
 	struct Result {
@@ -186,6 +217,11 @@ namespace bloop {
 		HostValue m_oValue;         // the return value
 		std::string m_sError;       // the message (and the stack trace of runtime errors)
 		bloop::BloopInt m_iExitCode{};
+		// compile and runtime errors: where it is (most have a position)
+		std::optional<ErrorLocation> m_oLocation;
+		// runtime errors: where it happened (the same as m_oLocation), then the calls that led there, outermost last.
+		// Only the first one has a message
+		std::vector<ErrorLocation> m_oTrace;
 
 		[[nodiscard]] bool Ok() const noexcept { return m_eStatus == Status::ok || m_eStatus == Status::exited; }
 
@@ -246,6 +282,15 @@ namespace bloop {
 		[[nodiscard]] Result Emit(std::string_view event, std::span<const HostValue> args);
 		[[nodiscard]] Result Emit(std::string_view event, std::initializer_list<HostValue> args = {});
 		[[nodiscard]] bool HasHandlers(std::string_view event) const;
+
+		// std.task: continues every task whose wait is over, in the order they were spawned (a game: every frame).
+		// Each task gets its own instruction budget. A task that fails ends, and the others still run: the result
+		// is the first error. The value is how many tasks ran
+		[[nodiscard]] Result RunTasks();
+		// the tasks that haven't finished
+		[[nodiscard]] std::size_t TaskCount() const noexcept;
+		// the std.time.now() when the earliest task can continue (none: no tasks)
+		[[nodiscard]] std::optional<double> NextTaskTime() const;
 
 		// the value of an export (after Run)
 		[[nodiscard]] Result Get(std::string_view name) const;

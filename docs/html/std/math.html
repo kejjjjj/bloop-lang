@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>std.math - bloop reference</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="top"><div class="inner">
+<a class="logo" href="../index.html">bloop<span>reference</span></a>
+<div class="sections"><a href="../language/index.html">Language</a><a href="../std/index.html">Standard library</a><a href="../embedding.html">Embedding</a><a href="../agents.html">For agents</a></div>
+</div></div>
+<div id="page">
+<div class="crumbs"><a href="../index.html">bloop</a> <span class="sep">&rsaquo;</span> <a href="../std/index.html">Standard library</a> <span class="sep">&rsaquo;</span> std.math</div>
+<h1>std.math</h1>
+<div class="navbar"><a href="../std/index.html">Standard library</a> <a href="../std/console.html">std.console</a> <a href="../std/array.html">std.array</a> <a href="../std/string.html">std.string</a> <a href="../std/object.html">std.object</a> <a class="here" href="../std/math.html">std.math</a> <a href="../std/json.html">std.json</a> <a href="../std/time.html">std.time</a> <a href="../std/task.html">std.task</a> <a href="../std/coroutine.html">std.coroutine</a> <a href="../std/fs.html">std.fs</a> <a href="../std/process.html">std.process</a></div>
+<div id="body">
+<p>abs, min, max, clamp and sign keep their <a href="../language/functions.html#declaring">argument</a>'s <a href="../language/types.html">type</a> (an <a href="../language/types.html#int">int</a> stays an int). floor, ceil, round and trunc give an int, so the result can index an <a href="../language/arrays.html">array</a>. Everything else gives a <a href="../language/types.html#double">double</a>, with the usual IEEE results (<code>sqrt(-1)</code> is nan).</p>
+<h2 id="constants">Constants</h2>
+<table class="wikitable"><tr><th><a href="../language/basics.html#identifiers">Name</a></th><th><a href="../language/types.html">Value</a></th></tr><tr><td><code>std.math.pi</code></td><td>3.14159...</td></tr><tr><td><code>std.math.tau</code></td><td>2 pi</td></tr><tr><td><code>std.math.e</code></td><td>2.71828...</td></tr><tr><td><code>std.math.inf</code></td><td>infinity</td></tr></table>
+<h2 id="std-math-abs">std.math.abs</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.math.abs(x)</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.sign(x)</code></td><td class="dcl-note">-1, 0 or 1</td></tr></table>
+<h2 id="std-math-min">std.math.min</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.math.min(values...)</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.max(values...)</code></td><td class="dcl-note"></td></tr></table>
+<p>The smallest or largest of one or more <a href="../language/types.html#numbers">numbers</a>.</p>
+<h2 id="std-math-clamp">std.math.clamp</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.math.clamp(x, low, high)</code></td><td class="dcl-note"></td></tr></table>
+<p><code>x</code>, but at least <code>low</code> and at most <code>high</code>.</p>
+<h2 id="std-math-floor">std.math.floor</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.math.floor(x) -&gt; int</code></td><td class="dcl-note">down</td></tr><tr><td class="dcl-code"><code>std.math.ceil(x) -&gt; int</code></td><td class="dcl-note">up</td></tr><tr><td class="dcl-code"><code>std.math.round(x) -&gt; int</code></td><td class="dcl-note">to the nearest, halves away from zero</td></tr><tr><td class="dcl-code"><code>std.math.trunc(x) -&gt; int</code></td><td class="dcl-note">towards zero</td></tr></table>
+<p>A <a href="../language/types.html#double">double</a> that doesn't fit in an <a href="../language/types.html#int">int</a> is a <a href="../language/errors.html">runtime error</a>.</p>
+<h2 id="powers-and-logarithms">Powers and logarithms</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.math.sqrt(x) -&gt; double</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.cbrt(x) -&gt; double</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.pow(base, exponent) -&gt; double</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.exp(x) -&gt; double</code></td><td class="dcl-note">e to the x</td></tr><tr><td class="dcl-code"><code>std.math.log(x) -&gt; double</code></td><td class="dcl-note">natural logarithm</td></tr><tr><td class="dcl-code"><code>std.math.log2(x) -&gt; double</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.log10(x) -&gt; double</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.hypot(x, y) -&gt; double</code></td><td class="dcl-note">the square root of x * x + y * y</td></tr></table>
+<h2 id="trigonometry">Trigonometry</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.math.sin(x) -&gt; double</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.cos(x) -&gt; double</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.tan(x) -&gt; double</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.asin(x) -&gt; double</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.acos(x) -&gt; double</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.atan(x) -&gt; double</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.atan2(y, x) -&gt; double</code></td><td class="dcl-note">the angle of the point (x, y)</td></tr><tr><td class="dcl-code"><code>std.math.to_radians(degrees) -&gt; double</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.to_degrees(radians) -&gt; double</code></td><td class="dcl-note"></td></tr></table>
+<p>Angles in radians.</p>
+<h2 id="std-math-lerp">std.math.lerp</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.math.lerp(a, b, t) -&gt; double</code></td><td class="dcl-note"></td></tr></table>
+<p><code>a + (b - a) * t</code>: <code>a</code> at <code>t = 0</code>, <code>b</code> at <code>t = 1</code>.</p>
+<h2 id="std-math-is-nan">std.math.is_nan</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.math.is_nan(x) -&gt; boolean</code></td><td class="dcl-note"></td></tr><tr><td class="dcl-code"><code>std.math.is_finite(x) -&gt; boolean</code></td><td class="dcl-note"></td></tr></table>
+<h2 id="random-numbers">Random numbers</h2>
+<table class="dcl"><tr><td class="dcl-code"><code>std.math.random() -&gt; double</code></td><td class="dcl-note">in [0, 1)</td></tr><tr><td class="dcl-code"><code>std.math.random_int(low, high) -&gt; int</code></td><td class="dcl-note">in [low, high], both included</td></tr><tr><td class="dcl-code"><code>std.math.seed(seed)</code></td><td class="dcl-note"></td></tr></table>
+<p>Every script has its own <a href="../language/coroutines.html#coroutines">generator</a>. The same seed gives the same <a href="../language/types.html#numbers">numbers</a> again: a script that has to repeat a run (a replay, a generated world) seeds it. The program running the script may seed it first; otherwise every run is different.</p>
+<div class="code"><pre><a href="#random-numbers">std.math.seed</a>(<span class="nu">7</span>);
+<span class="kw">const</span> first = <a href="#random-numbers">std.math.random_int</a>(<span class="nu">1</span>, <span class="nu">6</span>);
+<a href="#random-numbers">std.math.seed</a>(<span class="nu">7</span>);
+<a href="../std/console.html#std-console-log">std.console.log</a>(first == <a href="#random-numbers">std.math.random_int</a>(<span class="nu">1</span>, <span class="nu">6</span>));</pre></div>
+<div class="output"><div class="output-title">Output:</div><pre>true</pre></div>
+</div>
+</div>
+<div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/std/math.txt</code>.</div></div>
+</body>
+</html>

@@ -17,7 +17,8 @@ namespace bloop::parser {
 			o_logical_not,
 			o_bitwise_not,
 			o_increment,
-			o_decrement
+			o_decrement,
+			o_typeof
 		};
 
 		CPrefixOperation() = default;

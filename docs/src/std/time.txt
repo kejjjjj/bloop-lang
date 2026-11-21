@@ -1,0 +1,33 @@
+title: std.time
+path: Standard library / std.time
+defines: std.time
+group: std
+order: 7
+---
+Clocks, in seconds (doubles).
+
+# std.time.now {=std.time.now}
+
+decl std.time.now() -> double
+
+A clock for measuring time: seconds since the script started, never going backwards. The program running the script
+can give it its own clock (one that pauses with the program, say). std.task waits by this clock.
+
+```
+const start = std.time.now();
+// ... work ...
+std.console.log("took ", std.time.now() - start, " s");
+```
+
+# std.time.unix {=std.time.unix}
+
+decl std.time.unix() -> double
+
+The wall clock: seconds since 1970-01-01 00:00 UTC. For timestamps; it can jump when the computer's clock is set.
+
+# std.time.sleep {=std.time.sleep}
+
+decl std.time.sleep(seconds)
+
+Blocks the script (and the program running it) for that long. Only when the program allows it (a [[permission]]): it
+blocks everything else too, so where the program keeps running, scripts wait with std.task.wait instead.

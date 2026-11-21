@@ -49,3 +49,6 @@ TEST_CASE("function expression (lambda)") {
 TEST_CASE("operator precedence") {
     bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "operator_precedence"), Value::Type::t_int, std::array{14, 20, 5, 26, 3, 5});
 }
+TEST_CASE("relational operators bind tighter than equality operators") {
+    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "comparison_precedence"), Value::Type::t_bool, std::array{ true, true, true, true, true });
+}

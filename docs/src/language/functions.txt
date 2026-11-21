@@ -1,0 +1,83 @@
+title: Functions
+path: Language / Functions
+defines: functions, fn
+group: language
+order: 7
+---
+# Declaring {=function, parameter, argument}
+
+```
+fn area(width, height) {
+	return width * height;
+}
+
+std.console.log(area(3, 4));
+```
+```output
+12
+```
+
+`fn name(parameters) { body }` declares a function: a constant with that name. A call has to pass exactly as many
+arguments as the function has parameters: `area(3)` is a runtime error ("passed 1 arguments, but expected 2"). There
+are no default values; a function that needs an optional value takes one that can be [[undefined]]. (The standard
+library's functions have optional parameters: their pages say which.)
+
+Functions can be declared inside other functions; they're visible in the block that declares them.
+
+# Hoisting {=hoisting}
+
+A file's functions can be called anywhere in it, also above their declaration: they're all created before the file
+starts running. (The globals they use are there only once the file has run up to them.)
+
+# Lambdas {=lambda, lambdas, arrow function}
+
+```
+const double = (x) => x * 2;              // the value of one expression
+const describe = (name, count) => {        // a block, with return
+	return `${name}: ${count}`;
+};
+
+std.console.log(double(21), " ", describe("apples", 3));
+std.console.log(std.array.transform([1, 2, 3], (x) => x * x));
+```
+```output
+42 apples: 3
+[ 1, 4, 9 ]
+```
+
+A lambda is a function without a name, as a value: `(parameters) => expression` or `(parameters) => { body }`. The
+parentheses are needed also with one parameter, and with none: `() => 0`.
+
+# Closures {=closure, closures, capture}
+
+A function or lambda inside another uses the outer one's variables as they are, not copies of them: they stay alive
+as long as the inner function does, and changes are seen both ways.
+
+```
+fn counter() {
+	let count = 0;
+	return () => {
+		count++;
+		return count;
+	};
+}
+
+const next = counter();
+next();
+next();
+std.console.log(next());
+```
+```output
+3
+```
+
+# Functions as values
+
+A function is a value of type `function`: it can be stored, passed and returned. Calling something that isn't a
+function is a runtime error.
+
+# Recursion {=recursion}
+
+A function can call itself, up to 1024 calls deep (more is a runtime error: "exceeded 1024 call frames"). Calls
+between script functions don't use the C++ stack; calls through a standard function that takes a callback
+(std.array.transform) do, and the program running the script limits how deep those go.

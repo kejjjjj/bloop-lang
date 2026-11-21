@@ -11,6 +11,7 @@ namespace bloop::ast {
 	struct FunctionCall final : Postfix {
 
 		FunctionCall(const bloop::CodePosition& cp) : Postfix(EPunctuation::p_par_open, cp){}
+		[[nodiscard]] FunctionCall* AsFunctionCall() noexcept override { return this; }
 		FunctionCall(std::vector<std::unique_ptr<Expression>>&& args, const bloop::CodePosition& cp) 
 			: Postfix(EPunctuation::p_par_open, cp), m_oArguments(std::forward<decltype(args)>(args)) {}
 
@@ -38,6 +39,7 @@ namespace bloop::ast {
 	struct Subscript final : Postfix {
 
 		Subscript(const bloop::CodePosition& cp) : Postfix(EPunctuation::p_bracket_open, cp) {}
+		[[nodiscard]] Subscript* AsSubscript() noexcept override { return this; }
 		Subscript(std::unique_ptr<Expression>&& index, const bloop::CodePosition& cp)
 			: Postfix(EPunctuation::p_bracket_open, cp), m_pIndex(std::forward<decltype(index)>(index)) {
 		}
@@ -74,6 +76,7 @@ namespace bloop::ast {
 	struct PropertyAccess final : Postfix {
 		PropertyAccess(bloop::ConstantData _const, const bloop::CodePosition& cp) 
 			: Postfix(EPunctuation::p_period, cp), m_oConstant(_const) {}
+		[[nodiscard]] PropertyAccess* AsPropertyAccess() noexcept override { return this; }
 
 		void Resolve(TResolver& resolver) override {
 			assert(std::get<0>(m_oConstant).empty() == false);

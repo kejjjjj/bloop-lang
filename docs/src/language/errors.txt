@@ -1,0 +1,72 @@
+title: Errors
+path: Language / Errors
+defines: runtime error, compile error, errors
+group: language
+order: 13
+---
+bloop is strict: a mistake stops the script with a message that says what and where, instead of carrying on with a
+guess.
+
+# Compile errors
+
+Found before anything runs: syntax, an unknown name, a name declared twice ([[shadowing]]), assigning to a constant,
+an import that can't be found. Nothing of the program runs.
+
+```
+let total = 0;
+totl += 1;
+```
+```output
+unknown identifier: totl
+at: 2:1
+```
+
+# Runtime errors
+
+Found while it runs, they end the script (or, in a program running it, the call that was running): `catch` can't
+catch them. The message has a stack trace: where it happened, then the calls that led there.
+
+```
+fn second(list) {
+	return list[5];
+}
+fn first() {
+	return second([1, 2]);
+}
+first();
+```
+```output
+runtime error
+
+
+out of bounds index [5]
+
+at [2, 16]
+return list[5];
+           ^
+at [5, 18]
+return second([1, 2]);
+             ^
+at [7, 6]
+first();
+     ^
+```
+
+The usual ones:
+
+| Message | Cause |
+| `cannot promote from "int" to "object"` | an operator with a number and a string (`"n" + 1`): convert first |
+| `value of type "string" is not convertible to a boolean` | a string (or array, object) used as a [[condition]] |
+| `out of bounds index [5]` | an array index past its end |
+| `unknown property "b"` | reading a property an object doesn't have |
+| `passed 1 arguments, but expected 2` | a call with the wrong number of arguments |
+| `division by 0` | an int divided by an int zero |
+| `exceeded 1024 call frames` | recursion too deep |
+| `uncaught exception: ...` | a [[throw]] that no [[catch]] caught |
+| `the script ran too long` | the program running the script limits how much it may do in one call |
+
+# Standard functions
+
+A standard function used wrongly (an argument of the wrong type, a negative count) is a runtime error. What can
+fail when everything is right returns [[undefined]] instead: std.fs.read of a file that isn't there,
+std.json.parse of text that isn't JSON, std.string.parse_int of text that isn't a number.

@@ -23,7 +23,7 @@ bloop::bc::Chunk CByteCodeGlobals::Generate(bloop::metadata::Metadata& metadata)
 	for (auto& stmt : m_pCode->m_oStatements) {
 
 		if (stmt->IsFunction()) {
-			auto func = dynamic_cast<bloop::ast::FunctionDeclarationStatement*>(stmt.get());
+			auto func = stmt->AsFunction();
 			assert(func->m_oIdentifier.m_eKind != bloop::resolver::internal::ResolvedIdentifier::Kind::Error);
 			stmt->Emit(builder, EOpCode::MAKE_FUNCTION, func->m_uFunctionId);
 			stmt->Emit(builder, EOpCode::STORE_GLOBAL, func->m_oIdentifier.m_uSlot);

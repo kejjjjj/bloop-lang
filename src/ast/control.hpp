@@ -11,11 +11,11 @@ namespace bloop::ast {
 	// emits the value that an if/while condition tests (it stays on the stack for JZ).
 	// the condition is an expression, or a declaration with an initializer: if (const x = f())
 	inline void EmitCondition(TBCBuilder& builder, Statement& condition) {
-		if (auto* expression = dynamic_cast<ExpressionStatement*>(&condition)) {
+		if (auto* expression = condition.AsExpressionStatement()) {
 			expression->m_pExpression->EmitByteCode(builder, true);
 			return;
 		}
-		if (auto* declaration = dynamic_cast<VariableDeclaration*>(&condition); declaration && declaration->m_pExpression) {
+		if (auto* declaration = condition.AsVariableDeclaration(); declaration && declaration->m_pExpression) {
 			declaration->m_pExpression->m_pExpression->EmitByteCode(builder, true); // the assignment, its value is the assigned value
 			return;
 		}

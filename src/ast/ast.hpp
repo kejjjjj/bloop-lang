@@ -19,6 +19,17 @@ namespace bloop::ast {
 	using TBCBuilder = bloop::bytecode::CByteCodeBuilder;
 	using TOpCode = bloop::bytecode::EOpCode;
 
+	// the kinds of nodes that other code needs to tell apart: the As* accessors below return them (no RTTI)
+	struct BinaryExpression;
+	struct Unary;
+	struct FunctionCall;
+	struct Subscript;
+	struct PropertyAccess;
+	struct FunctionDeclarationStatement;
+	struct ImportStatement;
+	struct ExpressionStatement;
+	struct VariableDeclaration;
+
 	struct AbstractSyntaxTree	{
 		AbstractSyntaxTree(bloop::CodePosition cp) : m_oApproximatePosition(cp){}
 		virtual ~AbstractSyntaxTree() = default;
@@ -59,6 +70,12 @@ namespace bloop::ast {
 
 		// the name this statement declares in its scope (let, const, fn), if any
 		[[nodiscard]] virtual const bloop::BloopString* GetDeclaredName() const noexcept { return nullptr; }
+
+		// this statement as that kind, or null
+		[[nodiscard]] virtual FunctionDeclarationStatement* AsFunction() noexcept { return nullptr; }
+		[[nodiscard]] virtual ImportStatement* AsImport() noexcept { return nullptr; }
+		[[nodiscard]] virtual ExpressionStatement* AsExpressionStatement() noexcept { return nullptr; } // (return and throw too)
+		[[nodiscard]] virtual VariableDeclaration* AsVariableDeclaration() noexcept { return nullptr; }
 
 		// "export" in front of a global declaration
 		bloop::BloopBool m_bExported{};
@@ -105,11 +122,25 @@ namespace bloop::ast {
 
 		[[nodiscard]] virtual IdentifierExpression* GetIdentifier() noexcept { return nullptr; }
 
+		// this expression as that kind, or null
+		[[nodiscard]] virtual BinaryExpression* AsBinary() noexcept { return nullptr; } // (all of the ones below are)
+		[[nodiscard]] virtual Unary* AsUnary() noexcept { return nullptr; }            // a prefix or a postfix
+		[[nodiscard]] virtual FunctionCall* AsFunctionCall() noexcept { return nullptr; }
+		[[nodiscard]] virtual Subscript* AsSubscript() noexcept { return nullptr; }
+		[[nodiscard]] virtual PropertyAccess* AsPropertyAccess() noexcept { return nullptr; }
+		// only a plain name (unlike GetIdentifier, which also finds the one inside -x or x++)
+		[[nodiscard]] virtual IdentifierExpression* AsIdentifier() noexcept { return nullptr; }
+
 	};
+
+	// (null stays null, like a dynamic_cast)
+	[[nodiscard]] inline BinaryExpression* AsBinary(Expression* expression) noexcept { return expression ? expression->AsBinary() : nullptr; }
 
 	struct ExpressionStatement : Statement {
 		ExpressionStatement(std::unique_ptr<Expression>&& expr, CodePosition cp) 
 			: Statement(cp), m_pExpression(std::forward<decltype(expr)>(expr)){}
+
+		[[nodiscard]] ExpressionStatement* AsExpressionStatement() noexcept override { return this; }
 
 		void Resolve(TResolver& resolver) override {
 			return m_pExpression->Resolve(resolver);
@@ -153,6 +184,7 @@ namespace bloop::ast {
 	struct IdentifierExpression : Expression {
 		IdentifierExpression(const bloop::CodePosition& cp) : Expression(cp) {}
 		[[nodiscard]] IdentifierExpression* GetIdentifier() noexcept override { return this; }
+		[[nodiscard]] IdentifierExpression* AsIdentifier() noexcept override { return this; }
 		using ResolvedIdentifier = bloop::resolver::internal::ResolvedIdentifier;
 		void Resolve(TResolver& resolver) override {
 			m_oResolver = resolver.ResolveIdentifier(m_sName);
@@ -212,19 +244,62 @@ namespace bloop::ast {
 		BinaryExpression(const bloop::CodePosition& cp) : Expression(cp) {}
 		BinaryExpression(bloop::EPunctuation punc, const bloop::CodePosition& cp) : Expression(cp), m_ePunctuation(punc){}
 
+		[[nodiscard]] BinaryExpression* AsBinary() noexcept override { return this; }
+
 		virtual void Resolve(TResolver& resolver) override {
 			left->Resolve(resolver);
 			right->Resolve(resolver);
 		}
 
 		virtual void EmitByteCode(TBCBuilder& builder, bool want_value) override {
+			if (m_ePunctuation == bloop::EPunctuation::p_logical_and || m_ePunctuation == bloop::EPunctuation::p_logical_or) {
+				EmitShortCircuit(builder, want_value);
+				return;
+			}
+
 			left->EmitByteCode(builder, true);
 			right->EmitByteCode(builder, true);
 
 			if (!bloop::bytecode::conversionTable.contains(m_ePunctuation))
 				throw bloop::exception::ByteCodeError(BLOOPTEXT("unsupported operation"), m_oApproximatePosition);
 
-			Emit(builder, bloop::bytecode::conversionTable[m_ePunctuation]);
+			Emit(builder, bloop::bytecode::conversionTable.at(m_ePunctuation));
+
+			if (!want_value)
+				Emit(builder, TOpCode::POP);
+		}
+
+		// a && b, a || b: b only runs when a doesn't decide the result (the guard in `x !== undefined && x.y`).
+		// The result is a boolean (whether the operand that decided it is truthy)
+		//   a && b:  a, JZ false;  b, !!;  JMP end;  false: false
+		//   a || b:  a, JZ right;  true;   JMP end;  right: b, !!
+		void EmitShortCircuit(TBCBuilder& builder, bool want_value) {
+			const bool isAnd = m_ePunctuation == bloop::EPunctuation::p_logical_and;
+			const auto boolean = [&](bool value) {
+				Emit(builder, TOpCode::LOAD_CONST, builder.AddConstant({ bloop::BloopString(1, value ? '\x01' : '\x00'), bloop::EValueType::t_boolean }));
+			};
+			const auto rightAsBoolean = [&]() {
+				right->EmitByteCode(builder, true);
+				Emit(builder, TOpCode::NOT);
+				Emit(builder, TOpCode::NOT);
+			};
+
+			left->EmitByteCode(builder, true);
+			const auto whenFalsy = EmitJump(builder, TOpCode::JZ);
+
+			if (isAnd)
+				rightAsBoolean();
+			else
+				boolean(true);
+			const auto toEnd = EmitJump(builder, TOpCode::JMP);
+
+			PatchJump(builder, whenFalsy, builder.m_uOffset);
+			if (isAnd)
+				boolean(false);
+			else
+				rightAsBoolean();
+
+			PatchJump(builder, toEnd, builder.m_uOffset);
 
 			if (!want_value)
 				Emit(builder, TOpCode::POP);
@@ -372,6 +447,7 @@ namespace bloop::ast {
 			: Statement(cp), m_sName(name), m_pExpression(std::forward<decltype(init)>(init)) {}
 
 		[[nodiscard]] const bloop::BloopString* GetDeclaredName() const noexcept override { return &m_sName; }
+		[[nodiscard]] VariableDeclaration* AsVariableDeclaration() noexcept override { return this; }
 
 		void Resolve(TResolver& resolver) override {
 			if (resolver.ResolveSymbol(m_sName)) {
@@ -408,4 +484,4 @@ namespace bloop::ast {
 		[[nodiscard]] constexpr bool IsConst() const noexcept override { return true; }
 	};
 
-}
+}

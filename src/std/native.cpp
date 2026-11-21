@@ -11,6 +11,7 @@
 #include "lib/object/stdobject.hpp"
 #include "lib/coroutine/stdcoroutine.hpp"
 #include "lib/time/stdtime.hpp"
+#include "lib/task/stdtask.hpp"
 #include "lib/math/stdmath.hpp"
 #include "lib/json/stdjson.hpp"
 #include "lib/fs/stdfs.hpp"
@@ -53,6 +54,7 @@ NativeDef bloop::standard::IncludeStandardLibrary() {
 			NativeField(BLOOPTEXT("json"), bloop::standard::GetJsonDefinitions()),
 			NativeField(BLOOPTEXT("coroutine"), bloop::standard::GetCoroutineDefinitions()),
 			NativeField(BLOOPTEXT("time"), bloop::standard::GetTimeDefinitions()),
+			NativeField(BLOOPTEXT("task"), bloop::standard::GetTaskDefinitions()),
 			NativeField(BLOOPTEXT("math"), bloop::standard::GetMathDefinitions()),
 			// these reach outside of the VM, so they only exist when the VM's environment allows them
 			NativeField(BLOOPTEXT("fs"), bloop::standard::GetFileSystemDefinitions(), Permission::file_system),

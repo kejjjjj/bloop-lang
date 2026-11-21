@@ -1,0 +1,72 @@
+title: Basic concepts
+path: Language / Basic concepts
+defines: statement, comment, identifier, keyword, literal
+group: language
+order: 1
+---
+# Source files
+
+A bloop program is a text file (UTF-8, usually ending in `.bloop`) of statements. They run from top to bottom; a
+`return` at the top level ends the file, and its value is what the file returns to whoever ran it. The functions
+that a file declares can be used before their declaration (see [[hoisting]]).
+
+```
+std.console.log("first");
+std.console.log(add(1, 2));     // add is declared further down
+
+fn add(a, b) {
+	return a + b;
+}
+```
+```output
+first
+3
+```
+
+# Statements
+
+A statement ends with a semicolon, except the ones that end with a block: `fn`, `if`, `while`, `for`, `try`. A block is
+statements between braces, and it can't be empty: `{ }` is a compile error. The body of an if, a while or a for
+can also be a single statement without braces.
+
+```
+if (count > 10)
+	std.console.log("a lot");
+
+while (count > 0) {
+	count--;
+}
+```
+
+# Comments
+
+`//` starts a comment that goes to the end of the line, `/* */` one that can span lines. Comments don't nest.
+
+# Identifiers {=name}
+
+Names of variables, functions and parameters: letters, digits and underscores, not starting with a digit. They're
+case sensitive. A name can't be one of the keywords, and it can't be declared twice where both are visible: an inner
+block or a function inside another can't declare a name that the outer one already has (see [[shadowing]]).
+
+# Keywords
+
+`fn` `let` `const` `if` `else` `while` `for` `return` `break` `continue` `try` `catch` `throw` `import` `export`
+`typeof` `true` `false` `undefined`
+
+`from` has a meaning in an `import` statement only.
+
+# Literals
+
+| Literal | Type | Examples |
+| integer | [[int]] | `42`, `-7`, `1_000_000` (underscores between digits are ignored), `0x1F` (hexadecimal) |
+| unsigned integer | [[uint]] | `42u` |
+| floating point | [[double]] | `3.14`, `0.5`, `.5`, `5.`; with an exponent `1e6`, `2.5e-3`, `1E+9` (always a double) |
+| string | [[string]] | `"text"`, `'text'` (the same), escapes like `\n` (see [[language/strings|strings]]) |
+| template string | string | text between backticks, with `${expression}` parts in it (see [[template string]]) |
+| boolean | [[boolean]] | `true`, `false` |
+| undefined | [[undefined]] | `undefined` |
+| array | [[array]] | `[1, 2, 3]`, `[]` |
+| object | [[object]] | `{ x: 1, y: 2 }`, `{}` |
+
+> An exponent (`e` or `E`, an optional sign, digits) makes a literal a double, even without a decimal point: `1e3` is
+  `1000.0`. Hexadecimal literals have no exponent: `0x1e5` is the int `485`.

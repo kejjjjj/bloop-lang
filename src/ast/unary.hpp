@@ -7,6 +7,7 @@ namespace bloop::ast {
 	struct Unary : BinaryExpression {
 		Unary(bloop::EPunctuation punct, const bloop::CodePosition& cp) : BinaryExpression(punct, cp) {}
 		[[nodiscard]] IdentifierExpression* GetIdentifier() noexcept override;
+		[[nodiscard]] Unary* AsUnary() noexcept override { return this; }
 	};
 
 	// ++ and -- (prefix and postfix). The operand is a variable, an element (arr[i]) or a property (obj.key).
