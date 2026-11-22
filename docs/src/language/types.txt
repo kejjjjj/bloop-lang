@@ -35,8 +35,9 @@ function, a function that ends without returning a value, std.array.pop() of an 
 
 ## int {=int, integer}
 
-The usual number: a 64-bit signed integer. Integer literals are ints. Arithmetic on ints stays int: `7 / 2` is `3`,
-dividing by zero is a runtime error, and going past the largest or smallest int wraps around.
+The usual number: a 64-bit signed integer. Integer literals are ints. Arithmetic on ints stays int (`+`, `-`, `*`,
+`%`), and going past the largest or smallest int wraps around; but `/` always gives a [[double]]: `7 / 2` is `3.5`.
+std.math.idiv divides as whole numbers (`std.math.idiv(7, 2)` is `3`).
 
 ## uint {=uint}
 
@@ -83,4 +84,5 @@ from them. See [[language/functions|Functions]].
 
 A program that runs a script can give it handles: values that stand for something of the program's (a file, a
 window, a task). A script keeps them, compares them (`==`: the same thing) and passes them back to the program's functions,
-but can't look inside them or make one. They print as their type and a number, like `task#2`.
+but can't look inside them or make one. They print as their type and a number, like `task#2`. A handle can be an
+object's key ([[language/objects|objects]]): `counts[door] = 1`.

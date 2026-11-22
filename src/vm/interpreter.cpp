@@ -148,8 +148,8 @@ VM::ExecutionReturnCode VM::InterpretOpCode(TOpCode op) {
 
 			// obj["key"] = value adds the key when it's missing, like obj.key = value
 			if (operand.obj->IsObject()) {
-				if (!index.IsString())
-					throw exception::VMError(BLOOPTEXT("object index must be a string"));
+				if (!index.IsObjectKey())
+					throw exception::VMError(BLOOPTEXT("object index must be a string or a handle"));
 
 				m_oHeap.ObjectSet(operand.obj, index, value);
 				break;

@@ -15,7 +15,7 @@
 //   BloopInt             int, or uint if it fits
 //   BloopUInt            uint, or int if it isn't negative
 //   BloopDouble          any number (int, uint, double)
-//   StringArg, ArrayArg, ObjectArg, CallableArg
+//   StringArg, ArrayArg, ObjectArg, CallableArg, KeyArg (a string or a handle: an object's key)
 //                        views of an argument of that type (see below)
 //   bloop::vm::Value     anything, unchecked
 //   std::variant<...>    any of the alternatives above, the first one that accepts the argument wins
@@ -87,6 +87,11 @@ namespace bloop::standard
 		using ArgView::ArgView;
 	};
 
+	// an object's key: a string or a handle
+	struct KeyArg : ArgView {
+		using ArgView::ArgView;
+	};
+
 	struct CallableArg : ArgView {
 		using ArgView::ArgView;
 	};
@@ -153,6 +158,11 @@ namespace bloop::standard
 			static bool Accepts(const Value& v) noexcept { return v.IsObject(); }
 			static ObjectArg From(const Value& v) noexcept { return ObjectArg(v); }
 			static bloop::BloopString Name() { return BLOOPTEXT("object"); }
+		};
+		template<> struct ArgTraits<KeyArg> {
+			static bool Accepts(const Value& v) noexcept { return v.IsObjectKey(); }
+			static KeyArg From(const Value& v) noexcept { return KeyArg(v); }
+			static bloop::BloopString Name() { return BLOOPTEXT("string\" or \"handle"); }
 		};
 		template<> struct ArgTraits<CallableArg> {
 			static bool Accepts(const Value& v) { return v.IsCallable(); }

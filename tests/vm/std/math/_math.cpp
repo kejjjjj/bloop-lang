@@ -62,6 +62,18 @@ TEST_CASE("std.math | abs, min, max, clamp and sign keep the type") {
 	ExpectError("std.math.max(1, true);", "std.math.max: argument 2 must be \"number\", but got \"boolean\"");
 }
 
+TEST_CASE("std.math | idiv divides whole numbers") {
+	Expect("return [std.math.idiv(7, 2), std.math.idiv(-7, 2), std.math.idiv(7, -2), std.math.idiv(10, 5), std.math.idiv(7, 2u)];", "[ 3, -3, -3, 2, 3 ]");
+	ExpectType("std.math.idiv(7, 2)", Value::Type::t_int);
+	ExpectType("std.math.idiv(7u, 2u)", Value::Type::t_uint);
+	ExpectType("std.math.idiv(7, 2u)", Value::Type::t_int);
+	ExpectError("std.math.idiv(1, 0);", "std.math.idiv: division by 0");
+	ExpectError("std.math.idiv(1u, 0u);", "std.math.idiv: division by 0");
+	ExpectError("std.math.idiv(7.0, 2);", "std.math.idiv: argument 1 must be a whole number (\"int\" or \"uint\"), but got \"double\"");
+	ExpectError("std.math.idiv(7, 2.5);", "argument 2 must be a whole number");
+	ExpectError("std.math.idiv(-9223372036854775807 - 1, -1);", "std.math.idiv: the result doesn't fit in an int");
+}
+
 TEST_CASE("std.math | floor, ceil, round and trunc return ints") {
 	Expect("return [std.math.floor(2.7), std.math.floor(-2.2), std.math.ceil(2.1), std.math.ceil(-2.7)];", "[ 2, -3, 3, -2 ]");
 	// halves round away from zero

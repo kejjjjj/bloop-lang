@@ -33,7 +33,6 @@ The whole reference is also available as plain text, which is easier for a progr
 | `1 == "1"`, `"a" == true` | compare values of the same kind | `cannot promote from ...` |
 | `text == undefined`, `array == undefined` | `text === undefined` | `cannot promote from "undefined" to "object"` |
 | `"a" < "b"` | `std.array.sort` sorts strings; or compare std.string.get_code_at | `incompatible operands "string" and "string"` |
-| `7 / 2` is 3.5 | `7 / 2` is `3` (two ints divide as ints); write `7.0 / 2` | no error: a wrong number |
 | `object.missing` is undefined | `std.object.has(object, "missing")` first | `unknown property "missing"` |
 | `array[10]` is undefined | check `i < std.length(array)` | `out of bounds index [10]` |
 | `array.length`, `text.length` | `std.length(array)`, `std.length(text)` (bytes) | `a value of type "array" is not an aggregate type` |
@@ -200,6 +199,7 @@ std.math.sign(x)  // -1, 0 or 1
 std.math.min(values...)
 std.math.max(values...)
 std.math.clamp(x, low, high)
+std.math.idiv(a, b)  // a and b: ints or uints
 std.math.floor(x) -> int  // down
 std.math.ceil(x) -> int  // up
 std.math.round(x) -> int  // to the nearest, halves away from zero

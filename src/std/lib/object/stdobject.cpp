@@ -6,7 +6,7 @@ using namespace bloop::vm;
 using namespace bloop::standard;
 using namespace bloop::standard::lib;
 
-// keys are strings, and listing functions return them in insertion order
+// keys are strings or handles, and listing functions return them in insertion order
 
 namespace {
 
@@ -28,24 +28,24 @@ namespace {
 	Value Keys(VM& vm, ObjectArg obj) { return List<true>(vm, obj); }
 	Value Values(VM& vm, ObjectArg obj) { return List<false>(vm, obj); }
 
-	bloop::BloopBool Has(ObjectArg obj, StringArg key) {
+	bloop::BloopBool Has(ObjectArg obj, KeyArg key) {
 		return obj.Obj()->ObjectFind(key.Get()) != nullptr;
 	}
 
 	// the value of the property, or undefined if it doesn't exist (obj.key would be an error)
-	Value Get(ObjectArg obj, StringArg key) {
+	Value Get(ObjectArg obj, KeyArg key) {
 		const auto* value = obj.Obj()->ObjectFind(key.Get());
 		return value ? *value : Value{};
 	}
 
 	// adds or changes a property (unlike obj[key] = value, the key doesn't need to exist), returns the value
-	Value Set(VM& vm, ObjectArg obj, StringArg key, Value value) {
+	Value Set(VM& vm, ObjectArg obj, KeyArg key, Value value) {
 		vm.GetHeap().ObjectSet(obj.Obj(), key.Get(), value);
 		return obj.Obj()->ObjectGet(key.Get()); // re-read, setting may have allocated
 	}
 
 	// removes a property, returns whether it existed
-	bloop::BloopBool Remove(ObjectArg obj, StringArg key) {
+	bloop::BloopBool Remove(ObjectArg obj, KeyArg key) {
 		return obj.Obj()->ObjectRemove(key.Get());
 	}
 }

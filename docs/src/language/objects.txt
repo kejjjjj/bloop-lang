@@ -14,7 +14,7 @@ std.console.log(point.name, " ", point["size"], " ", point.position.x);
 A 10 1.000000
 ```
 
-An object is properties, each a name (a string) and a value, kept in the order they were added. An object is
+An object is properties, each a name (a string, or a [[handle]]) and a value, kept in the order they were added. An object is
 [[shared]]: assigning it or passing it doesn't copy it. Property names in a literal are names (or strings in quotes:
 `{ "with space": 1 }`).
 
@@ -25,6 +25,10 @@ An object is properties, each a name (a string) and a value, kept in the order t
 - `o.name = value` or `o[key] = value` sets a property, adding it when it isn't there.
 - std.object.remove removes one, std.object.keys and std.object.values list them (in order), std.length(o) counts
   them.
+- A key in `o[key]` can also be a [[handle]]: two handles to the same thing are the same key, so an object can keep
+  something for each of the program's things (`seen[player] = true`). std.object.keys gives the handles back. Such an
+  object can't become JSON (std.json.stringify is an error), and a program that gets it sees the handle's text
+  (`"door#3"`) as the key.
 
 ```
 const scores = {};

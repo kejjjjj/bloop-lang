@@ -91,7 +91,6 @@ The whole reference is also available as plain text, which is easier for a progr
 | `1 == "1"`, `"a" == true` | compare values of the same kind | `cannot promote from ...` |
 | `text == undefined`, `array == undefined` | `text === undefined` | `cannot promote from "undefined" to "object"` |
 | `"a" < "b"` | `std.array.sort` sorts strings; or compare std.string.get_code_at | `incompatible operands "string" and "string"` |
-| `7 / 2` is 3.5 | `7 / 2` is `3` (two ints divide as ints); write `7.0 / 2` | no error: a wrong number |
 | `object.missing` is undefined | `std.object.has(object, "missing")` first | `unknown property "missing"` |
 | `array[10]` is undefined | check `i < std.length(array)` | `out of bounds index [10]` |
 | `array.length`, `text.length` | `std.length(array)`, `std.length(text)` (bytes) | `a value of type "array" is not an aggregate type` |
@@ -296,7 +295,7 @@ The value that means nothing: a variable declared without a value, a missing opt
 
 ### int
 
-The usual number: a 64-bit signed integer. Integer literals are ints. Arithmetic on ints stays int: `7 / 2` is `3`, dividing by zero is a runtime error, and going past the largest or smallest int wraps around.
+The usual number: a 64-bit signed integer. Integer literals are ints. Arithmetic on ints stays int (`+`, `-`, `*`, `%`), and going past the largest or smallest int wraps around; but `/` always gives a double: `7 / 2` is `3.5`. std.math.idiv divides as whole numbers (`std.math.idiv(7, 2)` is `3`).
 
 ### uint
 
@@ -335,7 +334,7 @@ Functions are values: they can be stored in variables, arrays and objects, passe
 
 ## Handles
 
-A program that runs a script can give it handles: values that stand for something of the program's (a file, a window, a task). A script keeps them, compares them (`==`: the same thing) and passes them back to the program's functions, but can't look inside them or make one. They print as their type and a number, like `task#2`.
+A program that runs a script can give it handles: values that stand for something of the program's (a file, a window, a task). A script keeps them, compares them (`==`: the same thing) and passes them back to the program's functions, but can't look inside them or make one. They print as their type and a number, like `task#2`. A handle can be an object's key (objects): `counts[door] = 1`.
 
 # Variables
 
@@ -401,7 +400,7 @@ Every module has its own globals: a module's globals are visible to another only
 | `a + b` | addition; two strings: joined (see language/strings\|strings) |
 | `a - b` | subtraction |
 | `a * b` | multiplication |
-| `a / b` | division: ints give an int (rounded towards zero), by an int zero a runtime error; a double in it gives a double |
+| `a / b` | division, always a double: `7 / 2` is `3.5`, `1 / 0` is inf, `0 / 0` nan (whole numbers: std.math.idiv) |
 | `a % b` | the remainder (the sign of `a`): `7 % 3` is `1`, `-7 % 3` is `-1`; on doubles too |
 | `-a` | negation (not on a uint) |
 | `++a`, `a++` | adds one: before (the new value) or after (the old value) |
@@ -750,13 +749,14 @@ std.console.log(point.name, " ", point["size"], " ", point.position.x);
 A 10 1.000000
 ```
 
-An object is properties, each a name (a string) and a value, kept in the order they were added. An object is shared: assigning it or passing it doesn't copy it. Property names in a literal are names (or strings in quotes: `{ "with space": 1 }`).
+An object is properties, each a name (a string, or a handle) and a value, kept in the order they were added. An object is shared: assigning it or passing it doesn't copy it. Property names in a literal are names (or strings in quotes: `{ "with space": 1 }`).
 
 ## Properties
 
 - `o.name` or `o["name"]` reads a property. A property that isn't there is a runtime error ("unknown property"): std.object.has checks first, std.object.get gives undefined instead.
 - `o.name = value` or `o[key] = value` sets a property, adding it when it isn't there.
 - std.object.remove removes one, std.object.keys and std.object.values list them (in order), std.length(o) counts them.
+- A key in `o[key]` can also be a handle: two handles to the same thing are the same key, so an object can keep something for each of the program's things (`seen[player] = true`). std.object.keys gives the handles back. Such an object can't become JSON (std.json.stringify is an error), and a program that gets it sees the handle's text (`"door#3"`) as the key.
 
 ```bloop
 const scores = {};
@@ -962,7 +962,7 @@ The usual ones:
 | `out of bounds index [5]` | an array index past its end |
 | `unknown property "b"` | reading a property an object doesn't have |
 | `passed 1 arguments, but expected 2` | a call with the wrong number of arguments |
-| `division by 0` | an int divided by an int zero |
+| `division by 0` | `%` of an int by an int zero (`/` gives inf); std.math.idiv by zero |
 | `exceeded 1024 call frames` | recursion too deep |
 | `uncaught exception: ...` | a throw that no catch caught |
 | `the script ran too long` | the program running the script limits how much it may do in one call |
@@ -1533,7 +1533,7 @@ std.console.log(std.string.parse_int(" 42 "), " ", std.string.parse_int("42px"),
 
 (std/object.html)
 
-Functions for objects. Keys are strings, and lists come in the order the properties were added.
+Functions for objects. Keys are strings or handles, and lists come in the order the properties were added.
 
 ## std.object.keys
 
@@ -1589,7 +1589,7 @@ Removes the property; returns whether it was there.
 
 (std/math.html)
 
-abs, min, max, clamp and sign keep their argument's type (an int stays an int). floor, ceil, round and trunc give an int, so the result can index an array. Everything else gives a double, with the usual IEEE results (`sqrt(-1)` is nan).
+abs, min, max, clamp and sign keep their argument's type (an int stays an int). floor, ceil, round and trunc give an int, so the result can index an array; so does idiv, whole numbers divided as whole numbers (the `/` operator always gives a double). Everything else gives a double, with the usual IEEE results (`sqrt(-1)` is nan).
 
 ## Constants
 
@@ -1623,6 +1623,19 @@ std.math.clamp(x, low, high)
 ```
 
 `x`, but at least `low` and at most `high`.
+
+## std.math.idiv
+
+```
+std.math.idiv(a, b)  // a and b: ints or uints
+```
+
+`a` divided by `b` as whole numbers, rounded towards zero: `std.math.idiv(7, 2)` is `3`, `std.math.idiv(-7, 2)` is `-3`. Two ints give an int, two uints a uint, an int and a uint an int. Dividing by zero is a runtime error (`std.math.idiv: division by 0`), and so is a double (`std.math.trunc(a / b)` divides doubles that way).
+
+```bloop
+const middle = std.math.idiv(std.length(items), 2);   // an index
+const rows = std.math.idiv(count + per_row - 1, per_row);
+```
 
 ## std.math.floor
 
@@ -2064,6 +2077,6 @@ script.RunTasks();                                  // std.task: whenever the pr
 - Script::Call calls an exported function by name, or a function the program kept (a callback a native function got: bloop::Function::Keep).
 - Script::Emit calls every handler of an event, in the order they were added.
 - Script::RunTasks continues the std.task tasks whose wait is over.
-- Values go in and out as bloop::HostValue: undefined, bool, int, double, string, array, object, and handles (HostValue::Handle: a type name and an id, for the program's own objects).
+- Values go in and out as bloop::HostValue: undefined, bool, int, double, string, array, object, and handles (HostValue::Handle: a type name and an id, for the program's own objects). An object a script keyed by handles comes out with each handle's text as its key (`"door#3"`).
 
 Errors never throw into the program: every call returns a bloop::Result, with the message, the status (compile error, runtime error, exited) and, for errors, where they happened.

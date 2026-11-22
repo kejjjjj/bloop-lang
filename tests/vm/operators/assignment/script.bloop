@@ -4,7 +4,7 @@ const arr = [ 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 ];
 arr[0] += 10;
 arr[1] -= 5;
 arr[2] *= 2;
-arr[3] /= 2;
+arr[3] = std.math.idiv(arr[3], 2);   // (/= gives a double: operators/multiplicative/division)
 arr[4] %= 2;
 arr[5] <<= 2;
 arr[6] >>= 2;

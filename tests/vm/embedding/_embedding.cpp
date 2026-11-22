@@ -840,3 +840,73 @@ TEST_CASE("embedding | handles") {
 	REQUIRE(json.m_sError.find("a value of type \"door\" can't be converted to json") != std::string::npos);
 	REQUIRE(script.Call("as_condition", { door7 }).m_eStatus == Result::Status::runtime_error);
 }
+
+TEST_CASE("embedding | handles as object keys") {
+	using namespace bloop::standard;
+	ScriptOptions options;
+	options.m_sEventsModule = "events";
+
+	auto script = Start(R"(
+		let seen = {};
+		events.on("seen", (who) => {
+			if (std.object.has(seen, who))
+				seen[who] = seen[who] + 1;
+			else
+				seen[who] = 1;
+		});
+		export fn count(who) { return std.object.get(seen, who); }
+		export fn keys() { return std.object.keys(seen); }
+		export fn first_key_is(who) { return std.object.keys(seen)[0] == who; }
+		export fn with_string() { seen["door#7"] = "text"; return [std.length(seen), seen["door#7"]]; }
+		export fn remove(who) { return [std.object.remove(seen, who), std.object.has(seen, who)]; }
+		export fn set(who) { std.object.set(seen, who, 100); return seen[who]; }
+		export fn as_json() { return std.json.stringify(seen); }
+		export fn whole() { return seen; }
+		export fn after_gc(who) { std.gc_minor(); std.gc_major(); return seen[who]; }
+		export fn missing(who) { return seen[who]; }
+		export fn bad_key() { seen[5] = 1; }
+	)", options);
+
+	const HostValue door7(HostValue::Handle{ "door", 7 });
+	const HostValue player7(HostValue::Handle{ "player", 7 });
+
+	// each Emit hands out a new handle value: the same thing is still the same key
+	REQUIRE(script.Emit("seen", { door7 }).Ok());
+	REQUIRE(script.Emit("seen", { door7 }).Ok());
+	REQUIRE(script.Emit("seen", { player7 }).Ok());
+	REQUIRE(script.Call("count", { door7 }).m_oValue == HostValue(2));
+	REQUIRE(script.Call("count", { player7 }).m_oValue == HostValue(1)); // (the same id, another type: another key)
+	REQUIRE(script.Call("count", { HostValue(HostValue::Handle{ "door", 8 }) }).m_oValue == HostValue());
+	REQUIRE(script.Call("first_key_is", { door7 }).m_oValue == HostValue(true));
+	REQUIRE(script.Call("keys").m_oValue == HostValue(HostValue::Array{ door7, player7 }));
+
+	// a string that reads like it is another key
+	REQUIRE(script.Call("with_string").m_oValue == HostValue(HostValue::Array{ 3, "text" }));
+	REQUIRE(script.Call("count", { door7 }).m_oValue == HostValue(2));
+
+	// many keys: the object grows (and moves its entries), the GC moves the handles
+	for (int i = 0; i < 40; i++)
+		REQUIRE(script.Emit("seen", { HostValue(HostValue::Handle{ "item", static_cast<std::uint64_t>(i) }) }).Ok());
+	REQUIRE(script.Call("after_gc", { door7 }).m_oValue == HostValue(2));
+	REQUIRE(script.Call("after_gc", { HostValue(HostValue::Handle{ "item", 39 }) }).m_oValue == HostValue(1));
+
+	REQUIRE(script.Call("remove", { player7 }).m_oValue == HostValue(HostValue::Array{ true, false }));
+	REQUIRE(script.Call("set", { player7 }).m_oValue == HostValue(100));
+
+	auto missing = script.Call("missing", { HostValue(HostValue::Handle{ "door", 1 }) });
+	REQUIRE(missing.m_eStatus == Result::Status::runtime_error);
+	REQUIRE(missing.m_sError.find("unknown property \"door#1\"") != std::string::npos);
+
+	auto bad = script.Call("bad_key");
+	REQUIRE(bad.m_eStatus == Result::Status::runtime_error);
+	REQUIRE(bad.m_sError.find("object index must be a string or a handle") != std::string::npos);
+
+	// json has no such keys; the host gets the handle's text as the key
+	auto json = script.Call("as_json");
+	REQUIRE(json.m_eStatus == Result::Status::runtime_error);
+	REQUIRE(json.m_sError.find("an object with a handle (door#7) as a key can't be converted to json") != std::string::npos);
+	const auto whole = script.Call("whole");
+	REQUIRE(whole.Ok());
+	REQUIRE(whole.m_oValue.IsObject());
+	REQUIRE(whole.m_oValue.AsObject()[0].first == "door#7");
+}

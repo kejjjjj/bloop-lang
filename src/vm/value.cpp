@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <cassert>
 #include <cstring>
+#include <cstdint>
 
 using namespace bloop::vm;
 
@@ -132,9 +133,17 @@ bloop::BloopInt Value::ToInt() const {
 
 	throw exception::VMError(bloop::fmt::format(BLOOPTEXT("value of type \"{}\" is not convertible to an integer"), TypeToString()));
 }
+// an object key's hash: a string's, or a handle's from its type and id (the same for every handle to the same thing)
 bloop::BloopUInt32 Value::Hash() const {
-	assert(type == Type::t_object);
-	assert(obj->type == Object::Type::ot_string);
+	assert(IsObjectKey());
+	if (obj->type == Object::Type::ot_handle) {
+		auto h = static_cast<bloop::BloopUInt64>(reinterpret_cast<std::uintptr_t>(obj->handle.type)) * 0x9E3779B97F4A7C15ull;
+		h ^= obj->handle.id + 0x9E3779B97F4A7C15ull + (h << 6) + (h >> 2);
+		h ^= h >> 29;
+		h *= 0xBF58476D1CE4E5B9ull;
+		h ^= h >> 32;
+		return static_cast<bloop::BloopUInt32>(h);
+	}
 	return obj->string.hash;
 }
 bloop::BloopString Value::TypeToString() const {

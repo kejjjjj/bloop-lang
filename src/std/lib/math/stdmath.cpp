@@ -14,6 +14,7 @@ using namespace bloop::standard::lib;
 // std.math
 //
 //   abs, min, max, clamp, sign  keep the type of their argument (an int stays an int)
+//   idiv                        whole numbers divided as whole numbers (the / operator always gives a double)
 //   floor, ceil, round, trunc   return an int (so the result can index an array)
 //   everything else             returns a double, with the usual IEEE results: sqrt(-1) is nan, 1 / 0 is inf...
 //   random, random_int, seed    a generator per VM, seeded with Environment::m_oRandomSeed
@@ -103,6 +104,36 @@ namespace {
 		if (Less(high, x))
 			return high;
 		return x;
+	}
+
+	// a divided by b, rounded towards zero: two ints give an int, two uints a uint (an int and a uint: an int, when the
+	// uint fits in one). Doubles aren't taken: std.math.trunc(a / b) is that
+	Value Idiv(Value a, Value b) {
+		const auto checkWhole = [](const Value& v, std::size_t index) {
+			if (v.type != VT::t_int && v.type != VT::t_uint)
+				Fail(bloop::fmt::format(BLOOPTEXT("std.math.idiv: argument {} must be a whole number (\"int\" or \"uint\"), but got \"{}\""), index + 1u, v.TypeToString()));
+		};
+		checkWhole(a, 0u);
+		checkWhole(b, 1u);
+
+		if (a.type == VT::t_uint && b.type == VT::t_uint) {
+			if (b.u == 0u)
+				Fail(BLOOPTEXT("std.math.idiv: division by 0"));
+			return Value{ static_cast<bloop::BloopUInt>(a.u / b.u) };
+		}
+
+		const auto toInt = [](const Value& v) {
+			if (v.type == VT::t_uint && v.u > static_cast<bloop::BloopUInt>(std::numeric_limits<bloop::BloopInt>::max()))
+				Fail(BLOOPTEXT("std.math.idiv: a uint too big for an int can only be divided by a uint"));
+			return v.type == VT::t_int ? v.i : static_cast<bloop::BloopInt>(v.u);
+		};
+		const bloop::BloopInt x = toInt(a);
+		const bloop::BloopInt y = toInt(b);
+		if (y == 0)
+			Fail(BLOOPTEXT("std.math.idiv: division by 0"));
+		if (x == std::numeric_limits<bloop::BloopInt>::min() && y == -1)
+			Fail(BLOOPTEXT("std.math.idiv: the result doesn't fit in an int"));
+		return Value{ static_cast<bloop::BloopInt>(x / y) };
 	}
 
 	// -1, 0 or 1 (an int for ints, a double for doubles: nan stays nan)
@@ -213,6 +244,7 @@ NativeDef bloop::standard::GetMathDefinitions() {
 			NativeField(BLOOPTEXT("max"), Bind<&Max>()),
 			NativeField(BLOOPTEXT("clamp"), Bind<&Clamp>()),
 			NativeField(BLOOPTEXT("sign"), Bind<&Sign>()),
+			NativeField(BLOOPTEXT("idiv"), Bind<&Idiv>()),
 
 			NativeField(BLOOPTEXT("floor"), Bind<&Floor>()),
 			NativeField(BLOOPTEXT("ceil"), Bind<&Ceil>()),

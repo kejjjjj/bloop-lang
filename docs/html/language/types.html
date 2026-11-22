@@ -24,7 +24,7 @@
 <p><code>true</code> and <code>false</code>, what <a href="../language/operators.html#comparison">comparisons</a> and the <a href="../language/operators.html#logic">logical operators</a> give. In <a href="../language/operators.html#arithmetic">arithmetic</a> a boolean counts as <code>1</code> or <code>0</code> (<code>true + 1</code> is <code>2</code>).</p>
 <h2 id="numbers">Numbers</h2>
 <h3 id="int">int</h3>
-<p>The usual <a href="#numbers">number</a>: a 64-bit signed integer. Integer <a href="../language/basics.html">literals</a> are ints. <a href="../language/operators.html#arithmetic">Arithmetic</a> on ints stays int: <code>7 / 2</code> is <code>3</code>, dividing by zero is a <a href="../language/errors.html">runtime error</a>, and going past the largest or smallest int wraps around.</p>
+<p>The usual <a href="#numbers">number</a>: a 64-bit signed integer. Integer <a href="../language/basics.html">literals</a> are ints. <a href="../language/operators.html#arithmetic">Arithmetic</a> on ints stays int (<code>+</code>, <code>-</code>, <code>*</code>, <code>%</code>), and going past the largest or smallest int wraps around; but <code>/</code> always gives a <a href="#double">double</a>: <code>7 / 2</code> is <code>3.5</code>. <a href="../std/math.html#std-math-idiv">std.math.idiv</a> divides as whole numbers (<a href="../std/math.html#std-math-idiv"><code>std.math.idiv(7, 2)</code></a> is <code>3</code>).</p>
 <h3 id="uint">uint</h3>
 <p>A 64-bit unsigned <a href="#int">integer</a>, written with a <code>u</code> after the <a href="#numbers">number</a> (<code>5u</code>). Subtracting past zero wraps around to the largest values, and a uint can't be negated.</p>
 <h3 id="double">double</h3>
@@ -43,7 +43,7 @@
 <h2 id="functions">Functions</h2>
 <p><a href="../language/functions.html">Functions</a> are values: they can be stored in <a href="../language/variables.html">variables</a>, <a href="../language/arrays.html">arrays</a> and <a href="../language/objects.html">objects</a>, passed to other functions and returned from them. See <a href="../language/functions.html">Functions</a>.</p>
 <h2 id="handles">Handles</h2>
-<p>A program that runs a script can give it handles: values that stand for something of the program's (a file, a window, a <a href="../language/coroutines.html#tasks">task</a>). A script keeps them, compares them (<code>==</code>: the same thing) and passes them back to the program's <a href="../language/functions.html">functions</a>, but can't look inside them or make one. They print as their type and a <a href="#numbers">number</a>, like <code>task#2</code>.</p>
+<p>A program that runs a script can give it handles: values that stand for something of the program's (a file, a window, a <a href="../language/coroutines.html#tasks">task</a>). A script keeps them, compares them (<code>==</code>: the same thing) and passes them back to the program's <a href="../language/functions.html">functions</a>, but can't look inside them or make one. They print as their type and a <a href="#numbers">number</a>, like <code>task#2</code>. A handle can be an <a href="../language/objects.html">object</a>'s key (<a href="../language/objects.html">objects</a>): <code>counts[door] = 1</code>.</p>
 </div>
 </div>
 <div id="footer"><div class="inner">Generated from plain text by <code>docs/build.bloop</code>, a bloop script. Every page's source is <code>docs/src/language/types.txt</code>.</div></div>

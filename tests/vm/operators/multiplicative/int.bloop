@@ -2,8 +2,8 @@ return [
     3 * 4,
     -2 * 5,
 
-    10 / 2,
-    7 / 2,
+    std.math.idiv(10, 2),
+    std.math.idiv(7, 2),
 
     10 % 3,
     7 % 4

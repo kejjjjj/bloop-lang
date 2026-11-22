@@ -5,8 +5,8 @@ group: std
 order: 5
 ---
 abs, min, max, clamp and sign keep their argument's type (an int stays an int). floor, ceil, round and trunc give an
-int, so the result can index an array. Everything else gives a double, with the usual IEEE results (`sqrt(-1)` is
-nan).
+int, so the result can index an array; so does idiv, whole numbers divided as whole numbers (the `/` operator always
+gives a double). Everything else gives a double, with the usual IEEE results (`sqrt(-1)` is nan).
 
 # Constants {=std.math.pi, std.math.tau, std.math.e, std.math.inf}
 
@@ -33,6 +33,19 @@ The smallest or largest of one or more numbers.
 decl std.math.clamp(x, low, high)
 
 `x`, but at least `low` and at most `high`.
+
+# std.math.idiv {=std.math.idiv}
+
+decl std.math.idiv(a, b)  // a and b: ints or uints
+
+`a` divided by `b` as whole numbers, rounded towards zero: `std.math.idiv(7, 2)` is `3`, `std.math.idiv(-7, 2)` is
+`-3`. Two ints give an int, two uints a uint, an int and a uint an int. Dividing by zero is a runtime error
+(`std.math.idiv: division by 0`), and so is a double (`std.math.trunc(a / b)` divides doubles that way).
+
+```
+const middle = std.math.idiv(std.length(items), 2);   // an index
+const rows = std.math.idiv(count + per_row - 1, per_row);
+```
 
 # std.math.floor {=std.math.floor, std.math.ceil, std.math.round, std.math.trunc}
 

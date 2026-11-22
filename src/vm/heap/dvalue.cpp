@@ -60,8 +60,8 @@ Value& Object::Index(Value vidx) const {
 		return array.values[idx];
 	} case Type::ot_object: {
 
-		if (!vidx.IsString())
-			throw exception::VMError(BLOOPTEXT("object index must be a string"));
+		if (!vidx.IsObjectKey())
+			throw exception::VMError(BLOOPTEXT("object index must be a string or a handle"));
 
 		return ObjectGet(vidx);
 	} default:

@@ -164,8 +164,9 @@ namespace {
 			HostValue::Object object;
 			for (const auto slot : obj->ObjectSlotsInOrder()) {
 				const auto& entry = obj->object.entries[slot];
-				object.emplace_back(std::string(entry.key.obj->string.data, static_cast<std::size_t>(entry.key.obj->string.len)),
-					ToHost(entry.value, path));
+				// (a handle as a key: its text, "door#3": the host's objects have string keys)
+				object.emplace_back(entry.key.IsString() ? std::string(entry.key.obj->string.data, static_cast<std::size_t>(entry.key.obj->string.len))
+					: entry.key.ValueToString(), ToHost(entry.value, path));
 			}
 			result = HostValue(std::move(object));
 		}

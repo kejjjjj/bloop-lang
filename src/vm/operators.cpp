@@ -140,19 +140,16 @@ Value Value::operator*(Value v) {
     }
     throw exception::VMError(bloop::fmt::format(BLOOPTEXT("incompatible operands \"{}\" and \"{}\""), TypeToString(), v.TypeToString()));
 }
+// always a double, like JavaScript: 7 / 2 is 3.5 and 1 / 0 is inf (std.math.idiv divides whole numbers)
 Value Value::operator/(Value v) {
 
     Coerce(v);
 
     switch (type) {
     case VT::t_uint:
-        if (v.u == 0)
-            throw exception::VMError(BLOOPTEXT("division by 0"));
-        return u / v.u;
+        return static_cast<bloop::BloopDouble>(static_cast<bloop::BloopDouble>(u) / static_cast<bloop::BloopDouble>(v.u));
     case VT::t_int:
-        if (v.u == 0)
-            throw exception::VMError(BLOOPTEXT("division by 0"));
-        return i / v.i;
+        return static_cast<bloop::BloopDouble>(static_cast<bloop::BloopDouble>(i) / static_cast<bloop::BloopDouble>(v.i));
     case VT::t_double:
         return d / v.d;
     default:

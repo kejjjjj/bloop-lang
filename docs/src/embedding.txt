@@ -41,7 +41,8 @@ script.RunTasks();                                  // std.task: whenever the pr
 - Script::Emit calls every handler of an event, in the order they were added.
 - Script::RunTasks continues the std.task tasks whose wait is over.
 - Values go in and out as bloop::HostValue: undefined, bool, int, double, string, array, object, and handles
-  (HostValue::Handle: a type name and an id, for the program's own objects).
+  (HostValue::Handle: a type name and an id, for the program's own objects). An object a script keyed by handles
+  comes out with each handle's text as its key (`"door#3"`).
 
 Errors never throw into the program: every call returns a bloop::Result, with the message, the status (compile error,
 runtime error, exited) and, for errors, where they happened.

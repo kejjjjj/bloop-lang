@@ -39,7 +39,7 @@ TEST_CASE("std.length of objects") {
 }
 TEST_CASE("std.object functions only accept objects and string keys") {
     ExpectError("return std.object.keys([1]);", "argument 1 must be \"object\", but got \"array\"");
-    ExpectError("return std.object.get({}, 1);", "argument 2 must be \"string\", but got \"int\"");
+    ExpectError("return std.object.get({}, 1);", "argument 2 must be \"string\" or \"handle\", but got \"int\"");
 }
 TEST_CASE("object literals keep the order their keys were written in") {
     Expect("return std.object.keys({ z: 1, y: 2, x: 3, w: 4, v: 5, u: 6 });", "[ z, y, x, w, v, u ]");

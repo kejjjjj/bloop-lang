@@ -1,0 +1,6 @@
+const nan = 0 / 0;
+return [
+    1 / 0 == std.math.inf,
+    -1 / 0 == -std.math.inf,
+    std.math.is_nan(nan)
+];

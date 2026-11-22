@@ -60,7 +60,7 @@ The usual ones:
 | `out of bounds index [5]` | an array index past its end |
 | `unknown property "b"` | reading a property an object doesn't have |
 | `passed 1 arguments, but expected 2` | a call with the wrong number of arguments |
-| `division by 0` | an int divided by an int zero |
+| `division by 0` | `%` of an int by an int zero (`/` gives inf); std.math.idiv by zero |
 | `exceeded 1024 call frames` | recursion too deep |
 | `uncaught exception: ...` | a [[throw]] that no [[catch]] caught |
 | `the script ran too long` | the program running the script limits how much it may do in one call |

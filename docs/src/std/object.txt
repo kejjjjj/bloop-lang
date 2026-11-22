@@ -4,7 +4,8 @@ defines: std.object
 group: std
 order: 4
 ---
-Functions for [[language/objects|objects]]. Keys are strings, and lists come in the order the properties were added.
+Functions for [[language/objects|objects]]. Keys are strings or [[handle|handles]], and lists come in the order the
+properties were added.
 
 # std.object.keys {=std.object.keys, std.object.values}
 

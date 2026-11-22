@@ -138,6 +138,8 @@ namespace {
 				if (i)
 					m_sOut += ',';
 				NewLine(m_oPath.size());
+				if (!entry.key.IsString())
+					Fail(bloop::fmt::format(BLOOPTEXT("std.json.stringify: an object with a handle ({}) as a key can't be converted to json"), entry.key.ValueToString()));
 				WriteString({ entry.key.obj->string.data, static_cast<std::size_t>(entry.key.obj->string.len) });
 				m_sOut += m_iIndent > 0 ? ": " : ":";
 				Write(entry.value);

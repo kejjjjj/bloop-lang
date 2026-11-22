@@ -10,7 +10,7 @@ order: 4
 | `a + b` | addition; two strings: joined (see [[language/strings|strings]]) |
 | `a - b` | subtraction |
 | `a * b` | multiplication |
-| `a / b` | division: ints give an int (rounded towards zero), by an int zero a runtime error; a double in it gives a double |
+| `a / b` | division, always a double: `7 / 2` is `3.5`, `1 / 0` is inf, `0 / 0` nan (whole numbers: std.math.idiv) |
 | `a % b` | the remainder (the sign of `a`): `7 % 3` is `1`, `-7 % 3` is `-1`; on doubles too |
 | `-a` | negation (not on a uint) |
 | `++a`, `a++` | adds one: before (the new value) or after (the old value) |

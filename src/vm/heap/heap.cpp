@@ -162,7 +162,7 @@ Object* Heap::StringConcat(Object* a, Object* b)
 }
 void Heap::ObjectSet(Object* obj, Value key, Value value) {
 
-	assert(obj->IsObject() && key.IsString());
+	assert(obj->IsObject() && key.IsObjectKey());
 
 	if (obj->ObjectFind(key) == nullptr && obj->ObjectNeedsToGrow()) {
 

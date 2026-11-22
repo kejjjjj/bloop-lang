@@ -9,7 +9,7 @@ TEST_CASE("integer multiplicative operations") {
         // multiply
         bloop::BloopInt(3) * bloop::BloopInt(4),
         bloop::BloopInt(-2) * bloop::BloopInt(5),
-        // divide
+        // divide as whole numbers (std.math.idiv)
         bloop::BloopInt(10) / bloop::BloopInt(2),
         bloop::BloopInt(7) / bloop::BloopInt(2),
         // modulo
@@ -22,7 +22,7 @@ TEST_CASE("uinteger multiplicative operations") {
         // multiply
         bloop::BloopUInt(3u) * bloop::BloopUInt(4u),
         bloop::BloopUInt(2u) * bloop::BloopUInt(5u),
-        // divide
+        // divide as whole numbers (std.math.idiv)
         bloop::BloopUInt(10u) / bloop::BloopUInt(2u),
         bloop::BloopUInt(7u) / bloop::BloopUInt(2u),
         // modulo
@@ -42,4 +42,17 @@ TEST_CASE("double multiplicative operations") {
         std::fmod(10.0, 3.0),
         std::fmod(7.5, 2.0),
     });
+}
+TEST_CASE("division always gives a double") {
+    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "division"), Value::Type::t_double, std::array{
+        5.0,        // 10 / 2
+        3.5,        // 7 / 2
+        -3.5,       // -7 / 2
+        2.5,        // 10u / 4u
+        2.5,        // 5 / 2.0
+        2.5,        // x /= 4, x = 10
+    });
+}
+TEST_CASE("dividing by zero gives inf, nan for 0 / 0") {
+    bloop::test::CheckArray(MAKE_RELATIVE_PATH(PREFIX, "division_by_zero"), Value::Type::t_bool, std::array{ true, true, true });
 }

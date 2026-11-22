@@ -27,6 +27,9 @@ namespace bloop::vm {
         [[nodiscard]] constexpr bool IsObject() const noexcept { return type == Type::t_object && obj->IsObject(); }
         [[nodiscard]] constexpr bool IsFunction() const noexcept { return type == Type::t_object && obj->IsFunction(); }
         [[nodiscard]] constexpr bool IsClosure() const noexcept { return type == Type::t_object && obj->IsClosure(); }
+        [[nodiscard]] constexpr bool IsHandle() const noexcept { return type == Type::t_object && obj->IsHandle(); }
+        // what an object's key can be: a string, or a handle (two handles to the same thing are the same key)
+        [[nodiscard]] constexpr bool IsObjectKey() const noexcept { return IsString() || IsHandle(); }
 
         [[nodiscard]] bool IsTruthy() const;
         [[nodiscard]] bool IsArithmetic() const;

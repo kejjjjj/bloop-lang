@@ -7,7 +7,8 @@ bloop is a small, strict, JavaScript-like scripting language for embedding in C+
 bloop looks like JavaScript but isn't: no `null`, `this`, `var`, `class`, `switch`, `??`, `?.`, spread or default
 parameters; `x => x` needs parentheses (`(x) => x`); strings and arrays have no methods (`std.length(a)`,
 `std.array.push(a, x)`); only booleans, numbers and undefined can be conditions; `"n" + 1` is an error; a name can't
-be declared again while it's visible (no shadowing); `7 / 2` is `3`. Read these first:
+be declared again while it's visible (no shadowing); `/` always gives a double (`7 / 2` is `3.5`; whole numbers:
+`std.math.idiv(7, 2)` is `3`). Read these first:
 
 - `docs/html/llms-short.txt`: the pitfalls with the exact error each one gives, and every standard library signature
 - `docs/html/llms.txt`: the whole language reference as one plain text file
